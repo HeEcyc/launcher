@@ -88,8 +88,16 @@ abstract class BaseAdapter<T, V : ViewDataBinding> private constructor(initItems
 
         val oldItemPosition = items.indexOf(oldItem)
         if (oldItemPosition == -1) return
+
+        Log.d("12345", "enter $oldItemPosition : $newPosition")
+
         Collections.swap(items, newPosition, oldItemPosition)
+
         notifyItemMoved(newPosition, oldItemPosition)
+
+        updateItem(newPosition)
+     //   updateItem(oldItemPosition)
+
     }
 
     abstract class BaseItem<T, V : ViewDataBinding>(val binding: V) :

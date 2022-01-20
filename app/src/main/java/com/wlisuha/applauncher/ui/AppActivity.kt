@@ -84,9 +84,9 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
     private fun handleEventMainAppList(v: View, event: DragEvent): Boolean {
         val dragInfo = event.localState as? DragInfo ?: return false
-//
-//        if (event.action == DragEvent.ACTION_DRAG_LOCATION)
-//            handleItemMovement(event.x, event.y, dragInfo)
+
+        if (event.action == DragEvent.ACTION_DRAG_LOCATION)
+            handleItemMovement(event.x, event.y, dragInfo)
 
         if (event.action == DragEvent.ACTION_DRAG_EXITED)
             (event.localState as? DragInfo)?.removeItem()
@@ -100,17 +100,17 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     private fun handleItemMovement(x: Float, y: Float, dragInfo: DragInfo) {
         val currentRecycler = viewPagerAdapter
             .getCurrentAppListView(binding.appPages.currentItem) ?: return
-        val currentAdapter = currentRecycler.adapter as BaseAdapter<*, *>
 
-        val itemCount = currentRecycler.adapter?.itemCount ?: 0
-        (0 until itemCount)
-            .mapNotNull { currentRecycler.findViewHolderForLayoutPosition(it) }
-            .forEach {
-                val holderRect = Rect()
-                it.itemView.getGlobalVisibleRect(holderRect)
-                if (holderRect.contains(x.toInt(), y.toInt()))
-                    viewPagerAdapter.swapItem(dragInfo, it.adapterPosition, currentAdapter)
-            }
+        if (currentRecycler.itemAnimator?.isRunning == true) return
+        val currentView = currentRecycler.findChildViewUnder(x, y)
+
+        if (currentView == null) {
+            viewPagerAdapter.removeRequestToSwap()
+            return
+        }
+        val holder = currentRecycler.getChildViewHolder(currentView)
+
+        viewPagerAdapter.swapItem(dragInfo, holder.adapterPosition)
     }
 
 
@@ -122,7 +122,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         binding.pointer.requestLayout()
 
         val pointerRect = Rect()
-
+        
         binding.pointer.getGlobalVisibleRect(pointerRect)
 
         val sideItemIndexes = arrayOf<Int?>(null, null)

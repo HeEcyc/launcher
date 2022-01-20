@@ -4,7 +4,7 @@ import com.wlisuha.applauncher.base.BaseAdapter
 
 class DragInfo(
     val adapter: BaseAdapter<InstalledApp, *>,
-    val draggedItemPos: Int,
+    var draggedItemPos: Int,
     val draggedItem: InstalledApp,
     val fromBottomPanel: Boolean = false
 ) {

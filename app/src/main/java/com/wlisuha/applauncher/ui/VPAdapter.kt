@@ -1,9 +1,11 @@
 package com.wlisuha.applauncher.ui
 
 import android.annotation.SuppressLint
-import android.util.Log
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.PagerAdapter
@@ -13,6 +15,10 @@ import com.wlisuha.applauncher.base.createAdapter
 import com.wlisuha.applauncher.data.DragInfo
 import com.wlisuha.applauncher.data.InstalledApp
 import com.wlisuha.applauncher.databinding.LauncherItemApplicationBinding
+import com.wlisuha.applauncher.utils.AppListDiffUtils
+import com.wlisuha.applauncher.utils.SwapHelper
+import java.util.*
+
 
 class VPAdapter(
     private val listApplicationPackages: List<InstalledApp>,
@@ -20,6 +26,7 @@ class VPAdapter(
     private val onItemClicked: (InstalledApp) -> Unit,
 ) : PagerAdapter() {
 
+    private val swapHelper = SwapHelper(Handler(Looper.getMainLooper()))
     private var recyclers = mutableMapOf<Int, RecyclerView>()
 
     private var pagesCount = listApplicationPackages.size / visibleApplicationsOnScreen
@@ -89,20 +96,28 @@ class VPAdapter(
         return view === `object` as View
     }
 
-    fun swapItem(dragInfo: DragInfo, newPosition: Int, currentAdapter: BaseAdapter<*, *>) {
-
-        if (recyclers[0]?.itemAnimator?.isRunning == true) return
-        Log.d("12345", "" + dragInfo.getCurrentItemPosition() + "$newPosition")
-
-        if (isSwapInSameAdapter(dragInfo.draggedItem, currentAdapter)) {
-            if (dragInfo.getCurrentItemPosition() != newPosition) moveItem(dragInfo, newPosition)
-        } else {
-            //   swapItem()
+    fun swapItem(dragInfo: DragInfo, newPosition: Int) {
+        swapHelper.requestToSwap(dragInfo.getCurrentItemPosition(), newPosition) {
+            moveItem(dragInfo, newPosition)
         }
     }
 
     private fun moveItem(dragInfo: DragInfo, newPosition: Int) {
-        dragInfo.adapter.moveItem(dragInfo.draggedItem, newPosition)
+        val currentItemPosition = dragInfo.getCurrentItemPosition()
+        if (currentItemPosition == -1) {
+            swapHelper.removeRequestToSwap()
+            return
+        }
+
+        val adapter = dragInfo.adapter
+        val oldList = adapter.getData().toList()
+
+        dragInfo.draggedItemPos = newPosition
+
+        Collections.swap(adapter.getData(), currentItemPosition, newPosition)
+        DiffUtil.calculateDiff(AppListDiffUtils(oldList, adapter.getData()))
+            .dispatchUpdatesTo(adapter)
+
     }
 
     private fun isSwapInSameAdapter(item: InstalledApp, adapter: BaseAdapter<*, *>) =
@@ -112,4 +127,8 @@ class VPAdapter(
 
 
     fun getCurrentAppListView(page: Int) = recyclers[page]
+
+    fun removeRequestToSwap() {
+        swapHelper.removeRequestToSwap()
+    }
 }
