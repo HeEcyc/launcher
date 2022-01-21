@@ -2,15 +2,19 @@ package com.wlisuha.applauncher.ui
 
 import android.annotation.SuppressLint
 import android.app.WallpaperManager
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.databinding.ObservableField
+import com.wlisuha.applauncher.BR
 import com.wlisuha.applauncher.LauncherApplication
 import com.wlisuha.applauncher.R
 import com.wlisuha.applauncher.base.BaseAdapter
@@ -21,7 +25,13 @@ import com.wlisuha.applauncher.data.InstalledApp
 import com.wlisuha.applauncher.databinding.BottomItemApplicationBinding
 
 class AppViewModel : BaseViewModel() {
-    private val labelColor = ObservableField(Color.BLACK)
+    val labelColor = ObservableField(Color.BLACK)
+    val isSelectionEnabled = ObservableField(false)
+    val intentFilter = IntentFilter().apply {
+        addAction(Intent.ACTION_PACKAGE_REMOVED)
+        addAction(Intent.ACTION_PACKAGE_ADDED)
+        addDataScheme("package")
+    }
 
     private val packageManager get() = LauncherApplication.instance.packageManager
     private val skipPackagesList = arrayOf(
@@ -48,7 +58,12 @@ class AppViewModel : BaseViewModel() {
 
     val bottomAppListAdapter =
         createAdapter<InstalledApp, BottomItemApplicationBinding>(R.layout.bottom_item_application) {
+            onItemClick = { launchApp(it.packageName) }
             onBind = { item, binding, adapter ->
+
+                binding.setVariable(BR.viewModel, this@AppViewModel)
+                binding.notifyPropertyChanged(BR.viewModel)
+
                 binding.root.setOnLongClickListener {
                     createDragAndDropView(item, binding, adapter)
                     false
@@ -149,9 +164,20 @@ class AppViewModel : BaseViewModel() {
         return InstalledApp(
             rf.loadLabel(packageManager).toString(),
             rf.loadIcon(packageManager),
-            rf.packageName,
-            labelColor
+            rf.packageName
         )
+    }
+
+    fun removeItem(packageName: String) {
+        Intent(Intent.ACTION_DELETE, Uri.fromParts("package", packageName, null))
+            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            .let(LauncherApplication.instance::startActivity)
+    }
+
+    fun launchApp(packageName: String) {
+        packageManager.getLaunchIntentForPackage(packageName)
+            ?.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ?.let(LauncherApplication.instance::startActivity)
     }
 
 }

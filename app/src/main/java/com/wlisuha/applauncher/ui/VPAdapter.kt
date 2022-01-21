@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.PagerAdapter
+import com.wlisuha.applauncher.BR
 import com.wlisuha.applauncher.R
 import com.wlisuha.applauncher.base.BaseAdapter
 import com.wlisuha.applauncher.base.createAdapter
@@ -23,7 +24,7 @@ import java.util.*
 class VPAdapter(
     private val listApplicationPackages: List<InstalledApp>,
     private val visibleApplicationsOnScreen: Int,
-    private val onItemClicked: (InstalledApp) -> Unit,
+    private val viewModel: AppViewModel,
 ) : PagerAdapter() {
 
     private val swapHelper = SwapHelper(Handler(Looper.getMainLooper()))
@@ -55,9 +56,14 @@ class VPAdapter(
     private fun createAdapter(position: Int) =
         createAdapter<InstalledApp, LauncherItemApplicationBinding>(R.layout.launcher_item_application) {
             initItems = getItems(position)
-            onItemClick = onItemClicked::invoke
+            onItemClick = { viewModel.launchApp(it.packageName) }
             onBind = { item, binding, adapter ->
+
+                binding.setVariable(BR.viewModel, viewModel)
+                binding.notifyPropertyChanged(BR.viewModel)
+
                 binding.root.setOnLongClickListener {
+                    viewModel.isSelectionEnabled.set(true)
                     startDragAndDrop(item, binding, adapter)
                     false
                 }

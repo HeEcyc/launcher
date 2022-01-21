@@ -4,6 +4,10 @@
     <data>
 
         <variable
+            name="viewModel"
+            type="com.wlisuha.applauncher.ui.AppViewModel" />
+
+        <variable
             name="item"
             type="com.wlisuha.applauncher.data.InstalledApp" />
 
@@ -36,12 +40,23 @@
                 android:gravity="center"
                 android:maxLines="1"
                 android:text="@{item.name}"
-                android:textColor="@{item.labelColor}"
+                android:textColor="@{viewModel.labelColor}"
                 android:textSize="14sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/appIcon" />
 
+            <androidx.appcompat.widget.AppCompatImageView
+                android:layout_width="20sp"
+                android:layout_height="20sp"
+                android:background="@drawable/gray_circle"
+                android:onClick="@{() -> viewModel.removeItem(item.packageName)}"
+                android:translationX="10sp"
+                android:translationY="-10sp"
+                app:layout_constraintEnd_toEndOf="@id/appIcon"
+                app:layout_constraintTop_toTopOf="@id/appIcon" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
