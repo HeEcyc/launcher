@@ -45,6 +45,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         binding.appPages.post {
             binding.appPages.adapter = viewPagerAdapter
             binding.appPages.offscreenPageLimit = viewPagerAdapter.count
+            binding.pageIndicator.setViewPager(binding.appPages)
         }
     }
 
@@ -122,7 +123,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         binding.pointer.requestLayout()
 
         val pointerRect = Rect()
-        
+
         binding.pointer.getGlobalVisibleRect(pointerRect)
 
         val sideItemIndexes = arrayOf<Int?>(null, null)

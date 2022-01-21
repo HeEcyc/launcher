@@ -11,14 +11,14 @@ class SwapHelper(private val swapHandler: Handler) {
         if (swapFromPosition == swapToPosition) {
             swapHandler.removeCallbacksAndMessages(null)
             return
-        } else if (this.swapFromPosition == swapFromPosition && this.swapToPosition == swapToPosition) {
-            return
-        } else {
-            this.swapFromPosition = swapFromPosition
-            this.swapToPosition = swapToPosition
-            removeRequestToSwap()
-            swapHandler.postDelayed({ action.invoke() }, 500)
         }
+        if (this.swapFromPosition == swapFromPosition && this.swapToPosition == swapToPosition) {
+            return
+        }
+        this.swapFromPosition = swapFromPosition
+        this.swapToPosition = swapToPosition
+        removeRequestToSwap()
+        swapHandler.postDelayed({ action.invoke() }, 500)
     }
 
     fun removeRequestToSwap() {

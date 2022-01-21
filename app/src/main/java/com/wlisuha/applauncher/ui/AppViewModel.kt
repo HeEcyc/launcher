@@ -2,18 +2,18 @@ package com.wlisuha.applauncher.ui
 
 import android.annotation.SuppressLint
 import android.app.WallpaperManager
-import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
+import android.view.View
 import androidx.annotation.ColorInt
 import androidx.databinding.ObservableField
 import com.wlisuha.applauncher.LauncherApplication
 import com.wlisuha.applauncher.R
+import com.wlisuha.applauncher.base.BaseAdapter
 import com.wlisuha.applauncher.base.BaseViewModel
 import com.wlisuha.applauncher.base.createAdapter
 import com.wlisuha.applauncher.data.DragInfo
@@ -21,7 +21,7 @@ import com.wlisuha.applauncher.data.InstalledApp
 import com.wlisuha.applauncher.databinding.BottomItemApplicationBinding
 
 class AppViewModel : BaseViewModel() {
-    val labelColor = ObservableField(Color.BLACK)
+    private val labelColor = ObservableField(Color.BLACK)
 
     private val packageManager get() = LauncherApplication.instance.packageManager
     private val skipPackagesList = arrayOf(
@@ -46,11 +46,29 @@ class AppViewModel : BaseViewModel() {
             ?.let(labelColor::set)
     }
 
-
-    val fastAppListAdapter =
+    val bottomAppListAdapter =
         createAdapter<InstalledApp, BottomItemApplicationBinding>(R.layout.bottom_item_application) {
-
+            onBind = { item, binding, adapter ->
+                binding.root.setOnLongClickListener {
+                    createDragAndDropView(item, binding, adapter)
+                    false
+                }
+            }
         }
+
+    @SuppressLint("NewApi")
+    private fun createDragAndDropView(
+        item: InstalledApp,
+        binding: BottomItemApplicationBinding,
+        adapter: BaseAdapter<InstalledApp, *>
+    ) {
+        binding.root.startDragAndDrop(
+            null,
+            View.DragShadowBuilder(binding.root),
+            DragInfo(adapter, adapter.getData().indexOf(item), item, true),
+            0
+        )
+    }
 
     fun deleteItemFromAppsBarList(dragInfo: DragInfo) {
         dragInfo.enableRestore()
@@ -58,30 +76,31 @@ class AppViewModel : BaseViewModel() {
     }
 
     private fun deleteItemFromFastAppList(draggedItem: InstalledApp) {
-        fastAppListAdapter.removeItem(draggedItem)
+        bottomAppListAdapter.removeItem(draggedItem)
     }
 
     fun isFirstItem(dragInfo: DragInfo): Boolean {
-        return fastAppListAdapter.getData()
-            .isEmpty() || fastAppListAdapter.getData().size == 1 && fastAppListAdapter.getData()
+        return bottomAppListAdapter.getData()
+            .isEmpty() || bottomAppListAdapter.getData().size == 1 && bottomAppListAdapter.getData()
             .any { it.packageName == dragInfo.draggedItem.packageName }
     }
 
-    fun getBottomAppsItemCount() = fastAppListAdapter.itemCount
+    fun getBottomAppsItemCount() = bottomAppListAdapter.itemCount
 
     fun insertFirstItemToBottomBar(dragInfo: DragInfo) {
-        if (fastAppListAdapter.getData().size > 0) return
-        fastAppListAdapter.addItem(dragInfo.draggedItem)
+        if (bottomAppListAdapter.getData().size > 0) return
+        bottomAppListAdapter.addItem(dragInfo.draggedItem)
         dragInfo.disableRestore()
     }
 
     fun insertItemToBottomBar(dragInfo: DragInfo, sideIndexes: Array<Int?>) {
         sideIndexes.filterNotNull()
-            .map { fastAppListAdapter.getData()[it] }
+            .map { bottomAppListAdapter.getData()[it] }
             .forEach { if (it.packageName == dragInfo.draggedItem.packageName) return }
 
-        if (fastAppListAdapter.getData().size == 4 &&
-            !fastAppListAdapter.getData().any { it.packageName == dragInfo.draggedItem.packageName }
+        if (bottomAppListAdapter.getData().size == 4 &&
+            !bottomAppListAdapter.getData()
+                .any { it.packageName == dragInfo.draggedItem.packageName }
         ) return
 
         if (sideIndexes[0] == null && sideIndexes[1] != null) {
@@ -94,14 +113,14 @@ class AppViewModel : BaseViewModel() {
     }
 
     private fun addItemToPosition(position: Int, dragInfo: InstalledApp) {
-        fastAppListAdapter.addItem(position, dragInfo)
+        bottomAppListAdapter.addItem(position, dragInfo)
         var removeItemPosition = -1
-        fastAppListAdapter.getData().forEachIndexed { index, installedApp ->
+        bottomAppListAdapter.getData().forEachIndexed { index, installedApp ->
             if (installedApp.packageName == dragInfo.packageName && index != position) {
                 removeItemPosition = index
             }
         }
-        fastAppListAdapter.removeItem(removeItemPosition)
+        bottomAppListAdapter.removeItem(removeItemPosition)
     }
 
     @SuppressLint("NewApi")

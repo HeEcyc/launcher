@@ -131,4 +131,8 @@ class VPAdapter(
     fun removeRequestToSwap() {
         swapHelper.removeRequestToSwap()
     }
+
+    interface OnActions {
+
+    }
 }

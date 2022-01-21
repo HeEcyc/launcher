@@ -29,16 +29,9 @@
                 android:id="@+id/appPages"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@android:color/transparent"
-                android:fitsSystemWindows="true" />
+                android:fitsSystemWindows="true" >
 
-            <com.github.mmin18.widget.RealtimeBlurView
-                android:id="@+id/viewList"
-                android:layout_width="match_parent"
-                android:layout_height="0sp"
-                app:layout_constraintHeight_percent="1"
-                app:layout_constraintTop_toTopOf="parent"
-                app:realtimeBlurRadius="22dp" />
+            </androidx.viewpager.widget.ViewPager>
 
             <View
                 android:id="@+id/beacon"
@@ -49,42 +42,68 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-        </androidx.constraintlayout.motion.widget.MotionLayout>
-
-        <RelativeLayout
-            android:id="@+id/bottomAppsOverlay"
-            android:layout_width="0sp"
-            android:layout_height="0sp"
-            android:layout_marginBottom="16sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHeight_percent="0.1"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintWidth_percent="0.8">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/bottomAppsList"
+            <com.tbuonomo.viewpagerdotsindicator.SpringDotsIndicator
+                android:id="@+id/pageIndicator"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_centerInParent="true"
-                android:adapter="@{viewModel.fastAppListAdapter}"
-                android:orientation="horizontal"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                app:spanCount="4" />
-
-            <View
-                android:id="@+id/pointer"
-                android:layout_width="0sp"
-                android:layout_height="match_parent"
-                android:layout_centerInParent="true"
-                android:alpha="0.5"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintDimensionRatio="1:1"
+                android:layout_height="wrap_content"
+                app:dotsColor="@android:color/white"
+                app:dotsCornerRadius="8dp"
+                app:dotsSize="12dp"
+                app:dotsSpacing="2dp"
+                app:dotsWidthFactor="2.5"
+                app:layout_constraintBottom_toTopOf="@id/bottomAppsOverlay"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toBottomOf="@id/appPages"
+                app:progressMode="true"
+                app:selectedDotColor="@android:color/holo_red_dark" />
 
-        </RelativeLayout>
+            <RelativeLayout
+                android:id="@+id/bottomAppsOverlay"
+                android:layout_width="0sp"
+                android:layout_height="0sp"
+                android:layout_margin="16sp"
+                android:layout_marginBottom="16sp"
+                android:padding="6sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHeight_percent="0.12"
+                app:layout_constraintStart_toStartOf="parent">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/bottomAppsList"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_centerInParent="true"
+                    android:adapter="@{viewModel.bottomAppListAdapter}"
+                    android:orientation="horizontal"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    app:spanCount="4" />
+
+                <View
+                    android:id="@+id/pointer"
+                    android:layout_width="0sp"
+                    android:layout_height="match_parent"
+                    android:layout_centerInParent="true"
+                    android:alpha="0.5"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintDimensionRatio="1:1"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </RelativeLayout>
+
+            <com.github.mmin18.widget.RealtimeBlurView
+                android:id="@+id/viewList"
+                android:layout_width="match_parent"
+                android:layout_height="0sp"
+                app:layout_constraintHeight_percent="1"
+                app:layout_constraintTop_toTopOf="parent"
+                app:realtimeBlurRadius="22dp" />
+
+        </androidx.constraintlayout.motion.widget.MotionLayout>
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
