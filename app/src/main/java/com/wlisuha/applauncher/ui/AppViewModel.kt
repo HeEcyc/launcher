@@ -11,19 +11,24 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.databinding.ObservableField
+import androidx.lifecycle.viewModelScope
 import com.wlisuha.applauncher.BR
 import com.wlisuha.applauncher.LauncherApplication
 import com.wlisuha.applauncher.R
 import com.wlisuha.applauncher.base.BaseAdapter
 import com.wlisuha.applauncher.base.BaseViewModel
 import com.wlisuha.applauncher.base.createAdapter
+import com.wlisuha.applauncher.data.AppScreenLocation
 import com.wlisuha.applauncher.data.DragInfo
 import com.wlisuha.applauncher.data.InstalledApp
+import com.wlisuha.applauncher.data.db.DataBase
 import com.wlisuha.applauncher.databinding.BottomItemApplicationBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.lang.Exception
 
 class AppViewModel : BaseViewModel() {
     val labelColor = ObservableField(Color.BLACK)
@@ -40,19 +45,9 @@ class AppViewModel : BaseViewModel() {
         LauncherApplication.instance.packageName
     )
 
-
-    private val test = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 23, 4, 534, 534, 2)
     private val wallpaperManager = WallpaperManager.getInstance(LauncherApplication.instance)
 
     init {
-        test.withIndex()
-            .groupBy { it.index / 4 }
-            .forEach { entry: Map.Entry<Int, List<IndexedValue<Int>>> ->
-                Log.d("12345", "${entry.key}")
-                Log.d("12345", entry.value.map { it.value }.toString())
-            }
-
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setLabelColor()
             wallpaperManager.addOnColorsChangedListener(
@@ -160,22 +155,9 @@ class AppViewModel : BaseViewModel() {
         return if (a < 0.5) Color.BLACK else Color.WHITE
     }
 
-    fun getApplicationList(visiblePagesOfScreen: Int) = packageManager
-        .getInstalledApplications(PackageManager.GET_META_DATA)
-        .filter(::availableApp)
-        .map(::createModel)
-
     private fun availableApp(applicationInfo: ApplicationInfo): Boolean {
         return packageManager.getLaunchIntentForPackage(applicationInfo.packageName) != null
                 && !skipPackagesList.contains(applicationInfo.packageName)
-    }
-
-    private fun createModel(rf: ApplicationInfo): InstalledApp {
-        return InstalledApp(
-            rf.loadLabel(packageManager).toString(),
-            rf.loadIcon(packageManager),
-            rf.packageName
-        )
     }
 
     fun removeItem(packageName: String) {
@@ -190,4 +172,74 @@ class AppViewModel : BaseViewModel() {
             ?.let(LauncherApplication.instance::startActivity)
     }
 
+
+    fun readAllPackage(itemCountOnPage: Int): List<List<InstalledApp>> {
+        return if (DataBase.dao.getRowCount() == 0) {
+            val appList = getInstalledAppList(itemCountOnPage)
+            saveApplicationToDB(appList)
+            appList
+        } else readAppFromDB()
+    }
+
+    private fun saveApplicationToDB(appList: List<List<InstalledApp>>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            appList.forEachIndexed { pageIndex, list ->
+                list.forEachIndexed { index, installedApp ->
+                    AppScreenLocation(installedApp.packageName, pageIndex, index)
+                        .let(DataBase.dao::addItem)
+                }
+            }
+        }
+    }
+
+    private fun readAppFromDB(): List<List<InstalledApp>> {
+        return DataBase.dao
+            .getAppsPositions()
+            .groupBy { it.page }
+            .map {
+                it.value.sortedBy { appScreenLocation -> appScreenLocation.position }
+                    .filter(::appExist)
+                    .map { appScreenLocation -> createModel(appScreenLocation.packageName) }
+            }
+    }
+
+    private fun appExist(appScreenLocation: AppScreenLocation): Boolean = try {
+        packageManager.getPackageInfo(appScreenLocation.packageName, 0)
+        true
+    } catch (e: Exception) {
+        DataBase.dao.delete(appScreenLocation)
+        false
+    }
+
+    private fun getInstalledAppList(itemCountOnPage: Int): List<List<InstalledApp>> {
+        val appsList = packageManager
+            .getInstalledApplications(PackageManager.GET_META_DATA)
+            .filter(::availableApp)
+            .withIndex()
+            .groupBy { it.index / itemCountOnPage }
+            .values
+
+        return appsList.map { listOfApp -> listOfApp.map { createModel(it.value) } }
+    }
+
+    private fun createModel(packageName: String): InstalledApp {
+        return packageManager.getApplicationInfo(packageName, 0)
+            .let(::createModel)
+    }
+
+    private fun createModel(rf: ApplicationInfo): InstalledApp {
+        return InstalledApp(
+            rf.loadLabel(packageManager).toString(),
+            rf.loadIcon(packageManager),
+            rf.packageName
+        )
+    }
+
+    fun saveNewPositionItem(item: InstalledApp, newPosition: Int, page: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            AppScreenLocation(item.packageName, page, newPosition)
+                .let(DataBase.dao::updateItem)
+        }
+
+    }
 }

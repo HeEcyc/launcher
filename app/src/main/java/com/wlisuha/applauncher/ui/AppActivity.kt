@@ -11,18 +11,22 @@ import android.util.Log
 import android.view.DragEvent
 import android.view.View
 import androidx.activity.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.wlisuha.applauncher.R
 import com.wlisuha.applauncher.base.BaseActivity
 import com.wlisuha.applauncher.base.BaseAdapter
 import com.wlisuha.applauncher.data.DragInfo
 import com.wlisuha.applauncher.databinding.AppActivityBinding
 import com.wlisuha.applauncher.utils.APP_COLUMN_COUNT
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_activity),
     View.OnDragListener {
 
-    private val viewPagerAdapter: VPAdapter by lazy { createVPAdapter() }
+    private lateinit var viewPagerAdapter: VPAdapter
     override val viewModel: AppViewModel by viewModels()
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -35,10 +39,12 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     private fun handleRemovedApplication(data: Uri) {
+        Log.d("12345", data.toString())
         Log.d("12345", "removed")
     }
 
     private fun handleAddedApplication(data: Uri) {
+        Log.d("12345", data.toString())
         Log.d("12345", "added")
     }
 
@@ -67,9 +73,12 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
     private fun calculateAppItemViewHeight() {
         binding.appPages.post {
-            binding.appPages.adapter = viewPagerAdapter
-            binding.appPages.offscreenPageLimit = viewPagerAdapter.count
-            binding.pageIndicator.setViewPager(binding.appPages)
+            lifecycleScope.launch(Dispatchers.Main) {
+                viewPagerAdapter = withContext(Dispatchers.IO) { createVPAdapter() }
+                binding.appPages.adapter = viewPagerAdapter
+                binding.appPages.offscreenPageLimit = viewPagerAdapter.count
+                binding.pageIndicator.setViewPager(binding.appPages)
+            }
         }
     }
 
@@ -115,8 +124,8 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     private fun handleItemMovement(x: Float, y: Float, dragInfo: DragInfo) {
-        val currentRecycler = viewPagerAdapter
-            .getCurrentAppListView(binding.appPages.currentItem) ?: return
+        val currentPage = binding.appPages.currentItem
+        val currentRecycler = viewPagerAdapter.getCurrentAppListView(currentPage) ?: return
 
         if (currentRecycler.itemAnimator?.isRunning == true) return
         val currentView = currentRecycler.findChildViewUnder(x, y)
@@ -127,7 +136,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         }
         val holder = currentRecycler.getChildViewHolder(currentView)
 
-        viewPagerAdapter.swapItem(dragInfo, holder.adapterPosition)
+        viewPagerAdapter.swapItem(dragInfo, holder.adapterPosition, currentPage)
     }
 
 
@@ -169,7 +178,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         val rowCount = binding.appPages.height / (binding.appPages.width / APP_COLUMN_COUNT * 1.1f)
         val visibleItemCountOnPageScreen = rowCount.toInt() * APP_COLUMN_COUNT
         return VPAdapter(
-            viewModel.getApplicationList(visibleItemCountOnPageScreen),
+            viewModel.readAllPackage(visibleItemCountOnPageScreen),
             visibleItemCountOnPageScreen,
             viewModel,
         )

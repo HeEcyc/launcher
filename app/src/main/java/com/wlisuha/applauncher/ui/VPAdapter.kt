@@ -18,12 +18,11 @@ import com.wlisuha.applauncher.data.InstalledApp
 import com.wlisuha.applauncher.databinding.LauncherItemApplicationBinding
 import com.wlisuha.applauncher.utils.AppListDiffUtils
 import com.wlisuha.applauncher.utils.SwapHelper
-import java.lang.Exception
 import java.util.*
 
 
 class VPAdapter(
-    private val listApplicationPackages: List<InstalledApp>,
+    private val listApplicationPackages: List<List<InstalledApp>>,
     private val visibleApplicationsOnScreen: Int,
     private val viewModel: AppViewModel,
 ) : PagerAdapter() {
@@ -31,12 +30,7 @@ class VPAdapter(
     private val swapHelper = SwapHelper(Handler(Looper.getMainLooper()))
     private var recyclers = mutableMapOf<Int, RecyclerView>()
 
-    private var pagesCount = listApplicationPackages.size / visibleApplicationsOnScreen
-
-    init {
-        if (listApplicationPackages.size % visibleApplicationsOnScreen != 0)
-            pagesCount++
-    }
+    private var pagesCount = listApplicationPackages.size
 
     override fun getCount() = pagesCount
 
@@ -64,7 +58,7 @@ class VPAdapter(
 
     private fun createAdapter(position: Int) =
         createAdapter<InstalledApp, LauncherItemApplicationBinding>(R.layout.launcher_item_application) {
-            initItems = getItems(position)
+            initItems = listApplicationPackages.getOrNull(position) ?: listOf()
             onItemClick = { viewModel.launchApp(it.packageName) }
             onBind = { item, binding, adapter ->
 
@@ -93,20 +87,6 @@ class VPAdapter(
         )
     }
 
-    private fun getItems(position: Int): List<InstalledApp> {
-        val itemsStartRange = position * visibleApplicationsOnScreen
-        val itemsEndRange = itemsStartRange + visibleApplicationsOnScreen
-        return try {
-            listApplicationPackages.subList(
-                itemsStartRange,
-                if (itemsEndRange > listApplicationPackages.size) listApplicationPackages.size
-                else itemsEndRange
-            )
-        } catch (e: Exception) {
-            listOf()
-        }
-    }
-
     override fun destroyItem(container: ViewGroup, position: Int, `object`: Any) {
         container.removeView(`object` as View)
     }
@@ -115,9 +95,18 @@ class VPAdapter(
         return view === `object` as View
     }
 
-    fun swapItem(dragInfo: DragInfo, newPosition: Int) {
-        swapHelper.requestToSwap(dragInfo.getCurrentItemPosition(), newPosition) {
+    fun swapItem(dragInfo: DragInfo, newPosition: Int, currentPage: Int) {
+
+        val oldItemPosition = dragInfo.getCurrentItemPosition()
+
+        swapHelper.requestToSwap(oldItemPosition, newPosition) {
             moveItem(dragInfo, newPosition)
+
+            val swappedItem = getCurrentAppListAdapter(currentPage).getData()[oldItemPosition]
+                    as InstalledApp
+
+            viewModel.saveNewPositionItem(dragInfo.draggedItem, newPosition, currentPage)
+            viewModel.saveNewPositionItem(swappedItem, oldItemPosition, currentPage)
         }
     }
 
@@ -146,6 +135,9 @@ class VPAdapter(
 
 
     fun getCurrentAppListView(page: Int) = recyclers[page]
+
+    private fun getCurrentAppListAdapter(page: Int) =
+        recyclers[page]?.adapter as BaseAdapter<*, *>
 
     fun removeRequestToSwap() {
         swapHelper.removeRequestToSwap()
