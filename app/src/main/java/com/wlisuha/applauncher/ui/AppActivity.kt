@@ -18,7 +18,9 @@ import com.wlisuha.applauncher.base.BaseAdapter
 import com.wlisuha.applauncher.data.DragInfo
 import com.wlisuha.applauncher.databinding.AppActivityBinding
 import com.wlisuha.applauncher.utils.APP_COLUMN_COUNT
+import com.wlisuha.applauncher.utils.MOVING_PAGE_DELAY
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -53,8 +55,13 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 //        if (!NotificationManagerCompat.getEnabledListenerPackages(this).contains(packageName))
 //            openAirplaneSettings()
         binding.bottomAppsList.itemAnimator = null
+
         binding.bottomAppsOverlay.setOnDragListener(this)
         binding.appPages.setOnDragListener(this)
+
+        binding.leftTriggeredView.setOnDragListener(this)
+        binding.rightTriggeredView.setOnDragListener(this)
+
         binding.motionView.setOnLongClickListener {
             viewModel.isSelectionEnabled.set(!(viewModel.isSelectionEnabled.get() ?: false))
             true
@@ -90,8 +97,40 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         return when (v.id) {
             R.id.appPages -> handleEventMainAppList(v, event)
             R.id.bottomAppsOverlay -> handleBottomAppList(v, event)
+            R.id.leftTriggeredView -> handleLeftTrigger(event)
+            R.id.rightTriggeredView -> handleRightTrigger(event)
             else -> false
         }
+    }
+
+    private fun handleLeftTrigger(event: DragEvent): Boolean {
+        when (event.action) {
+            DragEvent.ACTION_DRAG_ENTERED -> if (viewModel.movePageJob?.isActive == true) return true
+            else viewModel.movePageJob = lifecycleScope.launch(Dispatchers.IO) {
+                while (binding.appPages.currentItem > 0) {
+                    delay(MOVING_PAGE_DELAY)
+                    withContext(Dispatchers.Main) { binding.appPages.currentItem-- }
+                }
+            }
+            DragEvent.ACTION_DRAG_EXITED -> viewModel.movePageJob?.cancel()
+        }
+        return true
+    }
+
+    private fun handleRightTrigger(event: DragEvent): Boolean {
+        when (event.action) {
+            DragEvent.ACTION_DRAG_ENTERED -> {
+                if (viewModel.movePageJob?.isActive == true) return true
+                else viewModel.movePageJob = lifecycleScope.launch(Dispatchers.IO) {
+                    while (binding.appPages.currentItem < viewPagerAdapter.count) {
+                        delay(MOVING_PAGE_DELAY)
+                        withContext(Dispatchers.Main) { binding.appPages.currentItem++ }
+                    }
+                }
+            }
+            DragEvent.ACTION_DRAG_EXITED -> viewModel.movePageJob?.cancel()
+        }
+        return true
     }
 
     private fun handleBottomAppList(v: View, event: DragEvent): Boolean {
@@ -102,6 +141,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
                     .insertFirstItemToBottomBar(dragInfo)
                 else viewModel.insertItemToBottomBar(dragInfo, getItemPosition(event.x))
             }
+            DragEvent.ACTION_DRAG_ENTERED -> dragInfo.removeItem()
             DragEvent.ACTION_DRAG_EXITED -> viewModel
                 .deleteItemFromAppsBarList(dragInfo)
         }
@@ -110,12 +150,8 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
     private fun handleEventMainAppList(v: View, event: DragEvent): Boolean {
         val dragInfo = event.localState as? DragInfo ?: return false
-
         if (event.action == DragEvent.ACTION_DRAG_LOCATION)
             handleItemMovement(event.x, event.y, dragInfo)
-
-        if (event.action == DragEvent.ACTION_DRAG_EXITED)
-            (event.localState as? DragInfo)?.removeItem()
 
         if (event.action == DragEvent.ACTION_DRAG_ENTERED) {
             (event.localState as? DragInfo)?.restoreItem()
@@ -175,7 +211,8 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     private fun createVPAdapter(): VPAdapter {
-        val rowCount = binding.appPages.height / (binding.appPages.width / APP_COLUMN_COUNT * 1.1f)
+        val rowCount =
+            binding.appPages.height / (binding.appPages.width / APP_COLUMN_COUNT * 1.1f)
         val visibleItemCountOnPageScreen = rowCount.toInt() * APP_COLUMN_COUNT
         return VPAdapter(
             viewModel.readAllPackage(visibleItemCountOnPageScreen),
@@ -183,10 +220,4 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             viewModel,
         )
     }
-
-    override fun onDestroy() {
-        super.onDestroy()
-    }
-
-
 }

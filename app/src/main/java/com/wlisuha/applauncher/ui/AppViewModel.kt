@@ -27,6 +27,7 @@ import com.wlisuha.applauncher.data.InstalledApp
 import com.wlisuha.applauncher.data.db.DataBase
 import com.wlisuha.applauncher.databinding.BottomItemApplicationBinding
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.lang.Exception
 
@@ -38,6 +39,7 @@ class AppViewModel : BaseViewModel() {
         addAction(Intent.ACTION_PACKAGE_ADDED)
         addDataScheme("package")
     }
+    var movePageJob: Job? = null
 
     private val packageManager get() = LauncherApplication.instance.packageManager
     private val skipPackagesList = arrayOf(

@@ -16,19 +16,23 @@ class ClickableMotionLayout @JvmOverloads constructor(
     private var longClickTask: Job? = null
 
     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
-        if (event.action == MotionEvent.ACTION_MOVE) {
-            val eventDuration = event.eventTime - event.downTime
-            if (eventDuration > 500 && canCallLongCLick) {
-                longClickTask?.cancel()
-                callLongClick()
+        when (event.action) {
+            MotionEvent.ACTION_MOVE -> {
+                val eventDuration = event.eventTime - event.downTime
+                if (eventDuration > 500 && canCallLongCLick) {
+                    longClickTask?.cancel()
+                    //        callLongClick()
+                }
+                return super.onInterceptTouchEvent(event)
             }
-            return super.onInterceptTouchEvent(event)
-        } else if (event.action == MotionEvent.ACTION_DOWN) {
-            canCallLongCLick = true
-            longClickTask = launch(Dispatchers.IO) {
-                delay(500)
-                callLongClick()
+            MotionEvent.ACTION_DOWN -> {
+                canCallLongCLick = true
+                longClickTask = launch(Dispatchers.IO) {
+                    delay(1000)
+                   // callLongClick()
+                }
             }
+            MotionEvent.ACTION_UP -> longClickTask?.cancel()
         }
         return false
     }

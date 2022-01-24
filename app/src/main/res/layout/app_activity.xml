@@ -26,25 +26,29 @@
                 android:alpha="0.8"
                 android:background="#FFFFFF" />
 
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/clickableOverlay"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/clickableView"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
             <androidx.viewpager.widget.ViewPager
                 android:id="@+id/appPages"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:fitsSystemWindows="true">
+                android:fitsSystemWindows="true" />
 
-            </androidx.viewpager.widget.ViewPager>
+            <View
+                android:id="@+id/leftTriggeredView"
+                android:layout_width="16sp"
+                android:layout_height="0sp"
+                android:background="@android:color/black"
+                app:layout_constraintBottom_toBottomOf="@id/appPages"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@id/appPages" />
+
+            <View
+                android:id="@+id/rightTriggeredView"
+                android:layout_width="16sp"
+                android:layout_height="0sp"
+                android:background="@android:color/black"
+                app:layout_constraintBottom_toBottomOf="@id/appPages"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/appPages" />
 
             <View
                 android:id="@+id/beacon"
@@ -54,7 +58,6 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
-
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/indicatorOverlay"
