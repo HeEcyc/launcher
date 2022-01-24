@@ -9,7 +9,7 @@ class SwapHelper(private val swapHandler: Handler) {
 
     fun requestToSwap(swapFromPosition: Int, swapToPosition: Int, action: () -> Unit) {
         if (swapFromPosition == swapToPosition) {
-            swapHandler.removeCallbacksAndMessages(null)
+            removeRequestToSwap()
             return
         }
         if (this.swapFromPosition == swapFromPosition && this.swapToPosition == swapToPosition) {
@@ -18,7 +18,11 @@ class SwapHelper(private val swapHandler: Handler) {
         this.swapFromPosition = swapFromPosition
         this.swapToPosition = swapToPosition
         removeRequestToSwap()
-        swapHandler.postDelayed({ action.invoke() }, 500)
+        swapHandler.postDelayed({
+            this.swapFromPosition = -1
+            this.swapToPosition = -1
+            action.invoke()
+        }, 500)
     }
 
     fun removeRequestToSwap() {

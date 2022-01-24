@@ -156,19 +156,19 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     private fun handleItemMovement(x: Float, y: Float, dragInfo: DragInfo) {
+
         val currentPage = binding.appPages.currentItem
+
         val currentRecycler = viewPagerAdapter.getCurrentAppListView(currentPage) ?: return
 
         if (currentRecycler.itemAnimator?.isRunning == true) return
         val currentView = currentRecycler.findChildViewUnder(x, y)
-
         if (currentView == null) {
             viewPagerAdapter.removeRequestToSwap()
             viewPagerAdapter.insertToLastPosition(dragInfo, currentPage)
             return
         }
         val holder = currentRecycler.getChildViewHolder(currentView)
-
         viewPagerAdapter.swapItem(dragInfo, holder.adapterPosition, currentPage)
     }
 

@@ -6,13 +6,15 @@ import androidx.databinding.BindingAdapter
 
 @BindingAdapter("onEnableSelected")
 fun AppCompatImageView.isVisibleRemoving(isVisibleRemoving: Boolean) {
+
     clearAnimation()
+
     with(animate()) {
 
         alpha(if (isVisibleRemoving) 1f else 0f)
 
-        if (isVisibleRemoving) withStartAction { visibility = View.VISIBLE }
-        else withEndAction { visibility = View.GONE }
+        withStartAction { if (isVisibleRemoving) visibility = View.VISIBLE }
+        withEndAction { if (!isVisibleRemoving) visibility = View.GONE }
 
     }.duration = ENABLED_ANIMATION_DURATION
 }

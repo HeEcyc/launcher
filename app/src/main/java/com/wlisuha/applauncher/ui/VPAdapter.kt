@@ -3,6 +3,7 @@ package com.wlisuha.applauncher.ui
 import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -88,10 +89,23 @@ class VPAdapter(
     }
 
     fun swapItem(dragInfo: DragInfo, newPosition: Int, currentPage: Int) {
+        if (isSwapInSameAdapter(dragInfo.draggedItem, currentPage))
+            swapItemInSamePage(dragInfo, newPosition, currentPage)
+        else swapItemBetweenPages(dragInfo, newPosition, currentPage)
+    }
 
+    private fun swapItemBetweenPages(dragInfo: DragInfo, newPosition: Int, currentPage: Int) {
+
+    }
+
+    private fun swapItemInSamePage(
+        dragInfo: DragInfo,
+        newPosition: Int,
+        currentPage: Int
+    ) {
         val oldItemPosition = dragInfo.getCurrentItemPosition()
-
         swapHelper.requestToSwap(oldItemPosition, newPosition) {
+
             moveItem(dragInfo, newPosition)
 
             val swappedItem = getCurrentAppListAdapter(currentPage).getData()[oldItemPosition]
@@ -119,11 +133,9 @@ class VPAdapter(
 
     }
 
-    private fun isSwapInSameAdapter(item: InstalledApp, adapter: BaseAdapter<*, *>) =
-        adapter.getData()
-            .map { it as InstalledApp }
-            .any { it.packageName == item.packageName }
-
+    private fun isSwapInSameAdapter(item: InstalledApp, currentPage: Int) =
+        getCurrentAppListAdapter(currentPage)
+            .getData().any { it.packageName == item.packageName }
 
     fun getCurrentAppListView(page: Int) = recyclers[page]
 
