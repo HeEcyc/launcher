@@ -34,14 +34,6 @@ class VPAdapter(
 
     override fun getCount() = pagesCount
 
-    init {
-        Handler(Looper.getMainLooper())
-            .postDelayed({
-                pagesCount++
-                notifyDataSetChanged()
-            }, 3000)
-    }
-
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
         return RecyclerView(container.context).apply {
             overScrollMode = View.OVER_SCROLL_NEVER
@@ -103,7 +95,6 @@ class VPAdapter(
             moveItem(dragInfo, newPosition)
 
             val swappedItem = getCurrentAppListAdapter(currentPage).getData()[oldItemPosition]
-                    as InstalledApp
 
             viewModel.saveNewPositionItem(dragInfo.draggedItem, newPosition, currentPage)
             viewModel.saveNewPositionItem(swappedItem, oldItemPosition, currentPage)
@@ -137,9 +128,28 @@ class VPAdapter(
     fun getCurrentAppListView(page: Int) = recyclers[page]
 
     private fun getCurrentAppListAdapter(page: Int) =
-        recyclers[page]?.adapter as BaseAdapter<*, *>
+        recyclers[page]?.adapter as BaseAdapter<InstalledApp, *>
 
     fun removeRequestToSwap() {
         swapHelper.removeRequestToSwap()
+    }
+
+    fun insertToLastPosition(dragInfo: DragInfo, currentPage: Int) {
+        with(getCurrentAppListAdapter(currentPage)) {
+            if (itemCount == visibleApplicationsOnScreen) return
+            else if (getData().any { it.packageName == dragInfo.draggedItem.packageName }) return
+            dragInfo.removeItem()
+            addItem(dragInfo.draggedItem)
+            dragInfo.adapter = this
+            dragInfo.draggedItemPos = itemCount - 1
+            viewModel.saveNewPositionItem(
+                dragInfo.draggedItem,
+                dragInfo.draggedItemPos,
+                currentPage
+            )
+        }
+        if (getCurrentAppListAdapter(currentPage).itemCount == visibleApplicationsOnScreen)
+            return
+
     }
 }

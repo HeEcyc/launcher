@@ -37,7 +37,6 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
                 Intent.ACTION_PACKAGE_REMOVED -> handleRemovedApplication(intent.data ?: return)
             }
         }
-
     }
 
     private fun handleRemovedApplication(data: Uri) {
@@ -119,13 +118,11 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
     private fun handleRightTrigger(event: DragEvent): Boolean {
         when (event.action) {
-            DragEvent.ACTION_DRAG_ENTERED -> {
-                if (viewModel.movePageJob?.isActive == true) return true
-                else viewModel.movePageJob = lifecycleScope.launch(Dispatchers.IO) {
-                    while (binding.appPages.currentItem < viewPagerAdapter.count) {
-                        delay(MOVING_PAGE_DELAY)
-                        withContext(Dispatchers.Main) { binding.appPages.currentItem++ }
-                    }
+            DragEvent.ACTION_DRAG_ENTERED -> if (viewModel.movePageJob?.isActive == true) return true
+            else viewModel.movePageJob = lifecycleScope.launch(Dispatchers.IO) {
+                while (binding.appPages.currentItem < viewPagerAdapter.count) {
+                    delay(MOVING_PAGE_DELAY)
+                    withContext(Dispatchers.Main) { binding.appPages.currentItem++ }
                 }
             }
             DragEvent.ACTION_DRAG_EXITED -> viewModel.movePageJob?.cancel()
@@ -150,11 +147,10 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
     private fun handleEventMainAppList(v: View, event: DragEvent): Boolean {
         val dragInfo = event.localState as? DragInfo ?: return false
-        if (event.action == DragEvent.ACTION_DRAG_LOCATION)
-            handleItemMovement(event.x, event.y, dragInfo)
-
-        if (event.action == DragEvent.ACTION_DRAG_ENTERED) {
-            (event.localState as? DragInfo)?.restoreItem()
+        when (event.action) {
+            DragEvent.ACTION_DRAG_LOCATION -> handleItemMovement(event.x, event.y, dragInfo)
+            DragEvent.ACTION_DRAG_ENTERED -> (event.localState as? DragInfo)?.restoreItem()
+            DragEvent.ACTION_DRAG_EXITED -> viewPagerAdapter.removeRequestToSwap()
         }
         return true
     }
@@ -168,6 +164,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
         if (currentView == null) {
             viewPagerAdapter.removeRequestToSwap()
+            viewPagerAdapter.insertToLastPosition(dragInfo, currentPage)
             return
         }
         val holder = currentRecycler.getChildViewHolder(currentView)

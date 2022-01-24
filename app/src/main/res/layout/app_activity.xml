@@ -36,7 +36,6 @@
                 android:id="@+id/leftTriggeredView"
                 android:layout_width="16sp"
                 android:layout_height="0sp"
-                android:background="@android:color/black"
                 app:layout_constraintBottom_toBottomOf="@id/appPages"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@id/appPages" />
@@ -45,7 +44,6 @@
                 android:id="@+id/rightTriggeredView"
                 android:layout_width="16sp"
                 android:layout_height="0sp"
-                android:background="@android:color/black"
                 app:layout_constraintBottom_toBottomOf="@id/appPages"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@id/appPages" />

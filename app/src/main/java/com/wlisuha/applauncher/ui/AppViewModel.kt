@@ -159,7 +159,8 @@ class AppViewModel : BaseViewModel() {
 
     private fun availableApp(applicationInfo: ApplicationInfo): Boolean {
         return packageManager.getLaunchIntentForPackage(applicationInfo.packageName) != null
-                && !skipPackagesList.contains(applicationInfo.packageName)
+                && !skipPackagesList.contains(applicationInfo.packageName) &&
+                applicationInfo.enabled
     }
 
     fun removeItem(packageName: String) {
@@ -217,11 +218,9 @@ class AppViewModel : BaseViewModel() {
         val appsList = packageManager
             .getInstalledApplications(PackageManager.GET_META_DATA)
             .filter(::availableApp)
-            .withIndex()
-            .groupBy { it.index / itemCountOnPage }
-            .values
+            .chunked(itemCountOnPage)
 
-        return appsList.map { listOfApp -> listOfApp.map { createModel(it.value) } }
+        return appsList.map { listOfApp -> listOfApp.map(::createModel) }
     }
 
     private fun createModel(packageName: String): InstalledApp {
@@ -242,6 +241,5 @@ class AppViewModel : BaseViewModel() {
             AppScreenLocation(item.packageName, page, newPosition)
                 .let(DataBase.dao::updateItem)
         }
-
     }
 }
