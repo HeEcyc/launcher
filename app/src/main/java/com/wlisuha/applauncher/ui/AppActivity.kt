@@ -49,8 +49,11 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         binding.bottomAppsList.itemAnimator = null
         binding.bottomAppsOverlay.setOnDragListener(this)
         binding.appPages.setOnDragListener(this)
+        binding.motionView.setOnLongClickListener {
+            viewModel.isSelectionEnabled.set(!(viewModel.isSelectionEnabled.get() ?: false))
+            true
+        }
         registerReceiver(broadcastReceiver, viewModel.intentFilter)
-
     }
 
     private fun askRole() {
@@ -166,7 +169,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         val rowCount = binding.appPages.height / (binding.appPages.width / APP_COLUMN_COUNT * 1.1f)
         val visibleItemCountOnPageScreen = rowCount.toInt() * APP_COLUMN_COUNT
         return VPAdapter(
-            viewModel.getApplicationList(),
+            viewModel.getApplicationList(visibleItemCountOnPageScreen),
             visibleItemCountOnPageScreen,
             viewModel,
         )

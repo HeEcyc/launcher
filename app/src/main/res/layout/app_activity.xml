@@ -13,7 +13,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <androidx.constraintlayout.motion.widget.MotionLayout
+        <com.wlisuha.applauncher.ui.custom.ClickableMotionLayout
+            android:id="@+id/motionView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:layoutDescription="@xml/app_activity_scene">
@@ -25,11 +26,23 @@
                 android:alpha="0.8"
                 android:background="#FFFFFF" />
 
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/clickableOverlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/clickableView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
             <androidx.viewpager.widget.ViewPager
                 android:id="@+id/appPages"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:fitsSystemWindows="true" >
+                android:fitsSystemWindows="true">
 
             </androidx.viewpager.widget.ViewPager>
 
@@ -42,21 +55,31 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <com.tbuonomo.viewpagerdotsindicator.SpringDotsIndicator
-                android:id="@+id/pageIndicator"
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/indicatorOverlay"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:dotsColor="@android:color/white"
-                app:dotsCornerRadius="8dp"
-                app:dotsSize="12dp"
-                app:dotsSpacing="2dp"
-                app:dotsWidthFactor="2.5"
                 app:layout_constraintBottom_toTopOf="@id/bottomAppsOverlay"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/appPages"
-                app:progressMode="true"
-                app:selectedDotColor="@android:color/holo_red_dark" />
+                app:layout_constraintTop_toBottomOf="@id/appPages">
+
+                <com.tbuonomo.viewpagerdotsindicator.SpringDotsIndicator
+                    android:id="@+id/pageIndicator"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:dotsColor="@android:color/white"
+                    app:dotsCornerRadius="8dp"
+                    app:dotsSize="12dp"
+                    app:dotsSpacing="2dp"
+                    app:dotsWidthFactor="2.5"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:progressMode="true"
+                    app:selectedDotColor="@android:color/holo_red_dark" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <RelativeLayout
                 android:id="@+id/bottomAppsOverlay"
@@ -102,9 +125,8 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:realtimeBlurRadius="22dp" />
 
-        </androidx.constraintlayout.motion.widget.MotionLayout>
 
-
+        </com.wlisuha.applauncher.ui.custom.ClickableMotionLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </layout>

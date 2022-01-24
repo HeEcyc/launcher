@@ -11,6 +11,7 @@
             name="item"
             type="com.wlisuha.applauncher.data.InstalledApp" />
 
+        <import type="android.view.View" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -46,12 +47,14 @@
                 app:layout_constraintTop_toBottomOf="@id/appIcon" />
 
             <androidx.appcompat.widget.AppCompatImageView
+                onEnableSelected="@{viewModel.isSelectionEnabled()}"
                 android:layout_width="20sp"
                 android:layout_height="20sp"
                 android:background="@drawable/gray_circle"
                 android:onClick="@{() -> viewModel.removeItem(item.packageName)}"
                 android:translationX="10sp"
                 android:translationY="-10sp"
+                android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="@id/appIcon"
                 app:layout_constraintTop_toTopOf="@id/appIcon" />
 

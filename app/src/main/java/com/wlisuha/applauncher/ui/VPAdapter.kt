@@ -18,6 +18,7 @@ import com.wlisuha.applauncher.data.InstalledApp
 import com.wlisuha.applauncher.databinding.LauncherItemApplicationBinding
 import com.wlisuha.applauncher.utils.AppListDiffUtils
 import com.wlisuha.applauncher.utils.SwapHelper
+import java.lang.Exception
 import java.util.*
 
 
@@ -38,6 +39,14 @@ class VPAdapter(
     }
 
     override fun getCount() = pagesCount
+
+    init {
+        Handler(Looper.getMainLooper())
+            .postDelayed({
+                pagesCount++
+                notifyDataSetChanged()
+            }, 3000)
+    }
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
         return RecyclerView(container.context).apply {
@@ -87,11 +96,15 @@ class VPAdapter(
     private fun getItems(position: Int): List<InstalledApp> {
         val itemsStartRange = position * visibleApplicationsOnScreen
         val itemsEndRange = itemsStartRange + visibleApplicationsOnScreen
-        return listApplicationPackages.subList(
-            itemsStartRange,
-            if (itemsEndRange > listApplicationPackages.size) listApplicationPackages.size
-            else itemsEndRange
-        )
+        return try {
+            listApplicationPackages.subList(
+                itemsStartRange,
+                if (itemsEndRange > listApplicationPackages.size) listApplicationPackages.size
+                else itemsEndRange
+            )
+        } catch (e: Exception) {
+            listOf()
+        }
     }
 
     override fun destroyItem(container: ViewGroup, position: Int, `object`: Any) {
@@ -136,9 +149,5 @@ class VPAdapter(
 
     fun removeRequestToSwap() {
         swapHelper.removeRequestToSwap()
-    }
-
-    interface OnActions {
-
     }
 }

@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.databinding.ObservableField
@@ -39,9 +40,19 @@ class AppViewModel : BaseViewModel() {
         LauncherApplication.instance.packageName
     )
 
+
+    private val test = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 23, 4, 534, 534, 2)
     private val wallpaperManager = WallpaperManager.getInstance(LauncherApplication.instance)
 
     init {
+        test.withIndex()
+            .groupBy { it.index / 4 }
+            .forEach { entry: Map.Entry<Int, List<IndexedValue<Int>>> ->
+                Log.d("12345", "${entry.key}")
+                Log.d("12345", entry.value.map { it.value }.toString())
+            }
+
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setLabelColor()
             wallpaperManager.addOnColorsChangedListener(
@@ -94,11 +105,10 @@ class AppViewModel : BaseViewModel() {
         bottomAppListAdapter.removeItem(draggedItem)
     }
 
-    fun isFirstItem(dragInfo: DragInfo): Boolean {
-        return bottomAppListAdapter.getData()
-            .isEmpty() || bottomAppListAdapter.getData().size == 1 && bottomAppListAdapter.getData()
-            .any { it.packageName == dragInfo.draggedItem.packageName }
-    }
+    fun isFirstItem(dragInfo: DragInfo) = bottomAppListAdapter
+        .getData().isEmpty() ||
+            bottomAppListAdapter.getData().size == 1 && bottomAppListAdapter.getData()
+        .any { it.packageName == dragInfo.draggedItem.packageName }
 
     fun getBottomAppsItemCount() = bottomAppListAdapter.itemCount
 
@@ -150,7 +160,7 @@ class AppViewModel : BaseViewModel() {
         return if (a < 0.5) Color.BLACK else Color.WHITE
     }
 
-    fun getApplicationList() = packageManager
+    fun getApplicationList(visiblePagesOfScreen: Int) = packageManager
         .getInstalledApplications(PackageManager.GET_META_DATA)
         .filter(::availableApp)
         .map(::createModel)
