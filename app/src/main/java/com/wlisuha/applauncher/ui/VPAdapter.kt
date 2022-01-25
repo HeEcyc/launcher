@@ -193,7 +193,8 @@ class VPAdapter(
     }
 
     private fun pageIsEmpty(oldPage: Int) =
-        getCurrentAppListAdapter(oldPage).getData().isEmpty()
+        if (oldPage == -1) false
+        else getCurrentAppListAdapter(oldPage).getData().isEmpty()
 
     private fun removePage(oldPage: Int) {
         listAppPages.removeAt(oldPage)

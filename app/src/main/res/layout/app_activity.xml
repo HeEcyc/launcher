@@ -89,39 +89,47 @@
                     app:progressMode="true" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <RelativeLayout
-                android:id="@+id/bottomAppsOverlay"
-                android:layout_width="0sp"
-                android:paddingVertical="8sp"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/bottomRoot"
+                android:layout_width="match_parent"
                 android:layout_height="0sp"
                 app:layout_constraintBottom_toTopOf="@id/fakeNavBar"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/indicatorOverlay">
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/bottomAppsList"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_centerInParent="true"
-                    android:adapter="@{viewModel.bottomAppListAdapter}"
-                    android:orientation="horizontal"
-                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                    app:spanCount="4" />
-
-                <View
-                    android:id="@+id/pointer"
-                    android:layout_width="0sp"
-                    android:layout_height="match_parent"
-                    android:layout_centerInParent="true"
-                    android:alpha="0.5"
+                <RelativeLayout
+                    android:id="@+id/bottomAppsOverlay"
+                    android:layout_width="match_parent"
+                    android:layout_height="0sp"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintDimensionRatio="1:1"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintHeight_percent="0.75"
+                    app:layout_constraintTop_toTopOf="parent">
 
-            </RelativeLayout>
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/bottomAppsList"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_centerInParent="true"
+                        android:adapter="@{viewModel.bottomAppListAdapter}"
+                        android:orientation="horizontal"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                        app:spanCount="4" />
+
+                    <View
+                        android:id="@+id/pointer"
+                        android:layout_width="0sp"
+                        android:layout_height="match_parent"
+                        android:layout_centerInParent="true"
+                        android:alpha="0.5"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintDimensionRatio="1:1"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                </RelativeLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
 
             <com.github.mmin18.widget.RealtimeBlurView
                 android:id="@+id/viewList"
@@ -131,7 +139,7 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:realtimeBlurRadius="22dp" />
 
-            <View
+            <Space
                 android:id="@+id/fakeNavBar"
                 android:layout_width="match_parent"
                 android:layout_height="0sp"

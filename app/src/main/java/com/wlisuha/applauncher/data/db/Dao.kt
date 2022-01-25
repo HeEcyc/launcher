@@ -13,7 +13,7 @@ interface Dao {
     @Query("SELECT count(*) from AppScreenLocation")
     fun getRowCount(): Int
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun addItem(appScreenLocation: AppScreenLocation)
 
     @Delete

@@ -11,7 +11,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.databinding.ObservableField
@@ -27,10 +26,8 @@ import com.wlisuha.applauncher.data.DragInfo
 import com.wlisuha.applauncher.data.InstalledApp
 import com.wlisuha.applauncher.data.db.DataBase
 import com.wlisuha.applauncher.databinding.BottomItemApplicationBinding
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import java.lang.Exception
+import com.wlisuha.applauncher.utils.APP_COLUMN_COUNT
+import kotlinx.coroutines.*
 
 class AppViewModel : BaseViewModel() {
     val labelColor = ObservableField(Color.BLACK)
@@ -40,6 +37,8 @@ class AppViewModel : BaseViewModel() {
         addAction(Intent.ACTION_PACKAGE_ADDED)
         addDataScheme("package")
     }
+
+    private var saveDBJob: Job? = null
     var movePageJob: Job? = null
 
     private val packageManager get() = LauncherApplication.instance.packageManager
@@ -89,7 +88,7 @@ class AppViewModel : BaseViewModel() {
         binding.root.startDragAndDrop(
             null,
             View.DragShadowBuilder(binding.root),
-            DragInfo(adapter, -1, adapter.getData().indexOf(item), item),
+            DragInfo(adapter, adapter.getData().indexOf(item), -1, item),
             0
         )
     }
@@ -112,27 +111,29 @@ class AppViewModel : BaseViewModel() {
 
     fun insertFirstItemToBottomBar(dragInfo: DragInfo) {
         if (bottomAppListAdapter.getData().size > 0) return
-        bottomAppListAdapter.addItem(dragInfo.draggedItem)
-        dragInfo.disableRestore()
+        addItemToPosition(0, dragInfo.draggedItem)
     }
 
-    fun insertItemToBottomBar(dragInfo: DragInfo, sideIndexes: Array<Int?>) {
-        sideIndexes.filterNotNull()
-            .map { bottomAppListAdapter.getData()[it] }
-            .forEach { if (it.packageName == dragInfo.draggedItem.packageName) return }
+    fun insertItemToBottomBar(dragInfo: DragInfo, position: Int?) {
+        position ?: return
+        if (canAddItem(dragInfo, position)) {
+            addItemToPosition(position, dragInfo.draggedItem)
+            dragInfo.removeItem()
+        }
+    }
 
-        if (bottomAppListAdapter.getData().size == 4 &&
-            !bottomAppListAdapter.getData()
-                .any { it.packageName == dragInfo.draggedItem.packageName }
-        ) return
+    private fun canAddItem(dragInfo: DragInfo, position: Int): Boolean {
+        bottomAppListAdapter.getData()
+            .takeIf { it.size == APP_COLUMN_COUNT }
+            ?.let { it ->
+                if (!it.any { it.packageName == dragInfo.draggedItem.packageName }) return false
+            }
 
-        if (sideIndexes[0] == null && sideIndexes[1] != null) {
-            addItemToPosition(getBottomAppsItemCount(), dragInfo.draggedItem)
-        } else if (sideIndexes[1] == null && sideIndexes[0] != null)
-            addItemToPosition(0, dragInfo.draggedItem)
-        else addItemToPosition(sideIndexes[0]!!, dragInfo.draggedItem)
+        bottomAppListAdapter.getData()
+            .getOrNull(position)
+            ?.let { if (it.packageName == dragInfo.draggedItem.packageName) return false }
 
-        dragInfo.disableRestore()
+        return true
     }
 
     private fun addItemToPosition(position: Int, dragInfo: InstalledApp) {
@@ -144,6 +145,20 @@ class AppViewModel : BaseViewModel() {
             }
         }
         bottomAppListAdapter.removeItem(removeItemPosition)
+
+        saveDBJob?.cancel()
+
+        saveDBJob = viewModelScope.launch(Dispatchers.IO) {
+            delay(300)
+            saveBottomAppsList()
+        }
+    }
+
+    private fun saveBottomAppsList() {
+        bottomAppListAdapter.getData().forEachIndexed { index, installedApp ->
+            AppScreenLocation(installedApp.packageName, -1, index)
+                .let(DataBase.dao::addItem)
+        }
     }
 
     @SuppressLint("NewApi")
@@ -154,7 +169,9 @@ class AppViewModel : BaseViewModel() {
 
     private fun getContrastColor(@ColorInt color: Int): Int {
         val a =
-            1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255
+            1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(
+                color
+            )) / 255
         return if (a < 0.5) Color.BLACK else Color.WHITE
     }
 
@@ -176,8 +193,7 @@ class AppViewModel : BaseViewModel() {
             ?.let(LauncherApplication.instance::startActivity)
     }
 
-
-    fun readAllPackage(itemCountOnPage: Int): MutableList<List<InstalledApp>> {
+    suspend fun readAllPackage(itemCountOnPage: Int): MutableList<List<InstalledApp>> {
         return if (DataBase.dao.getRowCount() == 0) {
             val appList = getInstalledAppList(itemCountOnPage)
             saveApplicationToDB(appList)
@@ -196,11 +212,22 @@ class AppViewModel : BaseViewModel() {
         }
     }
 
-    private fun readAppFromDB(): List<List<InstalledApp>> {
-        return DataBase.dao
+    private suspend fun readAppFromDB(): List<List<InstalledApp>> {
+        val appList = DataBase.dao
             .getAppsPositions()
             .filter(::appExist)
-            .sortedBy { it.page }
+            .toMutableList()
+
+        val bottomApps = appList.filter { it.page == -1 }
+        appList.removeAll(bottomApps)
+
+        bottomApps.sortedBy { it.position }
+            .map { createModel(it.packageName) }
+            .let {
+                withContext(Dispatchers.Main) { bottomAppListAdapter.reloadData(it) }
+            }
+
+        return appList.sortedBy { it.page }
             .groupBy { it.page }
             .map {
                 it.value.sortedBy { appScreenLocation -> appScreenLocation.position }
@@ -239,9 +266,6 @@ class AppViewModel : BaseViewModel() {
     }
 
     fun saveNewPositionItem(item: InstalledApp, newPosition: Int, page: Int) {
-
-        Log.d("12345", "save to dao $page")
-
         viewModelScope.launch(Dispatchers.IO) {
             AppScreenLocation(item.packageName, page, newPosition)
                 .let(DataBase.dao::updateItem)

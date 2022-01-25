@@ -8,12 +8,12 @@ import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
 import android.util.Log
-import android.view.*
+import android.view.DragEvent
+import android.view.View
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.wlisuha.applauncher.R
 import com.wlisuha.applauncher.base.BaseActivity
-import com.wlisuha.applauncher.base.BaseAdapter
 import com.wlisuha.applauncher.data.DragInfo
 import com.wlisuha.applauncher.databinding.AppActivityBinding
 import com.wlisuha.applauncher.utils.APP_COLUMN_COUNT
@@ -49,8 +49,12 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     override fun setupUI() {
-        binding.fakeNavBar.layoutParams.height = getNavBarSize()
+        binding.fakeNavBar.layoutParams.height = with(getNavBarSize()) {
+            if (!hasNavigationBar()) this
+            else this / 2
+        }
         calculateAppItemViewHeight()
+        Log.d("12345", "${!hasNavigationBar()}}")
 //        if (!NotificationManagerCompat.getEnabledListenerPackages(this).contains(packageName))
 //            openAirplaneSettings()
         binding.bottomAppsList.itemAnimator = null
@@ -89,7 +93,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     override fun onBackPressed() {
-        askRole()
+        //  askRole()
     }
 
     override fun onDrag(v: View, event: DragEvent): Boolean {
@@ -103,12 +107,9 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     private fun handleLeftTrigger(event: DragEvent): Boolean {
-        Log.d("12345", event.toString())
-
         when (event.action) {
             DragEvent.ACTION_DRAG_ENTERED -> if (viewModel.movePageJob?.isActive == true) return true
             else viewModel.movePageJob = lifecycleScope.launch(Dispatchers.IO) {
-                Log.d("12345", "enter left")
                 while (binding.appPages.currentItem > 0) {
                     delay(MOVING_PAGE_DELAY)
                     withContext(Dispatchers.Main) { binding.appPages.currentItem-- }
@@ -124,7 +125,6 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         when (event.action) {
             DragEvent.ACTION_DRAG_ENTERED -> if (viewModel.movePageJob?.isActive == true) return true
             else viewModel.movePageJob = lifecycleScope.launch(Dispatchers.IO) {
-                Log.d("12345", "enter right")
                 while (binding.appPages.currentItem < viewPagerAdapter.count - 1) {
                     delay(MOVING_PAGE_DELAY)
                     withContext(Dispatchers.Main) { binding.appPages.currentItem++ }
@@ -148,9 +148,14 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             DragEvent.ACTION_DRAG_LOCATION -> {
                 if (viewModel.isFirstItem(dragInfo)) viewModel
                     .insertFirstItemToBottomBar(dragInfo)
-                else viewModel.insertItemToBottomBar(dragInfo, getItemPosition(event.x))
+                else viewModel.insertItemToBottomBar(dragInfo, getItemPosition(event))
             }
-            DragEvent.ACTION_DRAG_ENTERED -> dragInfo.removeItem()
+            DragEvent.ACTION_DRAG_ENTERED ->
+                if (dragInfo.currentPage != -1) {
+                    Log.d("12345", "remove")
+                    //TODO
+                    //dragInfo.removeItem()
+                }
             DragEvent.ACTION_DRAG_EXITED -> viewModel
                 .deleteItemFromAppsBarList(dragInfo)
         }
@@ -185,41 +190,31 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
 
-    private fun getItemPosition(x: Float): Array<Int?> {
+    private fun getItemPosition(dragEvent: DragEvent): Int? {
+        val dragInfo = dragEvent.localState as DragInfo
 
-        binding.pointer.x = x - binding.pointer.width / 2
-        binding.pointer.layoutParams.width = binding.pointer.height
+        val currentView = binding.bottomAppsList
+            .findChildViewUnder(
+                dragEvent.x - binding.bottomAppsList.x,
+                dragEvent.y + binding.bottomAppsOverlay.y
+            ) ?: return if (dragEvent.x <= binding.bottomAppsOverlay.width / 2) 0
+        else viewModel.getBottomAppsItemCount()
 
-        binding.pointer.requestLayout()
+        val currentHolder = binding.bottomAppsList
+            .findContainingViewHolder(currentView)
+            ?.takeIf { viewModel.bottomAppListAdapter.getData()[it.layoutPosition].packageName != dragInfo.draggedItem.packageName }
+            ?: return null
 
-        val pointerRect = Rect()
-
-        binding.pointer.getGlobalVisibleRect(pointerRect)
-
-        val sideItemIndexes = arrayOf<Int?>(null, null)
-
-        (0 until viewModel.getBottomAppsItemCount())
-            .mapNotNull { binding.bottomAppsList.findViewHolderForLayoutPosition(it) }
-            .map { it as BaseAdapter.BaseItem<*, *> }
-            .forEach {
-                val holderRect = Rect()
-                it.itemView.getGlobalVisibleRect(holderRect)
-                if (holderRect.intersect(pointerRect))
-                    if (pointerRect.centerX() >= holderRect.centerX())
-                        sideItemIndexes[1] = it.adapterPosition
-                    else sideItemIndexes[0] = it.adapterPosition
+        return Rect()
+            .apply { currentView.getGlobalVisibleRect(this) }
+            .let { dragEvent.x <= it.centerX() }
+            .let { isLeftSide ->
+                if (isLeftSide) return currentHolder.layoutPosition
+                else currentHolder.layoutPosition + 1
             }
-
-        if (sideItemIndexes.filterNotNull().isEmpty()) {
-            val mainViewRect = Rect()
-            binding.bottomAppsOverlay.getGlobalVisibleRect(mainViewRect)
-            if (pointerRect.centerX() <= mainViewRect.centerX()) sideItemIndexes[0] = 0
-            else sideItemIndexes[1] = 0
-        }
-        return sideItemIndexes
     }
 
-    private fun createVPAdapter(): VPAdapter {
+    private suspend fun createVPAdapter(): VPAdapter {
         val rowCount =
             binding.appPages.height / (binding.appPages.width / APP_COLUMN_COUNT * 1.1f)
         val visibleItemCountOnPageScreen = rowCount.toInt() * APP_COLUMN_COUNT
@@ -235,4 +230,9 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             if (this != 0) resources.getDimensionPixelSize(this)
             else 0
         }
+
+    private fun hasNavigationBar(): Boolean {
+        val id: Int = resources.getIdentifier("config_showNavigationBar", "bool", "android")
+        return id > 0 && resources.getBoolean(id)
+    }
 }
