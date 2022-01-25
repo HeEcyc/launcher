@@ -3,12 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <ConstraintSet android:id="@+id/start">
-        <Constraint
-            android:id="@+id/appPages"
-            android:layout_width="match_parent"
-            android:layout_height="0sp"
-            android:background="@android:color/transparent"
-            app:layout_constraintHeight_percent="0.8" />
 
         <Constraint
             android:id="@+id/beacon"
@@ -17,19 +11,10 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-        </Constraint>
+            app:layout_constraintTop_toTopOf="parent" />
     </ConstraintSet>
 
     <ConstraintSet android:id="@+id/end">
-
-        <Constraint
-            android:id="@+id/appPages"
-            android:layout_width="match_parent"
-            android:layout_height="0sp"
-            android:background="@android:color/transparent"
-            app:layout_constraintHeight_percent="0.8" />
 
         <Constraint
             android:id="@+id/beacon"

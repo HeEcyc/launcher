@@ -5,8 +5,8 @@ import com.wlisuha.applauncher.base.BaseAdapter
 class DragInfo(
     var adapter: BaseAdapter<InstalledApp, *>,
     var draggedItemPos: Int,
-    val draggedItem: InstalledApp,
-    val fromBottomPanel: Boolean = false
+    var currentPage: Int = -1,
+    val draggedItem: InstalledApp
 ) {
 
     private var needRestore = false
@@ -31,4 +31,8 @@ class DragInfo(
 
     fun getCurrentItemPosition() = adapter.getData()
         .indexOf(draggedItem)
+
+    fun updateItemPosition() {
+        draggedItemPos = adapter.getData().indexOf(draggedItem)
+    }
 }

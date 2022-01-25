@@ -23,15 +23,23 @@ import java.util.*
 
 
 class VPAdapter(
-    private val listApplicationPackages: List<List<InstalledApp>>,
+    private val listAppPages: MutableList<List<InstalledApp>>,
     private val visibleApplicationsOnScreen: Int,
     private val viewModel: AppViewModel,
 ) : PagerAdapter() {
 
     private val swapHelper = SwapHelper(Handler(Looper.getMainLooper()))
     private var recyclers = mutableMapOf<Int, RecyclerView>()
+    private var canCreatePage = false
 
-    private var pagesCount = listApplicationPackages.size
+//    init {
+//        Handler(Looper.getMainLooper()).postDelayed({
+//            pagesCount++
+//            notifyDataSetChanged()
+//        }, 2000)
+//    }
+
+    private var pagesCount = listAppPages.size
 
     override fun getCount() = pagesCount
 
@@ -51,7 +59,7 @@ class VPAdapter(
 
     private fun createAdapter(position: Int) =
         createAdapter<InstalledApp, LauncherItemApplicationBinding>(R.layout.launcher_item_application) {
-            initItems = listApplicationPackages.getOrNull(position) ?: listOf()
+            initItems = listAppPages.getOrNull(position) ?: listOf()
             onItemClick = { viewModel.launchApp(it.packageName) }
             onBind = { item, binding, adapter ->
 
@@ -60,7 +68,7 @@ class VPAdapter(
 
                 binding.root.setOnLongClickListener {
                     viewModel.isSelectionEnabled.set(true)
-                    startDragAndDrop(item, binding, adapter)
+                    startDragAndDrop(item, binding, adapter, position)
                     false
                 }
             }
@@ -70,12 +78,14 @@ class VPAdapter(
     private fun startDragAndDrop(
         item: InstalledApp,
         binding: LauncherItemApplicationBinding,
-        adapter: BaseAdapter<InstalledApp, *>
+        adapter: BaseAdapter<InstalledApp, *>,
+        position: Int
     ) {
+        canCreatePage = adapter.getData().size > 1
         binding.root.startDragAndDrop(
             null,
             View.DragShadowBuilder(binding.root),
-            DragInfo(adapter, adapter.getData().indexOf(item), item),
+            DragInfo(adapter, adapter.getData().indexOf(item), position, item),
             0
         )
     }
@@ -94,21 +104,37 @@ class VPAdapter(
         else swapItemBetweenPages(dragInfo, newPosition, currentPage)
     }
 
-    private fun swapItemBetweenPages(dragInfo: DragInfo, newPosition: Int, currentPage: Int) {
+    private fun swapItemBetweenPages(dragInfo: DragInfo, newItemPosition: Int, currentPage: Int) {
+        val currentAdapter = getCurrentAppListAdapter(currentPage)
+        val swappedItem = currentAdapter.getData()[newItemPosition]
 
+        swapHelper.requestToSwapBetweenPages(
+            newItemPosition,
+            dragInfo.draggedItemPos,
+            dragInfo.currentPage,
+            currentPage
+        ) {
+
+            currentAdapter.addItem(newItemPosition, dragInfo.draggedItem)
+            dragInfo.adapter.addItem(dragInfo.draggedItemPos, swappedItem)
+
+            dragInfo.removeItem()
+            currentAdapter.removeItem(swappedItem)
+
+            dragInfo.adapter = currentAdapter
+            dragInfo.currentPage = currentPage
+
+            dragInfo.updateItemPosition()
+        }
     }
 
-    private fun swapItemInSamePage(
-        dragInfo: DragInfo,
-        newPosition: Int,
-        currentPage: Int
-    ) {
+    private fun swapItemInSamePage(dragInfo: DragInfo, newPosition: Int, currentPage: Int) {
         val oldItemPosition = dragInfo.getCurrentItemPosition()
-        swapHelper.requestToSwap(oldItemPosition, newPosition) {
+        swapHelper.requestToSwapInSomePage(oldItemPosition, newPosition) {
 
             moveItem(dragInfo, newPosition)
 
-            val swappedItem = getCurrentAppListAdapter(currentPage).getData()[oldItemPosition]
+            val swappedItem = getCurrentAppListAdapter(currentPage).getData()[newPosition]
 
             viewModel.saveNewPositionItem(dragInfo.draggedItem, newPosition, currentPage)
             viewModel.saveNewPositionItem(swappedItem, oldItemPosition, currentPage)
@@ -118,7 +144,7 @@ class VPAdapter(
     private fun moveItem(dragInfo: DragInfo, newPosition: Int) {
         val currentItemPosition = dragInfo.getCurrentItemPosition()
         if (currentItemPosition == -1) {
-            swapHelper.removeRequestToSwap()
+            swapHelper.clearRequest()
             return
         }
 
@@ -143,25 +169,47 @@ class VPAdapter(
         recyclers[page]?.adapter as BaseAdapter<InstalledApp, *>
 
     fun removeRequestToSwap() {
-        swapHelper.removeRequestToSwap()
+        swapHelper.clearRequest()
     }
 
     fun insertToLastPosition(dragInfo: DragInfo, currentPage: Int) {
+        val oldPage = dragInfo.currentPage
         with(getCurrentAppListAdapter(currentPage)) {
             if (itemCount == visibleApplicationsOnScreen) return
             else if (getData().any { it.packageName == dragInfo.draggedItem.packageName }) return
             dragInfo.removeItem()
             addItem(dragInfo.draggedItem)
             dragInfo.adapter = this
-            dragInfo.draggedItemPos = itemCount - 1
+            dragInfo.currentPage = currentPage
+            dragInfo.updateItemPosition()
+
             viewModel.saveNewPositionItem(
                 dragInfo.draggedItem,
                 dragInfo.draggedItemPos,
                 currentPage
             )
+            if (pageIsEmpty(oldPage)) removePage(oldPage)
         }
-        if (getCurrentAppListAdapter(currentPage).itemCount == visibleApplicationsOnScreen)
-            return
+    }
 
+    private fun pageIsEmpty(oldPage: Int) =
+        getCurrentAppListAdapter(oldPage).getData().isEmpty()
+
+    private fun removePage(oldPage: Int) {
+        listAppPages.removeAt(oldPage)
+        pagesCount--
+        notifyDataSetChanged()
+    }
+
+    fun createPage(currentPage: Int): Boolean {
+
+        val currentAdapter = getCurrentAppListAdapter(currentPage)
+
+        if (getCurrentAppListAdapter(currentPage).getData().size < 1 && canCreatePage) return false
+        pagesCount++
+        listAppPages.add(listOf())
+        notifyDataSetChanged()
+        canCreatePage = false
+        return true
     }
 }

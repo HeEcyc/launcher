@@ -2,13 +2,16 @@ package com.wlisuha.applauncher.base
 
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import com.wlisuha.applauncher.BR
+
 
 abstract class BaseActivity<TViewModel : BaseViewModel, TBinding : ViewDataBinding>(private val layoutId: Int) :
     AppCompatActivity() {
@@ -22,11 +25,22 @@ abstract class BaseActivity<TViewModel : BaseViewModel, TBinding : ViewDataBindi
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setStatusBarColor()
         StrictMode.setVmPolicy(StrictMode.VmPolicy.Builder().build())
         binding = DataBindingUtil.setContentView(this, layoutId)
         binding.setVariable(BR.viewModel, viewModel)
         binding.lifecycleOwner = this
         setupUI()
+    }
+
+    private fun setStatusBarColor() {
+        with(window) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) setDecorFitsSystemWindows(false)
+            else setFlags(
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+            )
+        }
     }
 
     abstract fun setupUI()

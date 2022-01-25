@@ -8,8 +8,7 @@ import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
 import android.util.Log
-import android.view.DragEvent
-import android.view.View
+import android.view.*
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.wlisuha.applauncher.R
@@ -50,6 +49,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     override fun setupUI() {
+        binding.fakeNavBar.layoutParams.height = getNavBarSize()
         calculateAppItemViewHeight()
 //        if (!NotificationManagerCompat.getEnabledListenerPackages(this).contains(packageName))
 //            openAirplaneSettings()
@@ -103,29 +103,41 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     private fun handleLeftTrigger(event: DragEvent): Boolean {
+        Log.d("12345", event.toString())
+
         when (event.action) {
             DragEvent.ACTION_DRAG_ENTERED -> if (viewModel.movePageJob?.isActive == true) return true
             else viewModel.movePageJob = lifecycleScope.launch(Dispatchers.IO) {
+                Log.d("12345", "enter left")
                 while (binding.appPages.currentItem > 0) {
                     delay(MOVING_PAGE_DELAY)
                     withContext(Dispatchers.Main) { binding.appPages.currentItem-- }
                 }
             }
-            DragEvent.ACTION_DRAG_EXITED -> viewModel.movePageJob?.cancel()
+            DragEvent.ACTION_DRAG_EXITED, DragEvent.ACTION_DRAG_ENDED -> viewModel.movePageJob?.cancel()
         }
         return true
     }
 
     private fun handleRightTrigger(event: DragEvent): Boolean {
+        val dragInfo = event.localState as DragInfo
         when (event.action) {
             DragEvent.ACTION_DRAG_ENTERED -> if (viewModel.movePageJob?.isActive == true) return true
             else viewModel.movePageJob = lifecycleScope.launch(Dispatchers.IO) {
-                while (binding.appPages.currentItem < viewPagerAdapter.count) {
+                Log.d("12345", "enter right")
+                while (binding.appPages.currentItem < viewPagerAdapter.count - 1) {
                     delay(MOVING_PAGE_DELAY)
                     withContext(Dispatchers.Main) { binding.appPages.currentItem++ }
                 }
+                delay(MOVING_PAGE_DELAY)
+                withContext(Dispatchers.Main) {
+                    if (viewPagerAdapter.createPage(binding.appPages.currentItem)) binding.appPages.currentItem++
+                    viewPagerAdapter.insertToLastPosition(dragInfo, binding.appPages.currentItem)
+                }
             }
-            DragEvent.ACTION_DRAG_EXITED -> viewModel.movePageJob?.cancel()
+            DragEvent.ACTION_DRAG_EXITED, DragEvent.ACTION_DRAG_ENDED -> {
+                viewModel.movePageJob?.cancel()
+            }
         }
         return true
     }
@@ -217,4 +229,10 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             viewModel,
         )
     }
+
+    private fun getNavBarSize() =
+        with(resources.getIdentifier("navigation_bar_height", "dimen", "android")) {
+            if (this != 0) resources.getDimensionPixelSize(this)
+            else 0
+        }
 }

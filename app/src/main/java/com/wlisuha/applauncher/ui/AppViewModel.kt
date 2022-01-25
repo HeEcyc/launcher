@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.databinding.ObservableField
@@ -88,7 +89,7 @@ class AppViewModel : BaseViewModel() {
         binding.root.startDragAndDrop(
             null,
             View.DragShadowBuilder(binding.root),
-            DragInfo(adapter, adapter.getData().indexOf(item), item, true),
+            DragInfo(adapter, -1, adapter.getData().indexOf(item), item),
             0
         )
     }
@@ -176,12 +177,12 @@ class AppViewModel : BaseViewModel() {
     }
 
 
-    fun readAllPackage(itemCountOnPage: Int): List<List<InstalledApp>> {
+    fun readAllPackage(itemCountOnPage: Int): MutableList<List<InstalledApp>> {
         return if (DataBase.dao.getRowCount() == 0) {
             val appList = getInstalledAppList(itemCountOnPage)
             saveApplicationToDB(appList)
-            appList
-        } else readAppFromDB()
+            appList.toMutableList()
+        } else readAppFromDB().toMutableList()
     }
 
     private fun saveApplicationToDB(appList: List<List<InstalledApp>>) {
@@ -198,10 +199,11 @@ class AppViewModel : BaseViewModel() {
     private fun readAppFromDB(): List<List<InstalledApp>> {
         return DataBase.dao
             .getAppsPositions()
+            .filter(::appExist)
+            .sortedBy { it.page }
             .groupBy { it.page }
             .map {
                 it.value.sortedBy { appScreenLocation -> appScreenLocation.position }
-                    .filter(::appExist)
                     .map { appScreenLocation -> createModel(appScreenLocation.packageName) }
             }
     }
@@ -237,6 +239,9 @@ class AppViewModel : BaseViewModel() {
     }
 
     fun saveNewPositionItem(item: InstalledApp, newPosition: Int, page: Int) {
+
+        Log.d("12345", "save to dao $page")
+
         viewModelScope.launch(Dispatchers.IO) {
             AppScreenLocation(item.packageName, page, newPosition)
                 .let(DataBase.dao::updateItem)
