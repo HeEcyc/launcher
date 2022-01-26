@@ -32,30 +32,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="0sp"
                 android:layout_marginTop="30sp"
-                android:background="@android:color/transparent"
                 android:fitsSystemWindows="true"
                 android:overScrollMode="never"
                 app:layout_constraintHeight_percent="0.78"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:ignore="SpeakableTextPresentCheck" />
-
-            <View
-                android:id="@+id/leftTriggeredView"
-                android:layout_width="0sp"
-                android:layout_height="0sp"
-                app:layout_constraintBottom_toBottomOf="@id/appPages"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@id/appPages"
-                app:layout_constraintWidth_percent="0.07" />
-
-            <View
-                android:id="@+id/rightTriggeredView"
-                android:layout_width="0sp"
-                android:layout_height="0sp"
-                app:layout_constraintBottom_toBottomOf="@id/appPages"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/appPages"
-                app:layout_constraintWidth_percent="0.07" />
 
             <View
                 android:id="@+id/beacon"
@@ -113,19 +94,6 @@
                         android:orientation="horizontal"
                         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                         app:spanCount="4" />
-
-                    <View
-                        android:id="@+id/pointer"
-                        android:layout_width="0sp"
-                        android:layout_height="match_parent"
-                        android:layout_centerInParent="true"
-                        android:alpha="0.5"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintDimensionRatio="1:1"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
                 </RelativeLayout>
 
             </androidx.constraintlayout.widget.ConstraintLayout>

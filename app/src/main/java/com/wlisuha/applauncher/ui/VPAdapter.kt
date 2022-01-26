@@ -6,6 +6,7 @@ import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.postDelayed
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -30,18 +31,10 @@ class VPAdapter(
 
     private val swapHelper = SwapHelper(Handler(Looper.getMainLooper()))
     private var recyclers = mutableMapOf<Int, RecyclerView>()
+    private var recyclersAdapters = mutableMapOf<Int, BaseAdapter<InstalledApp, *>>()
     private var canCreatePage = false
 
-//    init {
-//        Handler(Looper.getMainLooper()).postDelayed({
-//            pagesCount++
-//            notifyDataSetChanged()
-//        }, 2000)
-//    }
-
-    private var pagesCount = listAppPages.size
-
-    override fun getCount() = pagesCount
+    override fun getCount() = listAppPages.size
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
         return RecyclerView(container.context).apply {
@@ -49,7 +42,7 @@ class VPAdapter(
             adapter = createAdapter(position)
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
+                ViewGroup.LayoutParams.MATCH_PARENT
             )
             layoutManager = GridLayoutManager(context, 4)
             recyclers[position] = this
@@ -72,7 +65,7 @@ class VPAdapter(
                     false
                 }
             }
-        }
+        }.apply { recyclersAdapters[position] = this }
 
     @SuppressLint("NewApi")
     private fun startDragAndDrop(
@@ -165,8 +158,7 @@ class VPAdapter(
 
     fun getCurrentAppListView(page: Int) = recyclers[page]
 
-    private fun getCurrentAppListAdapter(page: Int) =
-        recyclers[page]?.adapter as BaseAdapter<InstalledApp, *>
+    private fun getCurrentAppListAdapter(page: Int) = recyclersAdapters[page]!!
 
     fun removeRequestToSwap() {
         swapHelper.clearRequest()
@@ -198,19 +190,53 @@ class VPAdapter(
 
     private fun removePage(oldPage: Int) {
         listAppPages.removeAt(oldPage)
-        pagesCount--
+        recyclersAdapters.remove(oldPage)
+        recyclers.remove(oldPage)
         notifyDataSetChanged()
     }
 
-    fun createPage(currentPage: Int): Boolean {
-
-        val currentAdapter = getCurrentAppListAdapter(currentPage)
-
-        if (getCurrentAppListAdapter(currentPage).getData().size < 1 && canCreatePage) return false
-        pagesCount++
+    fun createPage(): Boolean {
+        if (!canCreatePage) return false
         listAppPages.add(listOf())
         notifyDataSetChanged()
         canCreatePage = false
         return true
+    }
+
+    fun onNewApp(installedApp: InstalledApp) {
+        val lastAdapter = recyclersAdapters.values.last()
+        if (lastAdapter.getData().size == visibleApplicationsOnScreen) {
+            canCreatePage = true
+            createPage()
+            onNewApp(installedApp)
+        } else {
+            lastAdapter.addItem(installedApp)
+            viewModel.addItem(
+                installedApp,
+                lastAdapter.itemCount - 1,
+                recyclersAdapters.values.size - 1
+            )
+        }
+    }
+
+    fun onRemovedApp(packageName: String, onSwap: (Int) -> Unit) {
+        var adapterWithCurrentPackageKey = -1
+        recyclersAdapters.forEach { it ->
+            if (it.value.getData().any { it.packageName == packageName }) {
+                adapterWithCurrentPackageKey = it.key
+                return@forEach
+            }
+        }
+        val currentAdapter = recyclersAdapters[adapterWithCurrentPackageKey] ?: return
+
+        currentAdapter.remove { it.packageName == packageName }
+        viewModel.deletePackage(packageName)
+        if (currentAdapter.getData().isEmpty()) {
+            if (adapterWithCurrentPackageKey == 0) onSwap(1)
+            else onSwap(-1)
+            Handler(Looper.getMainLooper()).postDelayed(200) {
+                removePage(adapterWithCurrentPackageKey)
+            }
+        }
     }
 }

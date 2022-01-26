@@ -84,20 +84,9 @@ abstract class BaseAdapter<T, V : ViewDataBinding> private constructor(initItems
         notifyItemInserted(items.size)
     }
 
-    fun moveItem(oldItem: T, newPosition: Int) {
-
-        val oldItemPosition = items.indexOf(oldItem)
-        if (oldItemPosition == -1) return
-
-        Log.d("12345", "enter $oldItemPosition : $newPosition")
-
-        Collections.swap(items, newPosition, oldItemPosition)
-
-        notifyItemMoved(newPosition, oldItemPosition)
-
-        updateItem(newPosition)
-     //   updateItem(oldItemPosition)
-
+    fun remove(onRemove: (T) -> Boolean) {
+        getData().firstOrNull(onRemove)
+            ?.let(::removeItem)
     }
 
     abstract class BaseItem<T, V : ViewDataBinding>(val binding: V) :

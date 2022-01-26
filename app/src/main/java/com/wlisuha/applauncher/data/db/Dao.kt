@@ -19,6 +19,9 @@ interface Dao {
     @Delete
     fun delete(appScreenLocation: AppScreenLocation)
 
+    @Query("DELETE FROM AppScreenLocation WHERE packageName = :packageName")
+    fun deletePackage(packageName: String)
+
     @Update
     fun updateItem(appScreenLocation: AppScreenLocation)
 }

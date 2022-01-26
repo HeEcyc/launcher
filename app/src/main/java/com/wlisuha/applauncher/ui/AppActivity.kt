@@ -38,23 +38,39 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         }
     }
 
+    private val moveLeftRect by lazy {
+        Rect(0, 0, getRectWidth(), binding.appPages.height)
+    }
+
+    private val moveRightRect by lazy {
+        Rect(
+            binding.appPages.width - getRectWidth(),
+            0,
+            binding.appPages.width,
+            binding.appPages.height
+        )
+    }
+
+    private fun getRectWidth() = (binding.appPages.width * 0.08).toInt()
+
     private fun handleRemovedApplication(data: Uri) {
-        Log.d("12345", data.toString())
-        Log.d("12345", "removed")
+        viewPagerAdapter.onRemovedApp(data.encodedSchemeSpecificPart) { shiftPage ->
+            binding.appPages.currentItem += shiftPage
+        }
     }
 
     private fun handleAddedApplication(data: Uri) {
-        Log.d("12345", data.toString())
-        Log.d("12345", "added")
+        viewModel.createModel(data.encodedSchemeSpecificPart)
+            .let(viewPagerAdapter::onNewApp)
     }
 
     override fun setupUI() {
         binding.fakeNavBar.layoutParams.height = with(getNavBarSize()) {
+            Log.d("12345", this.toString())
             if (!hasNavigationBar()) this
             else this / 2
         }
         calculateAppItemViewHeight()
-        Log.d("12345", "${!hasNavigationBar()}}")
 //        if (!NotificationManagerCompat.getEnabledListenerPackages(this).contains(packageName))
 //            openAirplaneSettings()
         binding.bottomAppsList.itemAnimator = null
@@ -62,8 +78,6 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         binding.bottomAppsOverlay.setOnDragListener(this)
         binding.appPages.setOnDragListener(this)
 
-        binding.leftTriggeredView.setOnDragListener(this)
-        binding.rightTriggeredView.setOnDragListener(this)
 
         binding.motionView.setOnLongClickListener {
             viewModel.isSelectionEnabled.set(!(viewModel.isSelectionEnabled.get() ?: false))
@@ -98,81 +112,61 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
     override fun onDrag(v: View, event: DragEvent): Boolean {
         return when (v.id) {
-            R.id.appPages -> handleEventMainAppList(v, event)
-            R.id.bottomAppsOverlay -> handleBottomAppList(v, event)
-            R.id.leftTriggeredView -> handleLeftTrigger(event)
-            R.id.rightTriggeredView -> handleRightTrigger(event)
+            R.id.appPages -> handleEventMainAppList(event)
+            R.id.bottomAppsOverlay -> handleBottomAppList(event)
             else -> false
         }
     }
 
-    private fun handleLeftTrigger(event: DragEvent): Boolean {
-        when (event.action) {
-            DragEvent.ACTION_DRAG_ENTERED -> if (viewModel.movePageJob?.isActive == true) return true
-            else viewModel.movePageJob = lifecycleScope.launch(Dispatchers.IO) {
-                while (binding.appPages.currentItem > 0) {
-                    delay(MOVING_PAGE_DELAY)
-                    withContext(Dispatchers.Main) { binding.appPages.currentItem-- }
-                }
-            }
-            DragEvent.ACTION_DRAG_EXITED, DragEvent.ACTION_DRAG_ENDED -> viewModel.movePageJob?.cancel()
-        }
-        return true
-    }
-
-    private fun handleRightTrigger(event: DragEvent): Boolean {
-        val dragInfo = event.localState as DragInfo
-        when (event.action) {
-            DragEvent.ACTION_DRAG_ENTERED -> if (viewModel.movePageJob?.isActive == true) return true
-            else viewModel.movePageJob = lifecycleScope.launch(Dispatchers.IO) {
-                while (binding.appPages.currentItem < viewPagerAdapter.count - 1) {
-                    delay(MOVING_PAGE_DELAY)
-                    withContext(Dispatchers.Main) { binding.appPages.currentItem++ }
-                }
-                delay(MOVING_PAGE_DELAY)
-                withContext(Dispatchers.Main) {
-                    if (viewPagerAdapter.createPage(binding.appPages.currentItem)) binding.appPages.currentItem++
-                    viewPagerAdapter.insertToLastPosition(dragInfo, binding.appPages.currentItem)
-                }
-            }
-            DragEvent.ACTION_DRAG_EXITED, DragEvent.ACTION_DRAG_ENDED -> {
-                viewModel.movePageJob?.cancel()
-            }
-        }
-        return true
-    }
-
-    private fun handleBottomAppList(v: View, event: DragEvent): Boolean {
+    private fun handleBottomAppList(event: DragEvent): Boolean {
         val dragInfo = event.localState as? DragInfo ?: return false
         when (event.action) {
             DragEvent.ACTION_DRAG_LOCATION -> {
-                if (viewModel.isFirstItem(dragInfo)) viewModel
-                    .insertFirstItemToBottomBar(dragInfo)
-                else viewModel.insertItemToBottomBar(dragInfo, getItemPosition(event))
+                viewModel.insertItemToBottomBar(dragInfo, getItemPosition(event))
             }
-            DragEvent.ACTION_DRAG_ENTERED ->
+            DragEvent.ACTION_DRAG_ENTERED -> {
+                viewPagerAdapter.removeRequestToSwap()
                 if (dragInfo.currentPage != -1) {
                     Log.d("12345", "remove")
                     //TODO
                     //dragInfo.removeItem()
                 }
+            }
             DragEvent.ACTION_DRAG_EXITED -> viewModel
                 .deleteItemFromAppsBarList(dragInfo)
         }
         return true
     }
 
-    private fun handleEventMainAppList(v: View, event: DragEvent): Boolean {
+    private fun handleEventMainAppList(event: DragEvent): Boolean {
         val dragInfo = event.localState as? DragInfo ?: return false
         when (event.action) {
             DragEvent.ACTION_DRAG_LOCATION -> handleItemMovement(event.x, event.y, dragInfo)
-            DragEvent.ACTION_DRAG_ENTERED -> (event.localState as? DragInfo)?.restoreItem()
-            DragEvent.ACTION_DRAG_EXITED -> viewPagerAdapter.removeRequestToSwap()
+            DragEvent.ACTION_DRAG_ENTERED -> {
+                if (dragInfo.currentPage == -1) {
+                    //viewPagerAdapter.insertItem(dragInfo)
+                } else (event.localState as? DragInfo)?.restoreItem()
+            }
+            DragEvent.ACTION_DROP -> stopMovePagesJob()
+            DragEvent.ACTION_DRAG_EXITED -> {
+                Log.d("12345", "exit")
+            }
         }
         return true
     }
 
     private fun handleItemMovement(x: Float, y: Float, dragInfo: DragInfo) {
+        when {
+            moveLeftRect.contains(x.toInt(), y.toInt()) -> {
+                if (viewModel.movePageJob == null) movePagesLeft()
+                return
+            }
+            moveRightRect.contains(x.toInt(), y.toInt()) -> {
+                if (viewModel.movePageJob == null) movePagesRight(dragInfo)
+                return
+            }
+            viewModel.movePageJob != null -> stopMovePagesJob()
+        }
 
         val currentPage = binding.appPages.currentItem
 
@@ -189,6 +183,36 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         viewPagerAdapter.swapItem(dragInfo, holder.adapterPosition, currentPage)
     }
 
+    private fun stopMovePagesJob() {
+        viewModel.movePageJob?.cancel()
+        viewModel.movePageJob = null
+    }
+
+    private fun movePagesRight(dragInfo: DragInfo) {
+        viewModel.movePageJob = lifecycleScope.launch(Dispatchers.IO) {
+            while (binding.appPages.currentItem < viewPagerAdapter.count - 1) {
+                delay(MOVING_PAGE_DELAY)
+                withContext(Dispatchers.Main) { binding.appPages.currentItem++ }
+            }
+            delay(MOVING_PAGE_DELAY)
+            withContext(Dispatchers.Main) {
+                if (viewPagerAdapter.createPage()) {
+                    binding.appPages.currentItem++
+                    viewPagerAdapter.insertToLastPosition(dragInfo, binding.appPages.currentItem)
+                }
+            }
+            stopMovePagesJob()
+        }
+    }
+
+    private fun movePagesLeft() {
+        viewModel.movePageJob = lifecycleScope.launch(Dispatchers.IO) {
+            while (binding.appPages.currentItem > 0) {
+                delay(MOVING_PAGE_DELAY)
+                withContext(Dispatchers.Main) { binding.appPages.currentItem-- }
+            }
+        }
+    }
 
     private fun getItemPosition(dragEvent: DragEvent): Int? {
         val dragInfo = dragEvent.localState as DragInfo

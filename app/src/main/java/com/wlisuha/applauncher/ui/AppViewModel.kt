@@ -28,6 +28,7 @@ import com.wlisuha.applauncher.data.db.DataBase
 import com.wlisuha.applauncher.databinding.BottomItemApplicationBinding
 import com.wlisuha.applauncher.utils.APP_COLUMN_COUNT
 import kotlinx.coroutines.*
+import java.text.Collator
 
 class AppViewModel : BaseViewModel() {
     val labelColor = ObservableField(Color.BLACK)
@@ -102,23 +103,13 @@ class AppViewModel : BaseViewModel() {
         bottomAppListAdapter.removeItem(draggedItem)
     }
 
-    fun isFirstItem(dragInfo: DragInfo) = bottomAppListAdapter
-        .getData().isEmpty() ||
-            bottomAppListAdapter.getData().size == 1 && bottomAppListAdapter.getData()
-        .any { it.packageName == dragInfo.draggedItem.packageName }
-
     fun getBottomAppsItemCount() = bottomAppListAdapter.itemCount
-
-    fun insertFirstItemToBottomBar(dragInfo: DragInfo) {
-        if (bottomAppListAdapter.getData().size > 0) return
-        addItemToPosition(0, dragInfo.draggedItem)
-    }
 
     fun insertItemToBottomBar(dragInfo: DragInfo, position: Int?) {
         position ?: return
+        dragInfo.removeItem()
         if (canAddItem(dragInfo, position)) {
             addItemToPosition(position, dragInfo.draggedItem)
-            dragInfo.removeItem()
         }
     }
 
@@ -128,7 +119,6 @@ class AppViewModel : BaseViewModel() {
             ?.let { it ->
                 if (!it.any { it.packageName == dragInfo.draggedItem.packageName }) return false
             }
-
         bottomAppListAdapter.getData()
             .getOrNull(position)
             ?.let { if (it.packageName == dragInfo.draggedItem.packageName) return false }
@@ -139,12 +129,13 @@ class AppViewModel : BaseViewModel() {
     private fun addItemToPosition(position: Int, dragInfo: InstalledApp) {
         bottomAppListAdapter.addItem(position, dragInfo)
         var removeItemPosition = -1
+
         bottomAppListAdapter.getData().forEachIndexed { index, installedApp ->
             if (installedApp.packageName == dragInfo.packageName && index != position) {
                 removeItemPosition = index
             }
         }
-        bottomAppListAdapter.removeItem(removeItemPosition)
+        if (removeItemPosition != -1) bottomAppListAdapter.removeItem(removeItemPosition)
 
         saveDBJob?.cancel()
 
@@ -155,10 +146,9 @@ class AppViewModel : BaseViewModel() {
     }
 
     private fun saveBottomAppsList() {
-        bottomAppListAdapter.getData().forEachIndexed { index, installedApp ->
-            AppScreenLocation(installedApp.packageName, -1, index)
-                .let(DataBase.dao::addItem)
-        }
+        bottomAppListAdapter
+            .getData()
+            .forEachIndexed { index, installedApp -> addItem(installedApp, index, -1) }
     }
 
     @SuppressLint("NewApi")
@@ -205,8 +195,7 @@ class AppViewModel : BaseViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             appList.forEachIndexed { pageIndex, list ->
                 list.forEachIndexed { index, installedApp ->
-                    AppScreenLocation(installedApp.packageName, pageIndex, index)
-                        .let(DataBase.dao::addItem)
+                    addItem(installedApp, index, pageIndex)
                 }
             }
         }
@@ -244,15 +233,18 @@ class AppViewModel : BaseViewModel() {
     }
 
     private fun getInstalledAppList(itemCountOnPage: Int): List<List<InstalledApp>> {
-        val appsList = packageManager
+        val collator = Collator
+            .getInstance(LauncherApplication.instance.resources.configuration.locale)
+
+        return packageManager
             .getInstalledApplications(PackageManager.GET_META_DATA)
             .filter(::availableApp)
+            .map(::createModel)
+            .sortedWith(compareBy(collator) { it.name })
             .chunked(itemCountOnPage)
-
-        return appsList.map { listOfApp -> listOfApp.map(::createModel) }
     }
 
-    private fun createModel(packageName: String): InstalledApp {
+    fun createModel(packageName: String): InstalledApp {
         return packageManager.getApplicationInfo(packageName, 0)
             .let(::createModel)
     }
@@ -270,5 +262,16 @@ class AppViewModel : BaseViewModel() {
             AppScreenLocation(item.packageName, page, newPosition)
                 .let(DataBase.dao::updateItem)
         }
+    }
+
+    fun addItem(item: InstalledApp, newPosition: Int, page: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            AppScreenLocation(item.packageName, page, newPosition)
+                .let(DataBase.dao::addItem)
+        }
+    }
+
+    fun deletePackage(packageName: String) {
+        viewModelScope.launch(Dispatchers.IO) { DataBase.dao.deletePackage(packageName) }
     }
 }
