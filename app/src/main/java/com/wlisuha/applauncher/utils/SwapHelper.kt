@@ -6,14 +6,12 @@ import android.os.Handler
 class SwapHelper(private val swapHandler: Handler) {
     private var swapFromPosition = -1
     private var swapToPosition = -1
-
     private var swapFromPage = -1
     private var swapToPage = -1
 
-
     fun requestToSwapInSomePage(swapFromPosition: Int, swapToPosition: Int, action: () -> Unit) {
         if (swapFromPosition == swapToPosition) {
-            removeRequestToSwap()
+            removeRequest()
             return
         }
         if (this.swapFromPosition == swapFromPosition && this.swapToPosition == swapToPosition) {
@@ -21,16 +19,16 @@ class SwapHelper(private val swapHandler: Handler) {
         }
         this.swapFromPosition = swapFromPosition
         this.swapToPosition = swapToPosition
-        removeRequestToSwap()
+        removeRequest()
         swapHandler.postDelayed({
             this.swapFromPosition = -1
             this.swapToPosition = -1
             action.invoke()
             clearRequest()
-        }, 500)
+        }, REQUEST_DELAY)
     }
 
-    private fun removeRequestToSwap() {
+    private fun removeRequest() {
         swapHandler.removeCallbacksAndMessages(null)
     }
 
@@ -39,7 +37,7 @@ class SwapHelper(private val swapHandler: Handler) {
         swapToPosition = -1
         swapFromPage = -1
         swapToPage = -1
-        removeRequestToSwap()
+        removeRequest()
     }
 
     fun requestToSwapBetweenPages(
@@ -58,7 +56,7 @@ class SwapHelper(private val swapHandler: Handler) {
         this.swapToPosition = swapToPosition
         this.swapFromPosition = swapFromPosition
 
-        removeRequestToSwap()
+        removeRequest()
 
         swapHandler.postDelayed({
             this.swapFromPosition = -1
@@ -67,7 +65,19 @@ class SwapHelper(private val swapHandler: Handler) {
             this.swapToPage = -1
             action.invoke()
             clearRequest()
-        }, 500)
+        }, REQUEST_DELAY)
+    }
+
+    fun requestInsertToLastPosition(swapToPage: Int, action: () -> Unit) {
+        if (this.swapToPage == swapToPage) return
+        this.swapToPage = swapToPage
+
+        removeRequest()
+
+        swapHandler.postDelayed({
+            this.swapToPage = -1
+            action.invoke()
+        }, REQUEST_DELAY)
     }
 
     private fun canCreateRequest(
@@ -79,6 +89,5 @@ class SwapHelper(private val swapHandler: Handler) {
             this.swapFromPage != swapFromPage &&
             this.swapFromPosition != swapFromPosition &&
             this.swapToPosition != swapToPosition
-
 
 }

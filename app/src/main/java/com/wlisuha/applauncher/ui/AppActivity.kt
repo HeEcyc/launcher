@@ -175,8 +175,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         if (currentRecycler.itemAnimator?.isRunning == true) return
         val currentView = currentRecycler.findChildViewUnder(x, y)
         if (currentView == null) {
-            viewPagerAdapter.removeRequestToSwap()
-            viewPagerAdapter.insertToLastPosition(dragInfo, currentPage)
+            viewPagerAdapter.insertToLastPosition(dragInfo, currentPage, false)
             return
         }
         val holder = currentRecycler.getChildViewHolder(currentView)
@@ -198,7 +197,11 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             withContext(Dispatchers.Main) {
                 if (viewPagerAdapter.createPage()) {
                     binding.appPages.currentItem++
-                    viewPagerAdapter.insertToLastPosition(dragInfo, binding.appPages.currentItem)
+                    viewPagerAdapter.insertToLastPosition(
+                        dragInfo,
+                        binding.appPages.currentItem,
+                        true
+                    )
                 }
             }
             stopMovePagesJob()

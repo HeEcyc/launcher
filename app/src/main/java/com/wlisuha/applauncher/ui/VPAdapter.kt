@@ -3,7 +3,6 @@ package com.wlisuha.applauncher.ui
 import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.postDelayed
@@ -164,23 +163,15 @@ class VPAdapter(
         swapHelper.clearRequest()
     }
 
-    fun insertToLastPosition(dragInfo: DragInfo, currentPage: Int) {
-        val oldPage = dragInfo.currentPage
-        with(getCurrentAppListAdapter(currentPage)) {
-            if (itemCount == visibleApplicationsOnScreen) return
-            else if (getData().any { it.packageName == dragInfo.draggedItem.packageName }) return
-            dragInfo.removeItem()
-            addItem(dragInfo.draggedItem)
-            dragInfo.adapter = this
-            dragInfo.currentPage = currentPage
-            dragInfo.updateItemPosition()
+    fun insertToLastPosition(dragInfo: DragInfo, currentPage: Int, isNewPage: Boolean) {
+        getCurrentAppListAdapter(currentPage)
+            .getData().lastOrNull()
+            ?.packageName
+            ?.let { if (it == dragInfo.draggedItem.packageName) return }
 
-            viewModel.saveNewPositionItem(
-                dragInfo.draggedItem,
-                dragInfo.draggedItemPos,
-                currentPage
-            )
-            if (pageIsEmpty(oldPage)) removePage(oldPage)
+        if (isNewPage) insertItemToLastPosition(dragInfo, currentPage)
+        else swapHelper.requestInsertToLastPosition(currentPage) {
+            insertItemToLastPosition(dragInfo, currentPage)
         }
     }
 
@@ -238,5 +229,21 @@ class VPAdapter(
                 removePage(adapterWithCurrentPackageKey)
             }
         }
+    }
+
+    private fun insertItemToLastPosition(dragInfo: DragInfo, currentPage: Int) {
+        val oldPage = dragInfo.currentPage
+        val adapter = getCurrentAppListAdapter(currentPage)
+        dragInfo.removeItem()
+        adapter.addItem(dragInfo.draggedItem)
+        dragInfo.adapter = adapter
+        dragInfo.currentPage = currentPage
+        dragInfo.updateItemPosition()
+        viewModel.saveNewPositionItem(
+            dragInfo.draggedItem,
+            dragInfo.draggedItemPos,
+            currentPage
+        )
+        if (pageIsEmpty(oldPage)) removePage(oldPage)
     }
 }
