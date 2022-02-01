@@ -10,110 +10,139 @@
             type="com.wlisuha.applauncher.ui.AppViewModel" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.drawerlayout.widget.DrawerLayout
+        android:id="@+id/drawer"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.wlisuha.applauncher.ui.custom.ClickableMotionLayout
-            android:id="@+id/motionView"
+
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layoutDescription="@xml/app_activity_scene">
+            android:background="@mipmap/wallpaper">
 
-            <View
-                android:id="@+id/overlay"
+            <com.wlisuha.applauncher.ui.custom.ClickableMotionLayout
+                android:id="@+id/motionView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:alpha="0.8"
-                android:background="#FFFFFF" />
+                app:layoutDescription="@xml/app_activity_scene">
 
-            <androidx.viewpager.widget.ViewPager
-                android:id="@+id/appPages"
-                android:layout_width="match_parent"
-                android:layout_height="0sp"
-                android:layout_marginTop="30sp"
-                android:fitsSystemWindows="true"
-                android:overScrollMode="never"
-                app:layout_constraintHeight_percent="0.78"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:ignore="SpeakableTextPresentCheck" />
+                <View
+                    android:id="@+id/overlay"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:alpha="0.8"
+                    android:background="#FFFFFF"
+                    android:visibility="gone" />
 
-            <View
-                android:id="@+id/beacon"
-                android:layout_width="1sp"
-                android:layout_height="1sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/indicatorOverlay"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/appPages">
-
-                <com.tbuonomo.viewpagerdotsindicator.SpringDotsIndicator
-                    android:id="@+id/pageIndicator"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:dotsColor="@android:color/white"
-                    app:dotsCornerRadius="8dp"
-                    app:dotsSize="12dp"
-                    app:dotsSpacing="2dp"
-                    app:dotsWidthFactor="2.5"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:progressMode="true" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/bottomRoot"
-                android:layout_width="match_parent"
-                android:layout_height="0sp"
-                app:layout_constraintBottom_toTopOf="@id/fakeNavBar"
-                app:layout_constraintTop_toBottomOf="@id/indicatorOverlay">
-
-                <RelativeLayout
-                    android:id="@+id/bottomAppsOverlay"
+                <androidx.viewpager.widget.ViewPager
+                    android:id="@+id/appPages"
                     android:layout_width="match_parent"
                     android:layout_height="0sp"
+                    android:layout_marginTop="30sp"
+                    android:fitsSystemWindows="true"
+                    android:overScrollMode="never"
+                    app:layout_constraintHeight_percent="0.78"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:ignore="SpeakableTextPresentCheck" />
+
+                <View
+                    android:id="@+id/beacon"
+                    android:layout_width="1sp"
+                    android:layout_height="1sp"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintHeight_percent="0.75"
-                    app:layout_constraintTop_toTopOf="parent">
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/bottomAppsList"
+                <View
+                    android:id="@+id/beaconSecond"
+                    android:layout_width="1sp"
+                    android:layout_height="1sp"
+                    android:background="@android:color/holo_red_dark"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/indicatorOverlay"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/appPages">
+
+                    <com.tbuonomo.viewpagerdotsindicator.SpringDotsIndicator
+                        android:id="@+id/pageIndicator"
                         android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_centerInParent="true"
-                        android:adapter="@{viewModel.bottomAppListAdapter}"
-                        android:orientation="horizontal"
-                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                        app:spanCount="4" />
-                </RelativeLayout>
+                        android:layout_height="wrap_content"
+                        app:dotsColor="@android:color/white"
+                        app:dotsCornerRadius="8dp"
+                        app:dotsSize="12dp"
+                        app:dotsSpacing="2dp"
+                        app:dotsWidthFactor="2.5"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:progressMode="true" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/bottomRoot"
+                    android:layout_width="match_parent"
+                    android:layout_height="0sp"
+                    app:layout_constraintBottom_toTopOf="@id/fakeNavBar"
+                    app:layout_constraintTop_toBottomOf="@id/indicatorOverlay">
+
+                    <RelativeLayout
+                        android:id="@+id/bottomAppsOverlay"
+                        android:layout_width="match_parent"
+                        android:layout_height="0sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintHeight_percent="0.75"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/bottomAppsList"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_centerInParent="true"
+                            android:adapter="@{viewModel.bottomAppListAdapter}"
+                            android:orientation="horizontal"
+                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                            app:spanCount="4" />
+                    </RelativeLayout>
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
 
-            <com.github.mmin18.widget.RealtimeBlurView
-                android:id="@+id/viewList"
-                android:layout_width="match_parent"
-                android:layout_height="0sp"
-                app:layout_constraintHeight_percent="1"
-                app:layout_constraintTop_toTopOf="parent"
-                app:realtimeBlurRadius="22dp" />
+                <com.github.mmin18.widget.RealtimeBlurView
+                    android:id="@+id/viewList"
+                    android:layout_width="match_parent"
+                    android:layout_height="0sp"
+                    app:layout_constraintHeight_percent="1"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:realtimeBlurRadius="20dp" />
 
-            <Space
-                android:id="@+id/fakeNavBar"
-                android:layout_width="match_parent"
-                android:layout_height="0sp"
-                app:layout_constraintBottom_toBottomOf="parent" />
+                <Space
+                    android:id="@+id/fakeNavBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="0sp"
+                    app:layout_constraintBottom_toBottomOf="parent" />
 
-        </com.wlisuha.applauncher.ui.custom.ClickableMotionLayout>
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.wlisuha.applauncher.ui.custom.ClickableMotionLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:layout_marginStart="-64dp"
+            android:background="@android:color/holo_red_dark"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </androidx.drawerlayout.widget.DrawerLayout>
 
 </layout>

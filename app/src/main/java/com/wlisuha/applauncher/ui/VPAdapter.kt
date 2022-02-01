@@ -159,7 +159,7 @@ class VPAdapter(
 
     private fun getCurrentAppListAdapter(page: Int) = recyclersAdapters[page]!!
 
-    fun removeRequestToSwap() {
+    fun clearRequests() {
         swapHelper.clearRequest()
     }
 
@@ -249,15 +249,15 @@ class VPAdapter(
         if (pageIsEmpty(oldPage)) removePage(oldPage)
     }
 
-    fun insertItemToPosition(currentPage: Int, positionInt: Int, dragInfo: DragInfo) {
+    fun insertItemToPosition(currentPage: Int, position: Int, dragInfo: DragInfo) {
         val currentAdapter = getCurrentAppListAdapter(currentPage)
-        swapHelper.requestInsertToPosition(currentPage, positionInt) {
+        swapHelper.requestInsertToPosition(currentPage, position) {
             dragInfo.removeItem()
-            currentAdapter.addItem(positionInt, dragInfo.draggedItem)
+            currentAdapter.addItem(position, dragInfo.draggedItem)
             dragInfo.adapter = currentAdapter
             dragInfo.currentPage = currentPage
             dragInfo.updateItemPosition()
-            viewModel.saveNewPositionItem(dragInfo.draggedItem, positionInt, currentPage)
+            viewModel.saveNewPositionItem(dragInfo.draggedItem, position, currentPage)
             if (currentAdapter.getData().size > visibleApplicationsOnScreen)
                 moveItems(currentPage + 1, currentAdapter.removeLastItem())
         }

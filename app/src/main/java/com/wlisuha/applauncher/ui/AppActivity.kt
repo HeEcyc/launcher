@@ -7,7 +7,6 @@ import android.content.Intent
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
-import android.util.Log
 import android.view.DragEvent
 import android.view.View
 import androidx.activity.viewModels
@@ -61,16 +60,17 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
     private fun handleAddedApplication(data: Uri) {
         viewModel.createModel(data.encodedSchemeSpecificPart)
-            .let(viewPagerAdapter::onNewApp)
+            .takeIf { it.packageName != packageName }
+            ?.let(viewPagerAdapter::onNewApp)
     }
 
     override fun setupUI() {
         binding.fakeNavBar.layoutParams.height = with(getNavBarSize()) {
-            Log.d("12345", this.toString())
             if (!hasNavigationBar()) this
             else this / 2
         }
         calculateAppItemViewHeight()
+        binding.drawer.close()
 //        if (!NotificationManagerCompat.getEnabledListenerPackages(this).contains(packageName))
 //            openAirplaneSettings()
         binding.bottomAppsList.itemAnimator = null
@@ -125,12 +125,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
                 viewModel.insertItemToBottomBar(dragInfo, getItemPosition(event))
             }
             DragEvent.ACTION_DRAG_ENTERED -> {
-                viewPagerAdapter.removeRequestToSwap()
-                if (dragInfo.currentPage != -1) {
-                    Log.d("12345", "remove")
-                    //TODO
-                    //dragInfo.removeItem()
-                }
+                viewPagerAdapter.clearRequests()
             }
             DragEvent.ACTION_DRAG_EXITED -> {
                 dragInfo.adapter = viewModel.bottomAppListAdapter
@@ -144,11 +139,6 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         val dragInfo = event.localState as? DragInfo ?: return false
         when (event.action) {
             DragEvent.ACTION_DRAG_LOCATION -> handleItemMovement(event.x, event.y, dragInfo)
-//            DragEvent.ACTION_DRAG_ENTERED -> {
-//                if (dragInfo.currentPage == -1) {
-//                    //viewPagerAdapter.insertItem(dragInfo)
-//                } else (event.localState as? DragInfo)?.restoreItem()
-//            }
             DragEvent.ACTION_DROP -> stopMovePagesJob()
         }
         return true
@@ -157,10 +147,12 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     private fun handleItemMovement(x: Float, y: Float, dragInfo: DragInfo) {
         when {
             moveLeftRect.contains(x.toInt(), y.toInt()) -> {
+                viewPagerAdapter.clearRequests()
                 if (viewModel.movePageJob == null) movePagesLeft()
                 return
             }
             moveRightRect.contains(x.toInt(), y.toInt()) -> {
+                viewPagerAdapter.clearRequests()
                 if (viewModel.movePageJob == null) movePagesRight(dragInfo)
                 return
             }

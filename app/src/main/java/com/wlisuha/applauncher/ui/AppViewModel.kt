@@ -127,6 +127,11 @@ class AppViewModel : BaseViewModel() {
     }
 
     private fun addItemToPosition(position: Int, dragInfo: InstalledApp) {
+        if (bottomAppListAdapter.itemCount == 0) {
+            bottomAppListAdapter.addItem(dragInfo)
+            addItem(dragInfo, 0, -1)
+            return
+        }
         bottomAppListAdapter.addItem(position, dragInfo)
         var removeItemPosition = -1
 
