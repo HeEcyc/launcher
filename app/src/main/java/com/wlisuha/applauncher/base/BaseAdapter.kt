@@ -89,6 +89,12 @@ abstract class BaseAdapter<T, V : ViewDataBinding> private constructor(initItems
             ?.let(::removeItem)
     }
 
+    fun removeLastItem(): T? {
+        val removedItem = items.removeLastOrNull()
+        notifyItemRemoved(itemCount + 1)
+        return removedItem
+    }
+
     abstract class BaseItem<T, V : ViewDataBinding>(val binding: V) :
         RecyclerView.ViewHolder(binding.root) {
 

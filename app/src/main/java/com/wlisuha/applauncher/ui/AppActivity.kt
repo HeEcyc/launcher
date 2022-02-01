@@ -132,8 +132,10 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
                     //dragInfo.removeItem()
                 }
             }
-            DragEvent.ACTION_DRAG_EXITED -> viewModel
-                .deleteItemFromAppsBarList(dragInfo)
+            DragEvent.ACTION_DRAG_EXITED -> {
+                dragInfo.adapter = viewModel.bottomAppListAdapter
+                dragInfo.currentPage = -1
+            }
         }
         return true
     }
@@ -142,15 +144,12 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         val dragInfo = event.localState as? DragInfo ?: return false
         when (event.action) {
             DragEvent.ACTION_DRAG_LOCATION -> handleItemMovement(event.x, event.y, dragInfo)
-            DragEvent.ACTION_DRAG_ENTERED -> {
-                if (dragInfo.currentPage == -1) {
-                    //viewPagerAdapter.insertItem(dragInfo)
-                } else (event.localState as? DragInfo)?.restoreItem()
-            }
+//            DragEvent.ACTION_DRAG_ENTERED -> {
+//                if (dragInfo.currentPage == -1) {
+//                    //viewPagerAdapter.insertItem(dragInfo)
+//                } else (event.localState as? DragInfo)?.restoreItem()
+//            }
             DragEvent.ACTION_DROP -> stopMovePagesJob()
-            DragEvent.ACTION_DRAG_EXITED -> {
-                Log.d("12345", "exit")
-            }
         }
         return true
     }
@@ -175,11 +174,15 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         if (currentRecycler.itemAnimator?.isRunning == true) return
         val currentView = currentRecycler.findChildViewUnder(x, y)
         if (currentView == null) {
-            viewPagerAdapter.insertToLastPosition(dragInfo, currentPage, false)
+            viewPagerAdapter.insertToLastPosition(dragInfo, currentPage, true)
             return
         }
         val holder = currentRecycler.getChildViewHolder(currentView)
-        viewPagerAdapter.swapItem(dragInfo, holder.adapterPosition, currentPage)
+
+        if (dragInfo.currentPage == -1) viewPagerAdapter
+            .insertItemToPosition(currentPage, holder.adapterPosition, dragInfo)
+        else viewPagerAdapter
+            .swapItem(dragInfo, holder.adapterPosition, currentPage)
     }
 
     private fun stopMovePagesJob() {

@@ -163,13 +163,15 @@ class VPAdapter(
         swapHelper.clearRequest()
     }
 
-    fun insertToLastPosition(dragInfo: DragInfo, currentPage: Int, isNewPage: Boolean) {
-        getCurrentAppListAdapter(currentPage)
-            .getData().lastOrNull()
-            ?.packageName
-            ?.let { if (it == dragInfo.draggedItem.packageName) return }
+    fun insertToLastPosition(dragInfo: DragInfo, currentPage: Int, withDelay: Boolean) {
+        with(getCurrentAppListAdapter(currentPage)) {
+            if (itemCount == visibleApplicationsOnScreen) return
+            else getData().lastOrNull()
+                ?.packageName
+                ?.let { if (it == dragInfo.draggedItem.packageName) return }
+        }
 
-        if (isNewPage) insertItemToLastPosition(dragInfo, currentPage)
+        if (!withDelay) insertItemToLastPosition(dragInfo, currentPage)
         else swapHelper.requestInsertToLastPosition(currentPage) {
             insertItemToLastPosition(dragInfo, currentPage)
         }
@@ -246,4 +248,29 @@ class VPAdapter(
         )
         if (pageIsEmpty(oldPage)) removePage(oldPage)
     }
+
+    fun insertItemToPosition(currentPage: Int, positionInt: Int, dragInfo: DragInfo) {
+        val currentAdapter = getCurrentAppListAdapter(currentPage)
+        swapHelper.requestInsertToPosition(currentPage, positionInt) {
+            dragInfo.removeItem()
+            currentAdapter.addItem(positionInt, dragInfo.draggedItem)
+            dragInfo.adapter = currentAdapter
+            dragInfo.currentPage = currentPage
+            dragInfo.updateItemPosition()
+            viewModel.saveNewPositionItem(dragInfo.draggedItem, positionInt, currentPage)
+            if (currentAdapter.getData().size > visibleApplicationsOnScreen)
+                moveItems(currentPage + 1, currentAdapter.removeLastItem())
+        }
+    }
+
+    private fun moveItems(newAdapterPage: Int, lastItem: InstalledApp?) {
+        lastItem ?: return
+        if (!recyclersAdapters.containsKey(newAdapterPage)) createPage()
+        val newAdapter = getCurrentAppListAdapter(newAdapterPage)
+        newAdapter.addItem(0, lastItem)
+        if (newAdapter.itemCount > visibleApplicationsOnScreen) {
+            moveItems(newAdapterPage + 1, newAdapter.removeLastItem())
+        }
+    }
+
 }

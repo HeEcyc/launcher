@@ -90,4 +90,16 @@ class SwapHelper(private val swapHandler: Handler) {
             this.swapFromPosition != swapFromPosition &&
             this.swapToPosition != swapToPosition
 
+    fun requestInsertToPosition(swapToPage: Int, swapToPosition: Int, action: () -> Unit) {
+        if (this.swapToPage == swapToPage && this.swapToPosition == swapToPosition) return
+        removeRequest()
+        this.swapToPage = swapToPage
+        this.swapToPosition = swapToPosition
+        swapHandler.postDelayed({
+            this.swapToPage = -1
+            this.swapToPosition = -1
+            action.invoke()
+        }, REQUEST_DELAY)
+    }
+
 }
