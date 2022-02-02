@@ -3,7 +3,6 @@ package com.wlisuha.applauncher.ui
 import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.postDelayed
@@ -162,7 +161,7 @@ class VPAdapter(
 
     fun getCurrentAppListView(page: Int) = recyclers[page]
 
-    private fun getCurrentAppListAdapter(page: Int) = recyclersAdapters[page]!!
+    private fun getCurrentAppListAdapter(page: Int) = recyclersAdapters[page]
 
     fun clearRequests() {
         swapHelper.clearRequest()
@@ -225,7 +224,7 @@ class VPAdapter(
                 return@forEachIndexed
             }
         }
-        val currentAdapter = recyclersAdapters[adapterWithCurrentPackageKey] ?: return
+        val currentAdapter = recyclersAdapters[adapterWithCurrentPackageKey]
 
         currentAdapter.remove { it.packageName == packageName }
         viewModel.deletePackage(packageName)
@@ -262,8 +261,6 @@ class VPAdapter(
             dragInfo.adapter = currentAdapter
             dragInfo.currentPage = currentPage
             dragInfo.updateItemPosition()
-            Log.d("12345", currentAdapter.getData().last().packageName)
-            Log.d("12345", dragInfo.draggedItem.packageName)
             viewModel.saveNewPositionItem(dragInfo.draggedItem, position, currentPage)
         }
     }

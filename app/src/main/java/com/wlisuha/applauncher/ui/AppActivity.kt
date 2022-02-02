@@ -8,8 +8,6 @@ import android.content.Intent
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
-import android.util.Log
-import android.util.Range
 import android.view.DragEvent
 import android.view.View
 import androidx.activity.viewModels
@@ -40,13 +38,8 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             }
         }
     }
-    val touchRect by lazy {
-        Rect(
-            0,
-            0,
-            binding.indicatorTouch.width,
-            binding.indicatorTouch.height
-        )
+    private val touchRect by lazy {
+        Rect(0, 0, binding.indicatorTouch.width, binding.indicatorTouch.height)
     }
 
     private val moveLeftRect by lazy {
@@ -82,7 +75,6 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             else this / 2
         }
         calculateAppItemViewHeight()
-        binding.drawer.close()
         setTouchListenerOnIndicator()
 //        if (!NotificationManagerCompat.getEnabledListenerPackages(this).contains(packageName))
 //            openAirplaneSettings()
@@ -90,8 +82,6 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
         binding.bottomAppsOverlay.setOnDragListener(this)
         binding.appPages.setOnDragListener(this)
-
-
         binding.motionView.setOnLongClickListener {
             viewModel.isSelectionEnabled.set(!(viewModel.isSelectionEnabled.get() ?: false))
             true
@@ -174,7 +164,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
         val currentPage = binding.appPages.currentItem
 
-        val currentRecycler = viewPagerAdapter.getCurrentAppListView(currentPage) ?: return
+        val currentRecycler = viewPagerAdapter.getCurrentAppListView(currentPage)
 
         if (currentRecycler.itemAnimator?.isRunning == true) return
         val currentView = currentRecycler.findChildViewUnder(x, y)

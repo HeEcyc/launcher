@@ -94,15 +94,6 @@ class AppViewModel : BaseViewModel() {
         )
     }
 
-    fun deleteItemFromAppsBarList(dragInfo: DragInfo) {
-        dragInfo.enableRestore()
-        deleteItemFromFastAppList(dragInfo.draggedItem)
-    }
-
-    private fun deleteItemFromFastAppList(draggedItem: InstalledApp) {
-        bottomAppListAdapter.removeItem(draggedItem)
-    }
-
     fun getBottomAppsItemCount() = bottomAppListAdapter.itemCount
 
     fun insertItemToBottomBar(dragInfo: DragInfo, position: Int?) {
