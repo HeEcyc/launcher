@@ -1,5 +1,6 @@
 package com.wlisuha.applauncher.ui
 
+import android.annotation.SuppressLint
 import android.app.role.RoleManager
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -7,6 +8,8 @@ import android.content.Intent
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
+import android.util.Log
+import android.util.Range
 import android.view.DragEvent
 import android.view.View
 import androidx.activity.viewModels
@@ -21,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
 
 
 class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_activity),
@@ -35,6 +39,14 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
                 Intent.ACTION_PACKAGE_REMOVED -> handleRemovedApplication(intent.data ?: return)
             }
         }
+    }
+    val touchRect by lazy {
+        Rect(
+            0,
+            0,
+            binding.indicatorTouch.width,
+            binding.indicatorTouch.height
+        )
     }
 
     private val moveLeftRect by lazy {
@@ -71,6 +83,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         }
         calculateAppItemViewHeight()
         binding.drawer.close()
+        setTouchListenerOnIndicator()
 //        if (!NotificationManagerCompat.getEnabledListenerPackages(this).contains(packageName))
 //            openAirplaneSettings()
         binding.bottomAppsList.itemAnimator = null
@@ -256,5 +269,20 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     private fun hasNavigationBar(): Boolean {
         val id: Int = resources.getIdentifier("config_showNavigationBar", "bool", "android")
         return id > 0 && resources.getBoolean(id)
+    }
+
+
+    @SuppressLint("ClickableViewAccessibility")
+    fun setTouchListenerOnIndicator() {
+        binding.indicatorTouch.setOnTouchListener { _, event ->
+            if (touchRect.contains(event.x.toInt(), event.y.toInt()))
+                handleMovingPages(event.x)
+            return@setOnTouchListener true
+        }
+    }
+
+    private fun handleMovingPages(touchXPosition: Float) {
+        val percent = touchXPosition / binding.indicatorTouch.width
+        binding.appPages.currentItem = (viewPagerAdapter.count * percent).roundToInt()
     }
 }

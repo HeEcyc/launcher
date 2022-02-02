@@ -31,7 +31,7 @@ import kotlinx.coroutines.*
 import java.text.Collator
 
 class AppViewModel : BaseViewModel() {
-    val labelColor = ObservableField(Color.BLACK)
+    val labelColor = ObservableField(Color.WHITE)
     val isSelectionEnabled = ObservableField(false)
     val intentFilter = IntentFilter().apply {
         addAction(Intent.ACTION_PACKAGE_REMOVED)
@@ -52,7 +52,7 @@ class AppViewModel : BaseViewModel() {
 
     init {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            setLabelColor()
+            // setLabelColor()
             wallpaperManager.addOnColorsChangedListener(
                 { _, _ -> setLabelColor() }, Handler(Looper.getMainLooper())
             )
@@ -72,8 +72,8 @@ class AppViewModel : BaseViewModel() {
 
                 binding.setVariable(BR.viewModel, this@AppViewModel)
                 binding.notifyPropertyChanged(BR.viewModel)
-
                 binding.root.setOnLongClickListener {
+                    isSelectionEnabled.set(true)
                     createDragAndDropView(item, binding, adapter)
                     false
                 }

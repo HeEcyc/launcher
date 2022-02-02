@@ -42,7 +42,7 @@
                     android:layout_marginTop="30sp"
                     android:fitsSystemWindows="true"
                     android:overScrollMode="never"
-                    app:layout_constraintHeight_percent="0.78"
+                    app:layout_constraintHeight_percent="0.75"
                     app:layout_constraintTop_toTopOf="parent"
                     tools:ignore="SpeakableTextPresentCheck" />
 
@@ -55,37 +55,38 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <View
-                    android:id="@+id/beaconSecond"
-                    android:layout_width="1sp"
-                    android:layout_height="1sp"
-                    android:background="@android:color/holo_red_dark"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/indicatorOverlay"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:background="@android:color/black"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/appPages">
 
-                    <com.tbuonomo.viewpagerdotsindicator.SpringDotsIndicator
-                        android:id="@+id/pageIndicator"
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/indicatorTouch"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        app:dotsColor="@android:color/white"
-                        app:dotsCornerRadius="8dp"
-                        app:dotsSize="12dp"
-                        app:dotsSpacing="2dp"
-                        app:dotsWidthFactor="2.5"
-                        app:layout_constraintEnd_toEndOf="parent"
+                        android:paddingVertical="10sp"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:progressMode="true" />
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <com.tbuonomo.viewpagerdotsindicator.SpringDotsIndicator
+                            android:id="@+id/pageIndicator"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="10sp"
+                            app:dotsColor="@android:color/white"
+                            app:dotsCornerRadius="8dp"
+                            app:dotsSize="12dp"
+                            app:dotsSpacing="2dp"
+                            app:dotsWidthFactor="2.5"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:progressMode="true" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <androidx.constraintlayout.widget.ConstraintLayout
