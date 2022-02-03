@@ -230,7 +230,7 @@ class AppViewModel : BaseViewModel() {
 
     private fun getInstalledAppList(itemCountOnPage: Int): List<List<InstalledApp>> {
         val collator = Collator
-            .getInstance(LauncherApplication.instance.resources.configuration.locale)
+            .getInstance(getCurrentLocale())
 
         return packageManager
             .getInstalledApplications(PackageManager.GET_META_DATA)
@@ -239,6 +239,12 @@ class AppViewModel : BaseViewModel() {
             .sortedWith(compareBy(collator) { it.name })
             .chunked(itemCountOnPage)
     }
+
+    private fun getCurrentLocale() = with(LauncherApplication.instance.resources.configuration) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) locales[0]
+        else locale
+    }
+
 
     fun createModel(packageName: String): InstalledApp {
         return packageManager.getApplicationInfo(packageName, 0)

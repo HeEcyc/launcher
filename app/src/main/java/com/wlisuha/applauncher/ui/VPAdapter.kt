@@ -261,7 +261,8 @@ class VPAdapter(
             dragInfo.adapter = currentAdapter
             dragInfo.currentPage = currentPage
             dragInfo.updateItemPosition()
-            viewModel.saveNewPositionItem(dragInfo.draggedItem, position, currentPage)
+            saveItemPositionsOnPage(currentAdapter.getData(), currentPage)
+
         }
     }
 
@@ -270,9 +271,15 @@ class VPAdapter(
         if (recyclersAdapters.getOrNull(newAdapterPage) == null) createPage()
         val newAdapter = getCurrentAppListAdapter(newAdapterPage)
         newAdapter.addItem(0, lastItem)
+        saveItemPositionsOnPage(newAdapter.getData(), newAdapterPage)
         if (newAdapter.itemCount > visibleApplicationsOnScreen) {
             moveItems(newAdapterPage + 1, newAdapter.removeLastItem())
         }
     }
 
+    private fun saveItemPositionsOnPage(items: List<InstalledApp>, newAdapterPage: Int) {
+        items.forEachIndexed { index, installedApp ->
+            viewModel.saveNewPositionItem(installedApp, index, newAdapterPage)
+        }
+    }
 }
