@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <data>
+
+        <variable
+            name="settingsData"
+            type="com.wlisuha.applauncher.ui.custom.ShutterView.SettingsData" />
+    </data>
+
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -33,6 +40,7 @@
                 android:layout_width="0sp"
                 android:layout_height="0sp"
                 android:background="@drawable/gray_circle"
+                android:backgroundTint="@{settingsData.isEnableAirplaneMode ? @color/settingsEnable: @color/settingsDisable }"
                 android:padding="18sp"
                 android:src="@drawable/ic_airplanemode"
                 app:layout_constraintBottom_toTopOf="@id/wifiSettings"
@@ -65,6 +73,7 @@
                 android:layout_width="0sp"
                 android:layout_height="0sp"
                 android:background="@drawable/gray_circle"
+                android:backgroundTint="@{settingsData.isEnableWifi() ? @color/settingsEnable: @color/settingsDisable }"
                 android:padding="18sp"
                 android:src="@drawable/ic_wifi"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -78,6 +87,7 @@
                 android:layout_width="0sp"
                 android:layout_height="0sp"
                 android:background="@drawable/gray_circle"
+                android:backgroundTint="@{settingsData.isEnableBluetooth ? @color/settingsEnable: @color/settingsDisable }"
                 android:padding="18sp"
                 android:src="@drawable/ic_bluetooth"
                 app:layout_constraintDimensionRatio="1:1"
