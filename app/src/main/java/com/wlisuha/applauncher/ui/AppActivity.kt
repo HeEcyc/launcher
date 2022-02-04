@@ -11,6 +11,7 @@ import android.os.Build
 import android.view.DragEvent
 import android.view.View
 import androidx.activity.viewModels
+import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.lifecycle.lifecycleScope
 import com.wlisuha.applauncher.R
 import com.wlisuha.applauncher.base.BaseActivity
@@ -26,7 +27,7 @@ import kotlin.math.roundToInt
 
 
 class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_activity),
-    View.OnDragListener {
+    View.OnDragListener, MotionLayout.TransitionListener {
 
     private lateinit var viewPagerAdapter: VPAdapter
     override val viewModel: AppViewModel by viewModels()
@@ -76,10 +77,10 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         }
         calculateAppItemViewHeight()
         setTouchListenerOnIndicator()
-//        if (!NotificationManagerCompat.getEnabledListenerPackages(this).contains(packageName))
-//            openAirplaneSettings()
-        binding.bottomAppsList.itemAnimator = null
+        checkNotificationsPermissions()
 
+        binding.bottomAppsList.itemAnimator = null
+        binding.motionView.addTransitionListener(this)
         binding.bottomAppsOverlay.setOnDragListener(this)
         binding.appPages.setOnDragListener(this)
         binding.motionView.setOnLongClickListener {
@@ -88,6 +89,13 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         }
         registerReceiver(broadcastReceiver, viewModel.intentFilter)
     }
+
+    private fun checkNotificationsPermissions() {
+        if (!binding.viewList.hasNotificationPermission())
+            Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+                .let(::startActivity)
+    }
+
 
     private fun askRole() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -110,7 +118,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     override fun onBackPressed() {
-        //  askRole()
+        askRole()
     }
 
     override fun onDrag(v: View, event: DragEvent): Boolean {
@@ -274,5 +282,35 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     private fun handleMovingPages(touchXPosition: Float) {
         val percent = touchXPosition / binding.indicatorTouch.width
         binding.appPages.currentItem = (viewPagerAdapter.count * percent).roundToInt()
+    }
+
+    override fun onTransitionStarted(motionLayout: MotionLayout?, startId: Int, endId: Int) {
+
+    }
+
+    override fun onTransitionChange(
+        motionLayout: MotionLayout?,
+        startId: Int,
+        endId: Int,
+        progress: Float
+    ) {
+
+    }
+
+    override fun onTransitionCompleted(motionLayout: MotionLayout, currentId: Int) {
+        with(binding.viewList) {
+            if (currentId == R.id.start) onHide()
+            else onShow()
+        }
+    }
+
+
+    override fun onTransitionTrigger(
+        motionLayout: MotionLayout?,
+        triggerId: Int,
+        positive: Boolean,
+        progress: Float
+    ) {
+
     }
 }

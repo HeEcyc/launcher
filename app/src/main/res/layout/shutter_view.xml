@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+
+        <com.github.mmin18.widget.RealtimeBlurView
+            android:id="@+id/overlay"
+            android:layout_width="match_parent"
+            android:layout_height="0sp"
+            app:layout_constraintHeight_percent="1"
+            app:layout_constraintTop_toTopOf="parent"
+            app:realtimeBlurRadius="20dp" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/networkSettingsLayout"
+            android:layout_width="0sp"
+            android:layout_height="0sp"
+            android:layout_marginTop="20sp"
+            android:background="@drawable/settings_overlay_big"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toStartOf="@id/mediaControlLayout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.05"
+            app:layout_constraintWidth_percent="0.43">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/airPlaneSettings"
+                android:layout_width="0sp"
+                android:layout_height="0sp"
+                android:background="@drawable/gray_circle"
+                android:padding="18sp"
+                android:src="@drawable/ic_airplanemode"
+                app:layout_constraintBottom_toTopOf="@id/wifiSettings"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintEnd_toStartOf="@id/mobileNetworkSettings"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="spread"
+                app:layout_constraintWidth_percent="0.4" />
+
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/mobileNetworkSettings"
+                android:layout_width="0sp"
+                android:layout_height="0sp"
+                android:background="@drawable/gray_circle"
+                android:padding="18sp"
+                android:src="@drawable/ic_wifi_tethering"
+                app:layout_constraintBottom_toTopOf="@id/wifiSettings"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/airPlaneSettings"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="spread"
+                app:layout_constraintWidth_percent="0.4" />
+
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/wifiSettings"
+                android:layout_width="0sp"
+                android:layout_height="0sp"
+                android:background="@drawable/gray_circle"
+                android:padding="18sp"
+                android:src="@drawable/ic_wifi"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintStart_toStartOf="@id/airPlaneSettings"
+                app:layout_constraintTop_toBottomOf="@id/airPlaneSettings"
+                app:layout_constraintWidth_percent="0.4" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/bluetoothSettings"
+                android:layout_width="0sp"
+                android:layout_height="0sp"
+                android:background="@drawable/gray_circle"
+                android:padding="18sp"
+                android:src="@drawable/ic_bluetooth"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintStart_toStartOf="@id/mobileNetworkSettings"
+                app:layout_constraintTop_toTopOf="@id/wifiSettings"
+                app:layout_constraintWidth_percent="0.4" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/mediaControlLayout"
+            android:layout_width="0sp"
+            android:layout_height="0sp"
+            android:layout_marginTop="20sp"
+            android:background="@drawable/settings_overlay_big"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="20sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/networkSettingsLayout"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.05"
+            app:layout_constraintWidth_percent="0.43">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/soundName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10sp"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:textColor="@android:color/white"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/artistName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:alpha="0.5"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/soundName" />
+
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/playerRewind"
+                android:layout_width="0sp"
+                android:layout_height="0sp"
+                android:src="@drawable/ic_player_rewind"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintWidth_percent="0.27" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/play"
+                android:layout_width="0sp"
+                android:layout_height="0sp"
+                android:src="@drawable/ic_player_play"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintEnd_toStartOf="@id/playerForward"
+                app:layout_constraintStart_toEndOf="@id/playerRewind"
+                app:layout_constraintWidth_percent="0.27" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/playerForward"
+                android:layout_width="0sp"
+                android:layout_height="0sp"
+                android:src="@drawable/ic_player_forward"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintWidth_percent="0.27" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

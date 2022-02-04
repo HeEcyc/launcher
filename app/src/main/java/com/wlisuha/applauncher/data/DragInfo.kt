@@ -9,22 +9,6 @@ class DragInfo(
     val draggedItem: InstalledApp
 ) {
 
-    private var needRestore = false
-
-    fun restoreItem() {
-        if (!needRestore) return
-        adapter.addItem(draggedItemPos, draggedItem)
-        needRestore = false
-    }
-
-    fun disableRestore() {
-        needRestore = false
-    }
-
-    fun enableRestore() {
-        needRestore = true
-    }
-
     fun removeItem() {
         adapter.removeItem(draggedItem)
     }
