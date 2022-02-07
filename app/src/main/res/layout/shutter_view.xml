@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:app="http://schemas.android.com/apk/res-auto">
+<layout xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:bind="http://schemas.android.com/tools">
 
     <data>
 
@@ -25,15 +26,16 @@
             android:id="@+id/networkSettingsLayout"
             android:layout_width="0sp"
             android:layout_height="0sp"
+            android:layout_marginStart="20sp"
             android:layout_marginTop="20sp"
+            android:layout_marginEnd="10sp"
             android:background="@drawable/settings_overlay_big"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintEnd_toStartOf="@id/mediaControlLayout"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.05"
-            app:layout_constraintWidth_percent="0.43">
+            app:layout_constraintVertical_bias="0.05">
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/airPlaneSettings"
@@ -51,12 +53,12 @@
                 app:layout_constraintVertical_chainStyle="spread"
                 app:layout_constraintWidth_percent="0.4" />
 
-
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/mobileNetworkSettings"
                 android:layout_width="0sp"
                 android:layout_height="0sp"
                 android:background="@drawable/gray_circle"
+                android:backgroundTint="@{settingsData.isEnableMobileNetwork() ? @color/settingsEnable: @color/settingsDisable }"
                 android:padding="18sp"
                 android:src="@drawable/ic_wifi_tethering"
                 app:layout_constraintBottom_toTopOf="@id/wifiSettings"
@@ -100,7 +102,9 @@
             android:id="@+id/mediaControlLayout"
             android:layout_width="0sp"
             android:layout_height="0sp"
+            android:layout_marginStart="10sp"
             android:layout_marginTop="20sp"
+            android:layout_marginEnd="20sp"
             android:background="@drawable/settings_overlay_big"
             android:clickable="true"
             android:focusable="true"
@@ -110,8 +114,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/networkSettingsLayout"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.05"
-            app:layout_constraintWidth_percent="0.43">
+            app:layout_constraintVertical_bias="0.05">
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/soundName"
@@ -140,7 +143,6 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/soundName" />
-
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/playerRewind"
@@ -173,6 +175,41 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintWidth_percent="0.27" />
         </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <com.shahryar.airbar.AirBar
+            android:id="@+id/brightnessProgressBar"
+            android:layout_width="0sp"
+            android:layout_height="0sp"
+            android:layout_marginTop="20sp"
+            android:layout_marginEnd="10sp"
+            app:backgroundCornerRadius="60"
+            app:backgroundFillColor="#66000000"
+            app:icon="@drawable/ic_brightness"
+            app:layout_constraintDimensionRatio="1:1.9"
+            app:layout_constraintEnd_toStartOf="@id/volumeProgressBar"
+            app:layout_constraintStart_toStartOf="@id/mediaControlLayout"
+            app:layout_constraintTop_toBottomOf="@id/mediaControlLayout"
+            app:max="100"
+            app:progressBarFillColor="#e2d6d5"
+            bind:progress="@{settingsData.brightnessPercent}" />
+
+        <com.shahryar.airbar.AirBar
+            android:id="@+id/volumeProgressBar"
+            android:layout_width="0sp"
+            android:layout_height="0sp"
+            android:layout_marginStart="10sp"
+            android:layout_marginTop="20sp"
+            app:backgroundCornerRadius="60"
+            app:backgroundFillColor="#66000000"
+            app:icon="@drawable/ic_volume"
+            app:layout_constraintDimensionRatio="1:1.9"
+            app:layout_constraintEnd_toEndOf="@id/mediaControlLayout"
+            app:layout_constraintStart_toEndOf="@id/brightnessProgressBar"
+            app:layout_constraintTop_toBottomOf="@id/mediaControlLayout"
+            app:max="100"
+            app:progressBarFillColor="#e2d6d5"
+            bind:progress="@{settingsData.audioVolumePercent}" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

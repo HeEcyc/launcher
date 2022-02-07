@@ -1,13 +1,16 @@
 package com.wlisuha.applauncher.ui
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.role.RoleManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
+import android.media.audiofx.BassBoost
 import android.net.Uri
 import android.os.Build
+import android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS
 import android.view.DragEvent
 import android.view.View
 import androidx.activity.viewModels
@@ -79,6 +82,8 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         setTouchListenerOnIndicator()
         checkNotificationsPermissions()
 
+        askSettingsPermissions()
+
         binding.bottomAppsList.itemAnimator = null
         binding.motionView.addTransitionListener(this)
         binding.bottomAppsOverlay.setOnDragListener(this)
@@ -88,6 +93,13 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             true
         }
         registerReceiver(broadcastReceiver, viewModel.intentFilter)
+    }
+
+    private fun askSettingsPermissions() {
+        val intent = Intent(ACTION_MANAGE_WRITE_SETTINGS)
+        intent.data = Uri.parse("package:$packageName")
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        startActivity(intent)
     }
 
     private fun checkNotificationsPermissions() {

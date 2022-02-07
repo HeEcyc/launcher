@@ -1,14 +1,21 @@
 package com.wlisuha.applauncher.ui.custom
 
-import android.app.NotificationManager
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.*
+import android.database.ContentObserver
+import android.media.AudioManager
 import android.media.MediaMetadata
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
+import android.net.ConnectivityManager
+import android.net.TrafficStats
 import android.net.wifi.WifiManager
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.os.PowerManager
 import android.provider.Settings
 import android.util.AttributeSet
 import android.util.Log
@@ -19,21 +26,28 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.NotificationManagerCompat
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableField
+import com.shahryar.airbar.AirBar
 import com.wlisuha.applauncher.BR
 import com.wlisuha.applauncher.R
 import com.wlisuha.applauncher.databinding.ShutterViewBinding
 import com.wlisuha.applauncher.services.NLService
+import java.lang.reflect.Field
 
 
 class ShutterView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyle: Int = 0
-) : ConstraintLayout(context, attrs, defStyle), View.OnClickListener {
+) : ConstraintLayout(context, attrs, defStyle), View.OnClickListener,
+    AirBar.OnProgressChangedListener {
 
     private var mediaController: MediaController? = null
+
     private val bluetoothAdapter
         get() = context.getSystemService(BluetoothManager::class.java).adapter
+    private val wifiManager
+        get() = context.getSystemService(WifiManager::class.java)
+
     private val settingsData = SettingsData()
 
     private val mediaCallBack = object : MediaController.Callback() {
@@ -92,13 +106,6 @@ class ShutterView @JvmOverloads constructor(
         setPlayStateIcon()
     }
 
-    private fun hasNotification(packageName: String) = context
-        .getSystemService(NotificationManager::class.java)
-        .activeNotifications.any {
-            Log.d("12345", it.packageName)
-            it.packageName == packageName
-        }
-
     private fun setSoundInfo(metadata: MediaMetadata?) {
         binding.artistName.text = metadata
             ?.getText(MediaMetadata.METADATA_KEY_ARTIST)
@@ -124,6 +131,11 @@ class ShutterView @JvmOverloads constructor(
         binding.playerForward.setOnClickListener(this)
         binding.play.setOnClickListener(this)
         binding.bluetoothSettings.setOnClickListener(this)
+        binding.wifiSettings.setOnClickListener(this)
+        binding.airPlaneSettings.setOnClickListener(this)
+        binding.mobileNetworkSettings.setOnClickListener(this)
+        binding.brightnessProgressBar.setOnProgressChangedListener(this)
+        binding.volumeProgressBar.setOnProgressChangedListener(this)
     }
 
     override fun onClick(v: View) {
@@ -132,7 +144,21 @@ class ShutterView @JvmOverloads constructor(
             R.id.playerForward -> sendCommand(KeyEvent.KEYCODE_MEDIA_NEXT)
             R.id.play -> sendCommand(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
             R.id.bluetoothSettings -> onBluetoothClick()
+            R.id.mobileNetworkSettings, R.id.wifiSettings -> onNetworkClick()
+            R.id.airPlaneSettings -> onAirplaneSettingsClick()
         }
+    }
+
+    private fun onAirplaneSettingsClick() {
+        Intent(Settings.ACTION_AIRPLANE_MODE_SETTINGS)
+            .let(context::startActivity)
+    }
+
+    private fun onNetworkClick() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+            Intent(Settings.Panel.ACTION_INTERNET_CONNECTIVITY)
+                .let(context::startActivity)
+        else wifiManager.isWifiEnabled = !wifiManager.isWifiEnabled
     }
 
     private fun onBluetoothClick() {
@@ -153,35 +179,59 @@ class ShutterView @JvmOverloads constructor(
         settingsData.onDestroy(context)
     }
 
-
-    class SettingsData {
+    inner class SettingsData {
         val isEnableBluetooth = ObservableField<Boolean>()
         val isEnableAirplaneMode = ObservableField<Boolean>()
         val isEnableMobileNetwork = ObservableField<Boolean>()
         val isEnableWifi = ObservableField<Boolean>()
-        private val airPlaneReceiver = object : BroadcastReceiver() {
+        val audioVolumePercent = ObservableField<Double>()
+        val brightnessPercent = ObservableField<Double>()
+
+        private val brightnessObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) {
+                readCurrentBrightnessValue(context)
+            }
+        }
+
+        private val EXTRA_VOLUME_STREAM_TYPE = "android.media.EXTRA_VOLUME_STREAM_TYPE"
+        private val EXTRA_VOLUME_STREAM_VALUE = "android.media.EXTRA_VOLUME_STREAM_VALUE"
+        var maxVolumeValue = -1
+        var maxBrightnessValue = -1
+
+
+        private val intentFilter = IntentFilter().apply {
+            addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED)
+            addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
+            addAction(WifiManager.WIFI_STATE_CHANGED_ACTION)
+            addAction(ConnectivityManager.CONNECTIVITY_ACTION)
+            addAction("android.media.VOLUME_CHANGED_ACTION")
+        }
+
+        private val settingsReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
-                isEnableAirplaneMode.set(isAirplaneModeOn(context))
+                when (intent.action) {
+                    Intent.ACTION_AIRPLANE_MODE_CHANGED -> isEnableAirplaneMode
+                        .set(isAirplaneModeOn(context))
+                    BluetoothAdapter.ACTION_STATE_CHANGED -> isEnableBluetooth
+                        .set(isBluetoothEnable(intent))
+                    WifiManager.WIFI_STATE_CHANGED_ACTION -> isEnableWifi
+                        .set(isWifiEnable(context))
+                    ConnectivityManager.CONNECTIVITY_ACTION ->
+                        isEnableMobileNetwork.set(isEnableMobileData())
+                    "android.media.VOLUME_CHANGED_ACTION" -> handleVolumeState(intent)
+                }
             }
         }
 
-        private val wifiReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                isEnableWifi.set(isWifiEnable(context))
-            }
-        }
-        private val bluetoothReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent) {
-                isEnableBluetooth.set(isBluetoothEnable(intent))
-            }
+        private fun handleVolumeState(intent: Intent) {
+            if (intent.extras?.getInt(EXTRA_VOLUME_STREAM_TYPE) != AudioManager.STREAM_MUSIC) return
+            val currentVolume = intent.extras?.getInt(EXTRA_VOLUME_STREAM_VALUE) ?: 0
+            audioVolumePercent.set(currentVolume / maxVolumeValue.toDouble())
         }
 
-        private fun isBluetoothEnable(intent: Intent) = intent
-            .getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR) ==
-                BluetoothAdapter.STATE_ON
-
-        private fun isWifiEnable(context: Context) =
-            context.getSystemService(WifiManager::class.java).isWifiEnabled
+        private fun isEnableMobileData(): Boolean {
+            return TrafficStats.getMobileRxBytes() > 0
+        }
 
         fun onInit(context: Context) {
             registerListeners(context)
@@ -193,31 +243,98 @@ class ShutterView @JvmOverloads constructor(
                 .adapter.isEnabled.let(isEnableBluetooth::set)
             isEnableAirplaneMode.set(isAirplaneModeOn(context))
             isEnableWifi.set(isWifiEnable(context))
+            isEnableMobileNetwork.set(isEnableMobileData())
+            readMaxVolumeValue(context)
+            readCurrentVolumeValue(context)
+            readMaxBrightnessValue(context)
+            readCurrentBrightnessValue(context)
+        }
+
+        private fun readCurrentBrightnessValue(context: Context) {
+            val currentBrightness = Settings.System
+                .getInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS)
+            brightnessPercent.set(currentBrightness / maxBrightnessValue.toDouble())
+        }
+
+        private fun readMaxBrightnessValue(context: Context) {
+            maxBrightnessValue = getMaxBrightness(context)
+        }
+
+        private fun readCurrentVolumeValue(context: Context) {
+            val currentVolume = context.getSystemService(AudioManager::class.java)
+                .getStreamVolume(AudioManager.STREAM_MUSIC)
+            audioVolumePercent.set(currentVolume / maxVolumeValue.toDouble())
+        }
+
+        private fun readMaxVolumeValue(context: Context) {
+            maxVolumeValue = context.getSystemService(AudioManager::class.java)
+                .getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         }
 
         private fun registerListeners(context: Context) {
-            context.registerReceiver(
-                bluetoothReceiver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
-            )
-            context.registerReceiver(
-                airPlaneReceiver, IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED)
-            )
-
-            context.registerReceiver(
-                wifiReceiver, IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION)
+            context.registerReceiver(settingsReceiver, intentFilter)
+            context.contentResolver.registerContentObserver(
+                Settings.System.getUriFor(Settings.System.SCREEN_BRIGHTNESS),
+                false,
+                brightnessObserver
             )
         }
 
         fun onDestroy(context: Context) {
-            context.unregisterReceiver(bluetoothReceiver)
-            context.unregisterReceiver(airPlaneReceiver)
-            context.unregisterReceiver(wifiReceiver)
+            context.unregisterReceiver(settingsReceiver)
+            context.contentResolver.unregisterContentObserver(brightnessObserver)
         }
 
         private fun isAirplaneModeOn(context: Context): Boolean {
             return Settings.System
                 .getInt(context.contentResolver, Settings.Global.AIRPLANE_MODE_ON, 0) != 0
         }
+
+        private fun isBluetoothEnable(intent: Intent) = intent
+            .getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR) ==
+                BluetoothAdapter.STATE_ON
+
+        private fun isWifiEnable(context: Context) =
+            context.getSystemService(WifiManager::class.java).isWifiEnabled
+
+        private fun getMaxBrightness(context: Context): Int {
+            val powerManager = context.getSystemService(PowerManager::class.java)
+            val fields: Array<Field> = powerManager.javaClass.declaredFields
+            for (field in fields) {
+                if (field.name.equals("BRIGHTNESS_ON")) {
+                    field.isAccessible = true
+                    return try {
+                        field.get(powerManager) as Int
+                    } catch (e: IllegalAccessException) {
+                        255
+                    }
+                }
+            }
+            return 255
+        }
+    }
+
+    override fun onProgressChanged(airBar: AirBar, progress: Double, percentage: Double) {
+        when (airBar.id) {
+            R.id.brightnessProgressBar -> changeBrightness(percentage)
+            R.id.volumeProgressBar -> changeVolume(percentage)
+        }
+    }
+
+    private fun changeVolume(percentage: Double) {
+        val currentVolume = (percentage * settingsData.maxVolumeValue).toInt()
+        context.getSystemService(AudioManager::class.java)
+            .setStreamVolume(AudioManager.STREAM_MUSIC, currentVolume, AudioManager.FLAG_PLAY_SOUND)
+    }
+
+    private fun changeBrightness(percentage: Double) {
+        Settings.System.putInt(
+            context.contentResolver, Settings.System
+                .SCREEN_BRIGHTNESS, (percentage * settingsData.maxBrightnessValue).toInt()
+        )
+    }
+
+    override fun afterProgressChanged(airBar: AirBar, progress: Double, percentage: Double) {
 
     }
 }
