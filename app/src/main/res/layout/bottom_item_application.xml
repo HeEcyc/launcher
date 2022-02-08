@@ -33,7 +33,7 @@
             bind:imageDrawable="@{item.icon}" />
 
         <androidx.appcompat.widget.AppCompatImageView
-            onEnableSelected="@{viewModel.isSelectionEnabled()}"
+            onEnableSelected="@{item.nonSystemApp &amp;&amp; viewModel.isSelectionEnabled()}"
             android:layout_width="20sp"
             android:layout_height="20sp"
             android:background="@drawable/gray_circle"

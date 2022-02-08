@@ -1,20 +1,21 @@
 package com.wlisuha.applauncher.ui
 
-import android.Manifest
 import android.annotation.SuppressLint
+import android.app.UiModeManager
 import android.app.role.RoleManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
-import android.media.audiofx.BassBoost
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS
 import android.view.DragEvent
 import android.view.View
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.constraintlayout.motion.widget.MotionLayout
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
 import com.wlisuha.applauncher.R
 import com.wlisuha.applauncher.base.BaseActivity
@@ -30,7 +31,7 @@ import kotlin.math.roundToInt
 
 
 class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_activity),
-    View.OnDragListener, MotionLayout.TransitionListener {
+    View.OnDragListener, MotionLayout.TransitionListener, DrawerLayout.DrawerListener {
 
     private lateinit var viewPagerAdapter: VPAdapter
     override val viewModel: AppViewModel by viewModels()
@@ -80,9 +81,10 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         }
         calculateAppItemViewHeight()
         setTouchListenerOnIndicator()
-        checkNotificationsPermissions()
 
-        askSettingsPermissions()
+        // checkNotificationsPermissions()
+        // askSettingsPermissions()
+
 
         binding.bottomAppsList.itemAnimator = null
         binding.motionView.addTransitionListener(this)
@@ -92,6 +94,13 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             viewModel.isSelectionEnabled.set(!(viewModel.isSelectionEnabled.get() ?: false))
             true
         }
+        binding.drawer.addDrawerListener(this)
+
+
+//        getSystemService(UiModeManager::class.java)
+//            .nightMode = UiModeManager.MODE_NIGHT_YES
+
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY)
         registerReceiver(broadcastReceiver, viewModel.intentFilter)
     }
 
@@ -323,6 +332,22 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         positive: Boolean,
         progress: Float
     ) {
+
+    }
+
+    override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
+        binding.motionView.translationX = drawerView.width * slideOffset
+    }
+
+    override fun onDrawerOpened(drawerView: View) {
+
+    }
+
+    override fun onDrawerClosed(drawerView: View) {
+
+    }
+
+    override fun onDrawerStateChanged(newState: Int) {
 
     }
 }

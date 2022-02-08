@@ -252,10 +252,13 @@ class AppViewModel : BaseViewModel() {
     }
 
     private fun createModel(rf: ApplicationInfo): InstalledApp {
+        val isNotSystemApp =
+            rf.flags and (ApplicationInfo.FLAG_SYSTEM or ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) == 0
         return InstalledApp(
             rf.loadLabel(packageManager).toString(),
             rf.loadIcon(packageManager),
-            rf.packageName
+            rf.packageName,
+            isNotSystemApp
         )
     }
 

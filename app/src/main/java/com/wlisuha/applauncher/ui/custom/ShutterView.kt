@@ -26,6 +26,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.NotificationManagerCompat
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableField
+import androidx.drawerlayout.widget.DrawerLayout
 import com.shahryar.airbar.AirBar
 import com.wlisuha.applauncher.BR
 import com.wlisuha.applauncher.R
@@ -240,7 +241,7 @@ class ShutterView @JvmOverloads constructor(
 
         private fun readCurrentState(context: Context) {
             context.getSystemService(BluetoothManager::class.java)
-                .adapter.isEnabled.let(isEnableBluetooth::set)
+                .adapter?.isEnabled?.let(isEnableBluetooth::set)
             isEnableAirplaneMode.set(isAirplaneModeOn(context))
             isEnableWifi.set(isWifiEnable(context))
             isEnableMobileNetwork.set(isEnableMobileData())
