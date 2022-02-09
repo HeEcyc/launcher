@@ -82,7 +82,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         calculateAppItemViewHeight()
         setTouchListenerOnIndicator()
 
-        // checkNotificationsPermissions()
+        checkNotificationsPermissions()
         // askSettingsPermissions()
 
 

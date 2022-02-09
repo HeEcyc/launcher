@@ -1,15 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:app="http://schemas.android.com/apk/res-auto">
+<layout>
 
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_marginBottom="10sp">
 
-        <com.wlisuha.applauncher.ui.custom.NotificationStackView
+        <link.fls.swipestack.SwipeStack
             android:id="@+id/notificationStack"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@android:color/darker_gray"
+            android:layout_height="200sp"
+            android:paddingVertical="32dp"
+            app:scale_factor="0.98"
+            app:stack_spacing="6sp"
+            app:allowed_swipe_directions="both"
+            app:stack_rotation="0"
+            app:swipe_rotation="0"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>

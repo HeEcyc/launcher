@@ -133,7 +133,7 @@
             </com.wlisuha.applauncher.ui.custom.ClickableMotionLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <com.wlisuha.applauncher.ui.custom.NotificationView
+        <com.wlisuha.applauncher.ui.custom.NotificationScreenView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="start"

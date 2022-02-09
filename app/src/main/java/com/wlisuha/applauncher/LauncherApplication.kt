@@ -1,8 +1,11 @@
 package com.wlisuha.applauncher
 
 import android.app.Application
+import android.service.notification.StatusBarNotification
 
 class LauncherApplication : Application() {
+
+    var notificationListener: NotificationListener? = null
 
     companion object {
         lateinit var instance: LauncherApplication
@@ -11,5 +14,11 @@ class LauncherApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+    }
+
+    interface NotificationListener {
+        fun onAddedNotification(statusBarNotification: StatusBarNotification)
+
+        fun onRemovedNotification(statusBarNotification: StatusBarNotification)
     }
 }
