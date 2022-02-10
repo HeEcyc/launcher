@@ -48,7 +48,7 @@ public class SwipeHelper implements View.OnTouchListener {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                if(!mListenForTouchEvents || !mSwipeStack.isEnabled()) {
+                if (!mListenForTouchEvents || !mSwipeStack.isEnabled()) {
                     return false;
                 }
 
@@ -57,7 +57,6 @@ public class SwipeHelper implements View.OnTouchListener {
                 mPointerId = event.getPointerId(0);
                 mDownX = event.getX(mPointerId);
                 mDownY = event.getY(mPointerId);
-
                 return true;
 
             case MotionEvent.ACTION_MOVE:
@@ -94,16 +93,15 @@ public class SwipeHelper implements View.OnTouchListener {
                 v.getParent().requestDisallowInterceptTouchEvent(false);
                 mSwipeStack.onSwipeEnd();
                 checkViewPosition();
-
                 return true;
 
         }
 
-        return false;
+        return true;
     }
 
     private void checkViewPosition() {
-        if(!mSwipeStack.isEnabled()) {
+        if (!mSwipeStack.isEnabled()) {
             resetViewPosition();
             return;
         }

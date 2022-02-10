@@ -1,7 +1,6 @@
 package com.wlisuha.applauncher.ui.custom
 
 import android.content.Context
-import android.graphics.Color
 import android.service.notification.StatusBarNotification
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -12,13 +11,13 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.databinding.DataBindingUtil
 import com.wlisuha.applauncher.R
 import com.wlisuha.applauncher.databinding.NotificationStackViewBinding
-import kotlin.random.Random
 
 class NotificationStackView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyle: Int = 0
 ) : ConstraintLayout(context, attrs, defStyle) {
+
     private val stackAdapter = SwipeStackAdapter()
     private val notifications = mutableListOf<StatusBarNotification>()
 
@@ -27,11 +26,12 @@ class NotificationStackView @JvmOverloads constructor(
         stackAdapter.notifyDataSetChanged()
     }
 
-    fun removeNotification(statusBarNotification: StatusBarNotification) {
+    fun removeNotification(statusBarNotification: StatusBarNotification): Boolean {
         val toRemove = notifications
-            .firstOrNull { it.key == statusBarNotification.key } ?: return
-        notifications.remove(toRemove)
+            .filter { it.groupKey == statusBarNotification.groupKey }
+        notifications.removeAll(toRemove)
         stackAdapter.notifyDataSetChanged()
+        return notifications.isEmpty()
     }
 
     val binding: NotificationStackViewBinding = DataBindingUtil.inflate(
@@ -46,8 +46,8 @@ class NotificationStackView @JvmOverloads constructor(
         binding.notificationStack.adapter = stackAdapter
     }
 
-    fun getNotificationsPackage() =
-        notifications.firstOrNull()?.packageName
+    fun getNotificationsGroup() =
+        notifications.firstOrNull()?.groupKey
 
     inner class SwipeStackAdapter : BaseAdapter() {
 

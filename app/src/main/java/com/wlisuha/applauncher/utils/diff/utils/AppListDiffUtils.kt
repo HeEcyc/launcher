@@ -1,4 +1,4 @@
-package com.wlisuha.applauncher.utils
+package com.wlisuha.applauncher.utils.diff.utils
 
 import androidx.recyclerview.widget.DiffUtil
 import com.wlisuha.applauncher.data.InstalledApp

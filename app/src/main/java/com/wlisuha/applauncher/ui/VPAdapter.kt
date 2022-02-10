@@ -18,7 +18,7 @@ import com.wlisuha.applauncher.data.DragInfo
 import com.wlisuha.applauncher.data.InstalledApp
 import com.wlisuha.applauncher.databinding.LauncherItemApplicationBinding
 import com.wlisuha.applauncher.ui.custom.NonSwipeableViewPager
-import com.wlisuha.applauncher.utils.AppListDiffUtils
+import com.wlisuha.applauncher.utils.diff.utils.AppListDiffUtils
 import com.wlisuha.applauncher.utils.SwapHelper
 import java.util.*
 

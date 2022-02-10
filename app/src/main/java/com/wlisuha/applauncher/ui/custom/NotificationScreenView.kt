@@ -3,10 +3,9 @@ package com.wlisuha.applauncher.ui.custom
 import android.content.Context
 import android.service.notification.StatusBarNotification
 import android.util.AttributeSet
-import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.databinding.DataBindingUtil
 import com.wlisuha.applauncher.LauncherApplication
@@ -35,16 +34,43 @@ class NotificationScreenView @JvmOverloads constructor(
     }
 
     override fun onAddedNotification(statusBarNotification: StatusBarNotification) {
-        binding.notificationStack.addNotification(statusBarNotification)
+        for (i in 0 until binding.notificationsList.childCount) {
+            val currentView = binding.notificationsList
+                .getChildAt(0) as? NotificationStackView ?: return
+            if (currentView.getNotificationsGroup() == statusBarNotification.groupKey) {
+                currentView.addNotification(statusBarNotification)
+                return
+            }
+        }
+        addNotificationView(statusBarNotification)
+        binding.scrollView.requestLayout()
     }
 
     override fun onRemovedNotification(statusBarNotification: StatusBarNotification) {
-        Log.d("12345", "remove")
-        binding.notificationStack.removeNotification(statusBarNotification)
+        val viewsToRemove = mutableListOf<View>()
+        for (i in 0 until binding.notificationsList.childCount) {
+            binding.notificationsList.getChildAt(i)?.let {
+                it as NotificationStackView
+                if (it.getNotificationsGroup() == statusBarNotification.groupKey) {
+                    if (it.removeNotification(statusBarNotification)) viewsToRemove.add(it)
+                }
+            }
+
+        }
+        viewsToRemove.forEach { binding.notificationsList.removeView(it) }
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         LauncherApplication.instance.notificationListener = null
     }
+
+    private fun addNotificationView(statusBarNotification: StatusBarNotification) {
+        NotificationStackView(context).let {
+            it.addNotification(statusBarNotification)
+            binding.notificationsList.addView(it)
+        }
+    }
+
+
 }
