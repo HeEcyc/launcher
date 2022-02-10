@@ -151,6 +151,7 @@
 
         <com.wlisuha.applauncher.ui.custom.NotificationScreenView
             android:layout_width="match_parent"
+            android:id="@+id/notView"
             android:layout_height="match_parent"
             android:layout_gravity="start"
             android:layout_marginStart="-64dp"

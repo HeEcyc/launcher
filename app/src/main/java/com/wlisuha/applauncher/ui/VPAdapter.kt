@@ -265,7 +265,6 @@ class VPAdapter(
             dragInfo.currentPage = currentPage
             dragInfo.updateItemPosition()
             saveItemPositionsOnPage(currentAdapter.getData(), currentPage)
-
         }
     }
 

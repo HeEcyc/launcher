@@ -98,9 +98,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             true
         }
         binding.drawer.addDrawerListener(this)
-
-//        getSystemService(UiModeManager::class.java)
-//            .nightMode = UiModeManager.MODE_NIGHT_YES
+        binding.notView.drawerLayout = binding.drawer
 
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY)
         registerReceiver(broadcastReceiver, viewModel.intentFilter)

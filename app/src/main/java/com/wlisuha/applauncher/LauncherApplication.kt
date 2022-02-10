@@ -17,8 +17,6 @@ class LauncherApplication : Application() {
     }
 
     interface NotificationListener {
-        fun onAddedNotification(statusBarNotification: StatusBarNotification)
-
-        fun onRemovedNotification(statusBarNotification: StatusBarNotification)
+        fun onNotificationsChanges(statusBarNotification: List<StatusBarNotification>)
     }
 }
