@@ -23,22 +23,15 @@ class NotificationStackView @JvmOverloads constructor(
     private val notifications = mutableListOf<StatusBarNotification>()
 
     fun addNotification(statusBarNotification: StatusBarNotification) {
-        if (notifications.any {
-                it.packageName == statusBarNotification.packageName &&
-                        it.notification.tickerText == statusBarNotification.notification.tickerText
-            }) return
         notifications.add(0, statusBarNotification)
         stackAdapter.notifyDataSetChanged()
     }
 
     fun removeNotification(statusBarNotification: StatusBarNotification) {
-        val toRemove = notifications.firstOrNull {
-            it.packageName == statusBarNotification.packageName &&
-                    it.notification.tickerText == statusBarNotification.notification.tickerText
-        } ?: return
+        val toRemove = notifications
+            .firstOrNull { it.key == statusBarNotification.key } ?: return
         notifications.remove(toRemove)
         stackAdapter.notifyDataSetChanged()
-      //  binding.notificationStack.resetStack()
     }
 
     val binding: NotificationStackViewBinding = DataBindingUtil.inflate(
@@ -53,9 +46,8 @@ class NotificationStackView @JvmOverloads constructor(
         binding.notificationStack.adapter = stackAdapter
     }
 
-    fun getRandomColor(): Int {
-        return Color.argb(255, Random.nextInt(256), Random.nextInt(256), Random.nextInt(256))
-    }
+    fun getNotificationsPackage() =
+        notifications.firstOrNull()?.packageName
 
     inner class SwipeStackAdapter : BaseAdapter() {
 
@@ -66,13 +58,16 @@ class NotificationStackView @JvmOverloads constructor(
         override fun getItemId(position: Int) = position.toLong()
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-            return View(parent.context).apply {
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
-                setBackgroundColor(getRandomColor())
-            }
+            return LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_notification, parent, false)
+
+//            return View(parent.context).apply {
+//                layoutParams = ViewGroup.LayoutParams(
+//                    ViewGroup.LayoutParams.MATCH_PARENT,
+//                    ViewGroup.LayoutParams.MATCH_PARENT
+//                )
+//                //  setBackgroundColor(getRandomColor())
+//            }
         }
     }
 }

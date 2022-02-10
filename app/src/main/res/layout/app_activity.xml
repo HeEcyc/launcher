@@ -35,7 +35,7 @@
                     android:background="#FFFFFF"
                     android:visibility="gone" />
 
-                <androidx.viewpager.widget.ViewPager
+                <com.wlisuha.applauncher.ui.custom.NonSwipeableViewPager
                     android:id="@+id/appPages"
                     android:layout_width="match_parent"
                     android:layout_height="0sp"
@@ -59,7 +59,6 @@
                     android:id="@+id/indicatorOverlay"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@android:color/black"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/appPages">
@@ -89,33 +88,50 @@
                     </androidx.constraintlayout.widget.ConstraintLayout>
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <androidx.constraintlayout.widget.ConstraintLayout
+                <androidx.cardview.widget.CardView
                     android:id="@+id/bottomRoot"
                     android:layout_width="match_parent"
+                    android:layout_marginHorizontal="10sp"
+                    android:layout_marginVertical="5sp"
                     android:layout_height="0sp"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    app:cardCornerRadius="50sp"
+                    app:cardElevation="0sp"
                     app:layout_constraintBottom_toTopOf="@id/fakeNavBar"
                     app:layout_constraintTop_toBottomOf="@id/indicatorOverlay">
 
-                    <RelativeLayout
-                        android:id="@+id/bottomAppsOverlay"
+                    <com.github.mmin18.widget.RealtimeBlurView
                         android:layout_width="match_parent"
-                        android:layout_height="0sp"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintHeight_percent="0.75"
-                        app:layout_constraintTop_toTopOf="parent">
+                        android:layout_height="match_parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:realtimeBlurRadius="5sp"
+                        app:realtimeOverlayColor="#60ffffff" />
 
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/bottomAppsList"
-                            android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
-                            android:layout_centerInParent="true"
-                            android:adapter="@{viewModel.bottomAppListAdapter}"
-                            android:orientation="horizontal"
-                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                            app:spanCount="4" />
-                    </RelativeLayout>
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
 
-                </androidx.constraintlayout.widget.ConstraintLayout>
+                        <RelativeLayout
+                            android:id="@+id/bottomAppsOverlay"
+                            android:layout_width="match_parent"
+                            android:layout_height="0sp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintHeight_percent="0.75"
+                            app:layout_constraintTop_toTopOf="parent">
+
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/bottomAppsList"
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:layout_centerInParent="true"
+                                android:adapter="@{viewModel.bottomAppListAdapter}"
+                                android:orientation="horizontal"
+                                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                                app:spanCount="4" />
+                        </RelativeLayout>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                </androidx.cardview.widget.CardView>
 
                 <com.wlisuha.applauncher.ui.custom.ShutterView
                     android:id="@+id/viewList"

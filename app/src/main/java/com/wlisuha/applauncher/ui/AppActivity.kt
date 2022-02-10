@@ -1,7 +1,6 @@
 package com.wlisuha.applauncher.ui
 
 import android.annotation.SuppressLint
-import android.app.UiModeManager
 import android.app.role.RoleManager
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -15,12 +14,14 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.constraintlayout.motion.widget.MotionLayout
+import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
 import com.wlisuha.applauncher.R
 import com.wlisuha.applauncher.base.BaseActivity
 import com.wlisuha.applauncher.data.DragInfo
 import com.wlisuha.applauncher.databinding.AppActivityBinding
+import com.wlisuha.applauncher.ui.custom.NonSwipeableViewPager
 import com.wlisuha.applauncher.utils.APP_COLUMN_COUNT
 import com.wlisuha.applauncher.utils.MOVING_PAGE_DELAY
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +32,8 @@ import kotlin.math.roundToInt
 
 
 class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_activity),
-    View.OnDragListener, MotionLayout.TransitionListener, DrawerLayout.DrawerListener {
+    View.OnDragListener, MotionLayout.TransitionListener, DrawerLayout.DrawerListener,
+    NonSwipeableViewPager.StateProvider {
 
     private lateinit var viewPagerAdapter: VPAdapter
     override val viewModel: AppViewModel by viewModels()
@@ -85,7 +87,8 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         checkNotificationsPermissions()
         // askSettingsPermissions()
 
-
+        binding.appPages.stateProvider = this
+        viewModel.stateProvider = this
         binding.bottomAppsList.itemAnimator = null
         binding.motionView.addTransitionListener(this)
         binding.bottomAppsOverlay.setOnDragListener(this)
@@ -95,7 +98,6 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             true
         }
         binding.drawer.addDrawerListener(this)
-
 
 //        getSystemService(UiModeManager::class.java)
 //            .nightMode = UiModeManager.MODE_NIGHT_YES
@@ -139,7 +141,13 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     override fun onBackPressed() {
-        askRole()
+        if (!isPresentOnHomeScreen()) {
+            binding.motionView.transitionToStart()
+        } else if (binding.drawer.isDrawerOpen(GravityCompat.START)) {
+            binding.drawer.closeDrawer(GravityCompat.START)
+        } else {
+            askRole()
+        }
     }
 
     override fun onDrag(v: View, event: DragEvent): Boolean {
@@ -276,6 +284,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             viewModel.readAllPackage(visibleItemCountOnPageScreen),
             visibleItemCountOnPageScreen,
             viewModel,
+            this
         )
     }
 
@@ -350,4 +359,6 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     override fun onDrawerStateChanged(newState: Int) {
 
     }
+
+    override fun isPresentOnHomeScreen() = binding.motionView.currentState == R.id.start
 }

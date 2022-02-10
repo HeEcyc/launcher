@@ -5,12 +5,52 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <TextClock
+            android:id="@+id/mainClock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="70sp"
+            android:fontFamily="@font/sf_pro_display"
+            android:format12Hour="kk:mm"
+            android:format24Hour="hh:mm"
+            android:textColor="@android:color/white"
+            android:textSize="90sp"
+            android:textStyle="normal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextClock
+            android:id="@+id/textClock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="-5sp"
+            android:fontFamily="@font/sf_pro_display"
+            android:format12Hour="EEEE, dd MMMM"
+            android:format24Hour="EEEE, dd MMMM"
+            android:textColor="@android:color/white"
+            android:textSize="25sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/mainClock" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/notificationsCenterText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20sp"
+            android:layout_marginTop="60sp"
+            android:fontFamily="@font/sf_pro_display"
+            android:text="@string/notifications_center"
+            android:textColor="@android:color/white"
+            android:textSize="28sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/textClock" />
+
         <com.wlisuha.applauncher.ui.custom.NotificationStackView
             android:id="@+id/notificationStack"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@android:color/darker_gray"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/notificationsCenterText" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

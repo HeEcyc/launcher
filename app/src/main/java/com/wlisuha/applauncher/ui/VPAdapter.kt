@@ -17,6 +17,7 @@ import com.wlisuha.applauncher.base.createAdapter
 import com.wlisuha.applauncher.data.DragInfo
 import com.wlisuha.applauncher.data.InstalledApp
 import com.wlisuha.applauncher.databinding.LauncherItemApplicationBinding
+import com.wlisuha.applauncher.ui.custom.NonSwipeableViewPager
 import com.wlisuha.applauncher.utils.AppListDiffUtils
 import com.wlisuha.applauncher.utils.SwapHelper
 import java.util.*
@@ -26,6 +27,7 @@ class VPAdapter(
     private val listAppPages: MutableList<List<InstalledApp>>,
     private val visibleApplicationsOnScreen: Int,
     private val viewModel: AppViewModel,
+    private val stateProvider: NonSwipeableViewPager.StateProvider
 ) : PagerAdapter() {
 
     private val swapHelper = SwapHelper(Handler(Looper.getMainLooper()))
@@ -59,6 +61,7 @@ class VPAdapter(
                 binding.notifyPropertyChanged(BR.viewModel)
 
                 binding.root.setOnLongClickListener {
+                    if (!stateProvider.isPresentOnHomeScreen()) return@setOnLongClickListener false
                     viewModel.isSelectionEnabled.set(true)
                     startDragAndDrop(item, binding, adapter, position)
                     false

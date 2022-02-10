@@ -4,16 +4,16 @@
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="150sp"
         android:layout_marginBottom="10sp">
 
         <link.fls.swipestack.SwipeStack
             android:id="@+id/notificationStack"
             android:layout_width="match_parent"
-            android:layout_height="200sp"
-            android:paddingVertical="32dp"
+            android:layout_height="match_parent"
             app:scale_factor="0.98"
             app:stack_spacing="6sp"
+            android:paddingBottom="5sp"
             app:allowed_swipe_directions="both"
             app:stack_rotation="0"
             app:swipe_rotation="0"

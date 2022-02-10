@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">AppLauncher</string>
+    <string name="notifications_center">Notifications Center</string>
 </resources>

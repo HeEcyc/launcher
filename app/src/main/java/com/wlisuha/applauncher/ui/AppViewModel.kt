@@ -26,6 +26,7 @@ import com.wlisuha.applauncher.data.DragInfo
 import com.wlisuha.applauncher.data.InstalledApp
 import com.wlisuha.applauncher.data.db.DataBase
 import com.wlisuha.applauncher.databinding.BottomItemApplicationBinding
+import com.wlisuha.applauncher.ui.custom.NonSwipeableViewPager
 import com.wlisuha.applauncher.utils.APP_COLUMN_COUNT
 import kotlinx.coroutines.*
 import java.text.Collator
@@ -38,6 +39,7 @@ class AppViewModel : BaseViewModel() {
         addAction(Intent.ACTION_PACKAGE_ADDED)
         addDataScheme("package")
     }
+    var stateProvider: NonSwipeableViewPager.StateProvider? = null
 
     private var saveDBJob: Job? = null
     var movePageJob: Job? = null
@@ -73,8 +75,10 @@ class AppViewModel : BaseViewModel() {
                 binding.setVariable(BR.viewModel, this@AppViewModel)
                 binding.notifyPropertyChanged(BR.viewModel)
                 binding.root.setOnLongClickListener {
-                    isSelectionEnabled.set(true)
-                    createDragAndDropView(item, binding, adapter)
+                    if (stateProvider?.isPresentOnHomeScreen() == true) {
+                        isSelectionEnabled.set(true)
+                        createDragAndDropView(item, binding, adapter)
+                    }
                     false
                 }
             }
@@ -174,6 +178,7 @@ class AppViewModel : BaseViewModel() {
     }
 
     fun launchApp(packageName: String) {
+        if (stateProvider?.isPresentOnHomeScreen() == false) return
         packageManager.getLaunchIntentForPackage(packageName)
             ?.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             ?.let(LauncherApplication.instance::startActivity)

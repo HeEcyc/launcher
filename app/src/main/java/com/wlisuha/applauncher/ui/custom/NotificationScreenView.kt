@@ -6,6 +6,8 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.databinding.DataBindingUtil
 import com.wlisuha.applauncher.LauncherApplication
 import com.wlisuha.applauncher.R
@@ -26,15 +28,18 @@ class NotificationScreenView @JvmOverloads constructor(
 
     init {
         LauncherApplication.instance.notificationListener = this
+        ResourcesCompat.getFont(context, R.font.sf_pro_display)?.let {
+            binding.mainClock.typeface = it
+            binding.textClock.typeface = it
+        }
     }
 
     override fun onAddedNotification(statusBarNotification: StatusBarNotification) {
-        Log.d("12345","enter")
         binding.notificationStack.addNotification(statusBarNotification)
     }
 
     override fun onRemovedNotification(statusBarNotification: StatusBarNotification) {
-        Log.d("12345","remove")
+        Log.d("12345", "remove")
         binding.notificationStack.removeNotification(statusBarNotification)
     }
 

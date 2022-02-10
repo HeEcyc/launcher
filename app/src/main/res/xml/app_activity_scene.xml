@@ -26,10 +26,12 @@
     </ConstraintSet>
 
     <Transition
+
         app:constraintSetEnd="@id/end"
         app:constraintSetStart="@+id/start"
         app:duration="2000">
         <OnSwipe
+
             app:dragDirection="dragUp"
             app:touchAnchorId="@id/beacon" />
 
