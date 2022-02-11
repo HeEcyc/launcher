@@ -1,18 +1,15 @@
 package com.wlisuha.applauncher.ui.custom
 
 import android.annotation.SuppressLint
-import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Typeface
 import android.service.notification.StatusBarNotification
 import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.res.ResourcesCompat
 import androidx.databinding.DataBindingUtil
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.DiffUtil
@@ -91,13 +88,16 @@ class NotificationScreenView @JvmOverloads constructor(
     )
 
     init {
+        binding.removeAllNotificationsButton.setOnClickListener {
+            Intent("cancel").let(context::sendBroadcast)
+        }
         binding.notificationsList.addItemDecoration(NotificationItemDecoration())
         binding.notificationsList.adapter = adapter
         ItemTouchHelper(touchCallback)
             .attachToRecyclerView(binding.notificationsList)
         LauncherApplication.instance.notificationListener = this
-        ResourcesCompat.getFont(context, R.font.sf_pro_display)?.let {
-            binding.mainClock.typeface = it
+        Typeface.createFromAsset(context.assets, "sf_pro_display.ttf").let {
+            binding.mainClock.setTypeface(it, Typeface.NORMAL)
             binding.textClock.typeface = it
         }
     }

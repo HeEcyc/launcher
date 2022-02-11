@@ -8,6 +8,9 @@ import androidx.databinding.BindingAdapter
 import android.content.Context.CONTEXT_IGNORE_SECURITY
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
+import android.graphics.Outline
+import android.view.ViewOutlineProvider
+import androidx.appcompat.widget.AppCompatTextView
 
 
 @BindingAdapter("onEnableSelected")
@@ -28,5 +31,37 @@ fun AppCompatImageView.isVisibleRemoving(isVisibleRemoving: Boolean) {
 @BindingAdapter("notificationIcon")
 fun AppCompatImageView.notificationIcon(packageName: String) {
     context.packageManager.getApplicationIcon(packageName)
-        .let (::setImageDrawable)
+        .let(::setImageDrawable)
+}
+
+@BindingAdapter("notificationTitle")
+fun AppCompatTextView.notificationTitle(statusBarNotification: StatusBarNotification) {
+    text = statusBarNotification.notification.extras.getString("android.title")
+}
+
+@BindingAdapter("notificationText")
+fun AppCompatTextView.notificationText(statusBarNotification: StatusBarNotification) {
+    text = statusBarNotification.notification.extras.getString("android.text")
+}
+
+@BindingAdapter("notificationImage")
+fun AppCompatImageView.notificationImage(statusBarNotification: StatusBarNotification) {
+    with(statusBarNotification.notification.getLargeIcon()?.loadDrawable(context)) {
+        if (this == null) visibility = View.GONE
+        else {
+            object : ViewOutlineProvider() {
+                override fun getOutline(view: View, outline: Outline) {
+                    outline.setRoundRect(0, 0, view.width, view.height, 10f)
+                }
+            }.let(this@notificationImage::setOutlineProvider)
+            this@notificationImage.clipToOutline = true
+            this@notificationImage.setImageDrawable(this)
+        }
+    }
+}
+
+@BindingAdapter("notificationAppOwner")
+fun AppCompatTextView.notificationAppOwner(statusBarNotification: StatusBarNotification) {
+    val appInfo = context.packageManager.getApplicationInfo(statusBarNotification.packageName, 0)
+    text = context.packageManager.getApplicationLabel(appInfo)
 }

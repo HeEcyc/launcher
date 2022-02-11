@@ -5,6 +5,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Handler
+import android.os.Looper
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import com.wlisuha.applauncher.LauncherApplication
@@ -25,8 +27,11 @@ class NLService : NotificationListenerService() {
         registerReceiver(receiver, IntentFilter("cancel").apply {
             addAction("cancel_current")
         })
-        LauncherApplication.instance.notificationListener
-            ?.onNotificationsChanges(getNotificationsList())
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            LauncherApplication.instance.notificationListener
+                ?.onNotificationsChanges(getNotificationsList())
+        }, 100)
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
