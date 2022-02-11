@@ -31,7 +31,7 @@ class NLService : NotificationListenerService() {
         Handler(Looper.getMainLooper()).postDelayed({
             LauncherApplication.instance.notificationListener
                 ?.onNotificationsChanges(getNotificationsList())
-        }, 100)
+        }, 1000)
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {

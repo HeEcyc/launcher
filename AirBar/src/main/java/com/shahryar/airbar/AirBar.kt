@@ -195,18 +195,28 @@ class AirBar(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         if (event!!.action == MotionEvent.ACTION_MOVE) {
+            if (mListener?.canChange(this) == false) return true
             isVirgin = false
             Log.d("AIR", "${event.y}")
-            when {
-                event.y in 0.0..mBottom.toDouble() -> mProgressRect.top = event.y
-                event.y > 100 -> mProgressRect.top = mBottom
-                event.y < 0 -> mProgressRect.top = 0F
+
+            val percent = 1 - event.y / mBottom.toDouble()
+
+            if (mListener?.canMoveByFinger(this) == true) {
+                when {
+                    event.y in 0.0..mBottom.toDouble() -> mProgressRect.top = event.y
+                    event.y > 100 -> mProgressRect.top = mBottom
+                    event.y < 0 -> mProgressRect.top = 0F
+                }
             }
-            mListener?.onProgressChanged(this, getProgress(), getPercentage())
+
+            mListener?.onProgressChanged(this, getProgress(), percent)
             invalidate()
             return true
         } else if (event.action == MotionEvent.ACTION_UP) {
-            mListener?.afterProgressChanged(this, getProgress(), getPercentage())
+            if (mListener?.canChange(this) == false)
+                mListener?.actionWhenCantChange(this)
+            else mListener
+                ?.afterProgressChanged(this, getProgress(), getPercentage())
         }
         return true
     }
@@ -276,5 +286,11 @@ class AirBar(context: Context, attrs: AttributeSet) : View(context, attrs) {
     interface OnProgressChangedListener {
         fun onProgressChanged(airBar: AirBar, progress: Double, percentage: Double)
         fun afterProgressChanged(airBar: AirBar, progress: Double, percentage: Double)
+
+        fun canChange(airBar: AirBar): Boolean
+
+        fun actionWhenCantChange(airBar: AirBar)
+
+        fun canMoveByFinger(airBar: AirBar): Boolean
     }
 }

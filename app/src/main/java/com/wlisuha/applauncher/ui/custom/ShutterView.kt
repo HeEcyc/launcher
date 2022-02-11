@@ -11,6 +11,7 @@ import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.net.ConnectivityManager
 import android.net.TrafficStats
+import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Handler
@@ -26,7 +27,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.NotificationManagerCompat
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableField
-import androidx.drawerlayout.widget.DrawerLayout
 import com.shahryar.airbar.AirBar
 import com.wlisuha.applauncher.BR
 import com.wlisuha.applauncher.R
@@ -77,6 +77,7 @@ class ShutterView @JvmOverloads constructor(
 
     init {
         binding.setVariable(BR.settingsData, settingsData)
+        binding.allSettingsLayout.visibility = View.GONE
         settingsData.onInit(context)
     }
 
@@ -85,10 +86,12 @@ class ShutterView @JvmOverloads constructor(
 
 
     fun onHide() {
+        binding.allSettingsLayout.visibility = View.GONE
         mediaController?.unregisterCallback(mediaCallBack)
     }
 
     fun onShow() {
+        binding.allSettingsLayout.visibility = View.VISIBLE
         setupPlayerLayout()
     }
 
@@ -337,5 +340,23 @@ class ShutterView @JvmOverloads constructor(
 
     override fun afterProgressChanged(airBar: AirBar, progress: Double, percentage: Double) {
 
+    }
+
+    override fun canChange(airBar: AirBar): Boolean {
+        return when (airBar.id) {
+            R.id.brightnessProgressBar -> Settings.System.canWrite(context)
+            else -> true
+        }
+    }
+
+    override fun actionWhenCantChange(airBar: AirBar) {
+        Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
+            .setData(Uri.parse("package:${context.packageName}"))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            .let(context::startActivity)
+    }
+
+    override fun canMoveByFinger(airBar: AirBar): Boolean {
+        return airBar.id == R.id.brightnessProgressBar
     }
 }

@@ -105,10 +105,10 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     private fun askSettingsPermissions() {
-        val intent = Intent(ACTION_MANAGE_WRITE_SETTINGS)
-        intent.data = Uri.parse("package:$packageName")
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        startActivity(intent)
+        Intent(ACTION_MANAGE_WRITE_SETTINGS)
+            .setData(Uri.parse("package:${packageName}"))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            .let(::startActivity)
     }
 
     private fun checkNotificationsPermissions() {
@@ -322,14 +322,14 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         endId: Int,
         progress: Float
     ) {
-
+        with(binding.viewList) {
+            if (progress > 0.2f) onShow()
+            else onHide()
+        }
     }
 
     override fun onTransitionCompleted(motionLayout: MotionLayout, currentId: Int) {
-        with(binding.viewList) {
-            if (currentId == R.id.start) onHide()
-            else onShow()
-        }
+
     }
 
 
