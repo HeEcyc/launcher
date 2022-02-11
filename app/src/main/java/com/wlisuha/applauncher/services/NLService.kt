@@ -45,14 +45,17 @@ class NLService : NotificationListenerService() {
     }
 
 
-    private fun getNotificationsList() = activeNotifications
-        .filter {
-            it.notification.flags and Notification.FLAG_GROUP_SUMMARY == 0 &&
-                    !it.notification.extras.getString("android.text").isNullOrEmpty()
-        }
-        .distinctBy { it.notification.extras.getString("android.text") }
-        .sortedByDescending { it.postTime }
-
+    private fun getNotificationsList() = try {
+        activeNotifications
+            .filter {
+                it.notification.flags and Notification.FLAG_GROUP_SUMMARY == 0
+                        && it.notification.extras.containsKey("android.text")
+            }
+            .distinctBy { it.groupKey }
+            .sortedByDescending { it.postTime }
+    } catch (e: Exception) {
+        listOf()
+    }
 
     override fun onDestroy() {
         super.onDestroy()

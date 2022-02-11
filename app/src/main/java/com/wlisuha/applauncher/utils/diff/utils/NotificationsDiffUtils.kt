@@ -16,6 +16,6 @@ class NotificationsDiffUtils(
         oldList[oldItemPosition].postTime == newList[newItemPosition].postTime &&
                 oldList[oldItemPosition].packageName == newList[newItemPosition].packageName
 
-    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = true
+    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) =        true
 
 }

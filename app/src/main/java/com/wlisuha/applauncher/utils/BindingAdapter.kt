@@ -9,6 +9,7 @@ import android.content.Context.CONTEXT_IGNORE_SECURITY
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.Outline
+import android.text.SpannableString
 import android.view.ViewOutlineProvider
 import androidx.appcompat.widget.AppCompatTextView
 
@@ -41,7 +42,7 @@ fun AppCompatTextView.notificationTitle(statusBarNotification: StatusBarNotifica
 
 @BindingAdapter("notificationText")
 fun AppCompatTextView.notificationText(statusBarNotification: StatusBarNotification) {
-    text = statusBarNotification.notification.extras.getString("android.text")
+    text = statusBarNotification.notification.extras.get("android.text").toString()
 }
 
 @BindingAdapter("notificationImage")
@@ -58,6 +59,7 @@ fun AppCompatImageView.notificationImage(statusBarNotification: StatusBarNotific
             this@notificationImage.setImageDrawable(this)
         }
     }
+String
 }
 
 @BindingAdapter("notificationAppOwner")

@@ -9,6 +9,7 @@ import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS
+import android.util.Log
 import android.view.DragEvent
 import android.view.View
 import androidx.activity.viewModels
@@ -128,6 +129,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     private fun calculateAppItemViewHeight() {
+        binding.appPages.requestLayout()
         binding.appPages.post {
             lifecycleScope.launch(Dispatchers.Main) {
                 viewPagerAdapter = withContext(Dispatchers.IO) { createVPAdapter() }
@@ -276,7 +278,8 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
     private suspend fun createVPAdapter(): VPAdapter {
         val rowCount =
-            binding.appPages.height / (binding.appPages.width / APP_COLUMN_COUNT * 1.1f)
+            binding.appPages.height / ((binding.appPages.width / APP_COLUMN_COUNT) * 1.1f)
+
         val visibleItemCountOnPageScreen = rowCount.toInt() * APP_COLUMN_COUNT
         return VPAdapter(
             viewModel.readAllPackage(visibleItemCountOnPageScreen),
@@ -358,5 +361,5 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
     }
 
-    override fun isPresentOnHomeScreen() = binding.motionView.currentState == R.id.start
+    override fun isPresentOnHomeScreen() = binding.motionView.progress == 0f
 }

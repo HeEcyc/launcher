@@ -6,7 +6,6 @@ import android.content.Intent
 import android.graphics.Typeface
 import android.service.notification.StatusBarNotification
 import android.util.AttributeSet
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -96,9 +95,10 @@ class NotificationScreenView @JvmOverloads constructor(
         ItemTouchHelper(touchCallback)
             .attachToRecyclerView(binding.notificationsList)
         LauncherApplication.instance.notificationListener = this
-        Typeface.createFromAsset(context.assets, "sf_pro_display.ttf").let {
-            binding.mainClock.setTypeface(it, Typeface.NORMAL)
+        Typeface.createFromAsset(context.assets, "font.ttf").let {
+            binding.mainClock.paint.typeface = it
             binding.textClock.typeface = it
+            binding.notificationsCenterText.typeface = it
         }
     }
 
@@ -108,7 +108,6 @@ class NotificationScreenView @JvmOverloads constructor(
     }
 
     override fun onNotificationsChanges(statusBarNotification: List<StatusBarNotification>) {
-
         val oldList = adapter.getData().toList()
 
         adapter.getData().clear()
