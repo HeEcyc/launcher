@@ -1,12 +1,17 @@
 package com.wlisuha.applauncher.ui.custom
 
 import android.annotation.SuppressLint
+import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.service.notification.StatusBarNotification
 import android.util.AttributeSet
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.databinding.DataBindingUtil
 import androidx.drawerlayout.widget.DrawerLayout
@@ -38,15 +43,29 @@ class NotificationScreenView @JvmOverloads constructor(
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                adapter.removeItem(viewHolder.adapterPosition)
+                cancelNotification(adapter.getData()[viewHolder.adapterPosition])
             }
 
+            override fun getMovementFlags(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder
+            ): Int {
+                return if (adapter.getData()[viewHolder.adapterPosition].isClearable) super
+                    .getMovementFlags(recyclerView, viewHolder)
+                else 0
+            }
         }
+
+    private fun cancelNotification(statusBarNotification: StatusBarNotification) {
+        Intent("cancel_current")
+            .putExtra("key", statusBarNotification.key)
+            .let(context::sendBroadcast)
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     private val adapter =
         createAdapter<StatusBarNotification, ItemNotificationBinding>(R.layout.item_notification) {
-            onBind = { item, binding, adapter ->
+            onBind = { _, binding, _ ->
                 binding.root.setOnTouchListener { _, event ->
                     when (event.action) {
                         MotionEvent.ACTION_DOWN -> drawerLayout?.requestDisallowInterceptTouchEvent(
@@ -57,8 +76,11 @@ class NotificationScreenView @JvmOverloads constructor(
                         )
 
                     }
-                    return@setOnTouchListener true
+                    return@setOnTouchListener false
                 }
+            }
+            onItemClick = {
+                it.notification.contentIntent.send()
             }
         }
     val binding: NotificationViewBinding = DataBindingUtil.inflate(
@@ -95,6 +117,4 @@ class NotificationScreenView @JvmOverloads constructor(
         DiffUtil.calculateDiff(NotificationsDiffUtils(oldList, adapter.getData()))
             .dispatchUpdatesTo(adapter)
     }
-
-
 }

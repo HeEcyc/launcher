@@ -2,25 +2,27 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <data>
 
-    <androidx.cardview.widget.CardView
+        <variable
+            name="item"
+            type="android.service.notification.StatusBarNotification" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="150sp"
-        android:clipChildren="true"
-        app:cardBackgroundColor="@android:color/transparent"
-        app:cardCornerRadius="15sp"
-        app:cardUseCompatPadding="true">
+        android:layout_height="100sp"
+        android:layout_marginHorizontal="10sp"
+        android:layout_marginBottom="10sp"
+        android:background="@drawable/notification_bg"
+        android:padding="15sp">
 
-        <com.github.mmin18.widget.RealtimeBlurView
-            android:id="@+id/overlay"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:realtimeBlurRadius="5sp" />
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="sdf" />
-    </androidx.cardview.widget.CardView>
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/notificationIcon"
+            notificationIcon="@{item.packageName}"
+            android:layout_width="20sp"
+            android:layout_height="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
