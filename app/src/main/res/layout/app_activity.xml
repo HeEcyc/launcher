@@ -35,7 +35,7 @@
                     android:background="#FFFFFF"
                     android:visibility="gone" />
 
-                <com.wlisuha.applauncher.ui.custom.NonSwipeableViewPager
+                <androidx.viewpager2.widget.ViewPager2
                     android:id="@+id/appPages"
                     android:layout_width="match_parent"
                     android:layout_height="0sp"

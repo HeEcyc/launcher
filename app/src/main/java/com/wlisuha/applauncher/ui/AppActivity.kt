@@ -8,8 +8,6 @@ import android.content.Intent
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
-import android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS
-import android.util.Log
 import android.view.DragEvent
 import android.view.View
 import androidx.activity.viewModels
@@ -88,7 +86,6 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         checkNotificationsPermissions()
         // askSettingsPermissions()
 
-        binding.appPages.stateProvider = this
         viewModel.stateProvider = this
         binding.bottomAppsList.itemAnimator = null
         binding.motionView.addTransitionListener(this)
@@ -105,19 +102,11 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         registerReceiver(broadcastReceiver, viewModel.intentFilter)
     }
 
-    private fun askSettingsPermissions() {
-        Intent(ACTION_MANAGE_WRITE_SETTINGS)
-            .setData(Uri.parse("package:${packageName}"))
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            .let(::startActivity)
-    }
-
     private fun checkNotificationsPermissions() {
         if (!binding.viewList.hasNotificationPermission())
             Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
                 .let(::startActivity)
     }
-
 
     private fun askRole() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -135,7 +124,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
                 viewPagerAdapter = withContext(Dispatchers.IO) { createVPAdapter() }
                 binding.appPages.adapter = viewPagerAdapter
                 binding.appPages.offscreenPageLimit = viewPagerAdapter.count
-                binding.pageIndicator.setViewPager(binding.appPages)
+                binding.pageIndicator.setViewPager2(binding.appPages)
             }
         }
     }
@@ -162,12 +151,16 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         val dragInfo = event.localState as? DragInfo ?: return false
         when (event.action) {
             DragEvent.ACTION_DRAG_LOCATION -> {
+                val oldPage = dragInfo.currentPage
                 viewModel.insertItemToBottomBar(dragInfo, getItemPosition(event))
+                viewPagerAdapter.checkForRemovePage(oldPage) { binding.appPages.currentItem += it }
+                binding.pageIndicator.setViewPager(binding.appPages)
             }
             DragEvent.ACTION_DRAG_ENTERED -> {
                 viewPagerAdapter.clearRequests()
             }
             DragEvent.ACTION_DRAG_EXITED -> {
+                viewPagerAdapter.canCreatePage = true
                 dragInfo.adapter = viewModel.bottomAppListAdapter
                 dragInfo.currentPage = -1
             }
@@ -206,9 +199,10 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         if (currentRecycler.itemAnimator?.isRunning == true) return
         val currentView = currentRecycler.findChildViewUnder(x, y)
         if (currentView == null) {
-            viewPagerAdapter.insertToLastPosition(dragInfo, currentPage, true)
+            viewPagerAdapter.insertToLastPosition(dragInfo, currentPage, true, binding.appPages)
             return
         }
+
         val holder = currentRecycler.getChildViewHolder(currentView)
 
         if (dragInfo.currentPage == -1) viewPagerAdapter
@@ -235,7 +229,8 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
                     viewPagerAdapter.insertToLastPosition(
                         dragInfo,
                         binding.appPages.currentItem,
-                        true
+                        true,
+                        binding.appPages
                     )
                 }
             }
@@ -271,14 +266,17 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             .apply { currentView.getGlobalVisibleRect(this) }
             .let { dragEvent.x <= it.centerX() }
             .let { isLeftSide ->
-                if (isLeftSide) return currentHolder.layoutPosition
+
+                val itemPosition = if (isLeftSide) return currentHolder.layoutPosition
                 else currentHolder.layoutPosition + 1
+
+                itemPosition
             }
     }
 
     private suspend fun createVPAdapter(): VPAdapter {
         val rowCount =
-            binding.appPages.height / ((binding.appPages.width / APP_COLUMN_COUNT) * 1.1f)
+            binding.appPages.height / ((binding.appPages.width / APP_COLUMN_COUNT) * 1.2f)
 
         val visibleItemCountOnPageScreen = rowCount.toInt() * APP_COLUMN_COUNT
         return VPAdapter(
@@ -299,7 +297,6 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         val id: Int = resources.getIdentifier("config_showNavigationBar", "bool", "android")
         return id > 0 && resources.getBoolean(id)
     }
-
 
     @SuppressLint("ClickableViewAccessibility")
     fun setTouchListenerOnIndicator() {
@@ -335,7 +332,6 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
     }
 
-
     override fun onTransitionTrigger(
         motionLayout: MotionLayout?,
         triggerId: Int,
@@ -361,5 +357,5 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
     }
 
-    override fun isPresentOnHomeScreen() = binding.motionView.progress == 0f
+    override fun isPresentOnHomeScreen() = binding.motionView.progress < 0.2f
 }

@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.databinding.ObservableField
@@ -102,9 +103,13 @@ class AppViewModel : BaseViewModel() {
 
     fun insertItemToBottomBar(dragInfo: DragInfo, position: Int?) {
         position ?: return
+
+        if (position >= bottomAppListAdapter.getData().size) return
         dragInfo.removeItem()
         if (canAddItem(dragInfo, position)) {
             addItemToPosition(position, dragInfo.draggedItem)
+            dragInfo.currentPage = -1
+            dragInfo.adapter = bottomAppListAdapter
         }
     }
 
@@ -137,8 +142,8 @@ class AppViewModel : BaseViewModel() {
         }
         if (removeItemPosition != -1) bottomAppListAdapter.removeItem(removeItemPosition)
 
-        saveDBJob?.cancel()
 
+        saveDBJob?.cancel()
         saveDBJob = viewModelScope.launch(Dispatchers.IO) {
             delay(300)
             saveBottomAppsList()

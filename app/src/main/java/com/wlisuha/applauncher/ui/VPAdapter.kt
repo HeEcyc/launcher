@@ -3,6 +3,7 @@ package com.wlisuha.applauncher.ui
 import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.postDelayed
@@ -10,6 +11,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.PagerAdapter
+import androidx.viewpager.widget.ViewPager
+import androidx.viewpager2.widget.ViewPager2
 import com.wlisuha.applauncher.BR
 import com.wlisuha.applauncher.R
 import com.wlisuha.applauncher.base.BaseAdapter
@@ -18,8 +21,8 @@ import com.wlisuha.applauncher.data.DragInfo
 import com.wlisuha.applauncher.data.InstalledApp
 import com.wlisuha.applauncher.databinding.LauncherItemApplicationBinding
 import com.wlisuha.applauncher.ui.custom.NonSwipeableViewPager
-import com.wlisuha.applauncher.utils.diff.utils.AppListDiffUtils
 import com.wlisuha.applauncher.utils.SwapHelper
+import com.wlisuha.applauncher.utils.diff.utils.AppListDiffUtils
 import java.util.*
 
 
@@ -33,11 +36,12 @@ class VPAdapter(
     private val swapHelper = SwapHelper(Handler(Looper.getMainLooper()))
     private var recyclers = mutableListOf<RecyclerView>()
     private var recyclersAdapters = mutableListOf<BaseAdapter<InstalledApp, *>>()
-    private var canCreatePage = false
+    var canCreatePage = false
 
     override fun getCount() = listAppPages.size
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
+
         return RecyclerView(container.context).apply {
             overScrollMode = View.OVER_SCROLL_NEVER
             adapter = createAdapter(position)
@@ -86,7 +90,7 @@ class VPAdapter(
     }
 
     override fun destroyItem(container: ViewGroup, position: Int, `object`: Any) {
-        container.removeView(`object` as View)
+        container.removeViewAt(position)
     }
 
     override fun isViewFromObject(view: View, `object`: Any): Boolean {
@@ -102,6 +106,7 @@ class VPAdapter(
     private fun swapItemBetweenPages(dragInfo: DragInfo, newItemPosition: Int, currentPage: Int) {
         val currentAdapter = getCurrentAppListAdapter(currentPage)
         val swappedItem = currentAdapter.getData()[newItemPosition]
+
 
         swapHelper.requestToSwapBetweenPages(
             newItemPosition,
@@ -170,7 +175,12 @@ class VPAdapter(
         swapHelper.clearRequest()
     }
 
-    fun insertToLastPosition(dragInfo: DragInfo, currentPage: Int, withDelay: Boolean) {
+    fun insertToLastPosition(
+        dragInfo: DragInfo,
+        currentPage: Int,
+        withDelay: Boolean,
+        viewPager: ViewPager
+    ) {
         with(getCurrentAppListAdapter(currentPage)) {
             if (itemCount == visibleApplicationsOnScreen) return
             else getData().lastOrNull()
@@ -178,26 +188,31 @@ class VPAdapter(
                 ?.let { if (it == dragInfo.draggedItem.packageName) return }
         }
 
-        if (!withDelay) insertItemToLastPosition(dragInfo, currentPage)
+        if (!withDelay) insertItemToLastPosition(dragInfo, currentPage, viewPager)
         else swapHelper.requestInsertToLastPosition(currentPage) {
-            insertItemToLastPosition(dragInfo, currentPage)
+            insertItemToLastPosition(dragInfo, currentPage, viewPager)
         }
     }
 
-    private fun pageIsEmpty(oldPage: Int) =
-        if (oldPage == -1) false
-        else getCurrentAppListAdapter(oldPage).getData().isEmpty()
+    private fun pageIsEmpty(oldPage: Int) = when {
+        oldPage == -1 -> false
+        oldPage >= recyclersAdapters.size -> false
+        else -> getCurrentAppListAdapter(oldPage).getData().isEmpty()
+    }
 
     private fun removePage(oldPage: Int) {
         listAppPages.removeAt(oldPage)
         recyclersAdapters.removeAt(oldPage)
         recyclers.removeAt(oldPage)
         notifyDataSetChanged()
+
     }
 
     fun createPage(): Boolean {
         if (!canCreatePage) return false
+
         listAppPages.add(listOf())
+        recyclersAdapters.add(createAdapter(listAppPages.size - 1))
         notifyDataSetChanged()
         canCreatePage = false
         return true
@@ -235,26 +250,45 @@ class VPAdapter(
             if (adapterWithCurrentPackageKey == 0) onSwap(1)
             else onSwap(-1)
             Handler(Looper.getMainLooper()).postDelayed(200) {
-                removePage(adapterWithCurrentPackageKey)
+                try {
+                    removePage(adapterWithCurrentPackageKey)
+                } catch (e: Exception) {
+
+                }
             }
         }
     }
 
-    private fun insertItemToLastPosition(dragInfo: DragInfo, currentPage: Int) {
+    private fun insertItemToLastPosition(
+        dragInfo: DragInfo,
+        currentPage: Int,
+        viewPager: ViewPager
+    ) {
         val oldPage = dragInfo.currentPage
         val adapter = getCurrentAppListAdapter(currentPage)
         val oldList = adapter.getData().toList()
+
         dragInfo.removeItem()
+
         dragInfo.adapter = adapter
         dragInfo.currentPage = currentPage
+
+        adapter.getData().add(dragInfo.draggedItem)
+
         viewModel.saveNewPositionItem(dragInfo.draggedItem, dragInfo.draggedItemPos, currentPage)
         dragInfo.updateItemPosition()
-        adapter.getData().add(dragInfo.draggedItem)
-        updateItems(oldList, adapter)
-        if (pageIsEmpty(oldPage)) removePage(oldPage)
+
+        DiffUtil.calculateDiff(AppListDiffUtils(oldList, adapter.getData()))
+            .dispatchUpdatesTo(adapter)
+
+        if (pageIsEmpty(oldPage)) {
+            removePage(oldPage)
+            viewPager.removeViewAt(oldPage)
+        }
     }
 
     fun insertItemToPosition(currentPage: Int, position: Int, dragInfo: DragInfo) {
+
         val currentAdapter = getCurrentAppListAdapter(currentPage)
         swapHelper.requestInsertToPosition(currentPage, position) {
             if (currentAdapter.getData().size == visibleApplicationsOnScreen)
@@ -282,6 +316,14 @@ class VPAdapter(
     private fun saveItemPositionsOnPage(items: List<InstalledApp>, newAdapterPage: Int) {
         items.forEachIndexed { index, installedApp ->
             viewModel.saveNewPositionItem(installedApp, index, newAdapterPage)
+        }
+    }
+
+    fun checkForRemovePage(currentPage: Int, onSwap: (Int) -> Unit) {
+        if (pageIsEmpty(currentPage)) {
+            removePage(currentPage)
+            if (currentPage == 0) onSwap(1)
+            else onSwap(-1)
         }
     }
 }
