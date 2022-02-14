@@ -126,7 +126,6 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             lifecycleScope.launch(Dispatchers.Main) {
                 viewPagerAdapter = withContext(Dispatchers.IO) { createVPAdapter() }
                 binding.appPages.adapter = viewPagerAdapter
-//                binding.appPages.offscreenPageLimit = viewPagerAdapter.count
                 binding.pageIndicator.setViewPager(binding.appPages)
             }
         }
@@ -202,7 +201,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         if (currentRecycler.itemAnimator?.isRunning == true) return
         val currentView = currentRecycler.findChildViewUnder(x, y)
         if (currentView == null) {
-            viewPagerAdapter.insertToLastPosition(dragInfo, currentPage, true, binding.appPages)
+            viewPagerAdapter.insertToLastPosition(dragInfo, currentPage, true)
             return
         }
         val holder = currentRecycler.getChildViewHolder(currentView)
@@ -228,12 +227,8 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             withContext(Dispatchers.Main) {
                 if (viewPagerAdapter.createPage()) {
                     binding.appPages.currentItem++
-                    viewPagerAdapter.insertToLastPosition(
-                        dragInfo,
-                        binding.appPages.currentItem,
-                        true,
-                        binding.appPages
-                    )
+                    viewPagerAdapter
+                        .insertToLastPosition(dragInfo, binding.appPages.currentItem, false)
                 }
             }
             stopMovePagesJob()

@@ -172,12 +172,7 @@ class VPAdapter(
         swapHelper.clearRequest()
     }
 
-    fun insertToLastPosition(
-        dragInfo: DragInfo,
-        currentPage: Int,
-        withDelay: Boolean,
-        viewPager: ViewPager
-    ) {
+    fun insertToLastPosition(dragInfo: DragInfo, currentPage: Int, withDelay: Boolean) {
         with(getCurrentAppListAdapter(currentPage)) {
             if (itemCount == visibleApplicationsOnScreen) return
             else getData().lastOrNull()
