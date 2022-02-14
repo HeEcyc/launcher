@@ -335,6 +335,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         endId: Int,
         progress: Float
     ) {
+        binding.motionView.canCallLongCLick = false
         with(binding.viewList) {
             if (progress > 0.2f) onShow()
             else onHide()
@@ -356,6 +357,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
     override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
         binding.motionView.translationX = drawerView.width * slideOffset
+        binding.motionView.canCallLongCLick = false
     }
 
     override fun onDrawerOpened(drawerView: View) {

@@ -43,6 +43,7 @@ class ClickableMotionLayout @JvmOverloads constructor(
                 }
             }
             MotionEvent.ACTION_UP -> longClickTask?.cancel()
+
         }
         return false
     }
