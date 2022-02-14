@@ -35,6 +35,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     NonSwipeableViewPager.StateProvider {
 
     private lateinit var viewPagerAdapter: VPAdapter
+    private var isLaunchNotificationSettings = false
     override val viewModel: AppViewModel by viewModels()
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -71,7 +72,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
     private fun handleAddedApplication(data: Uri) {
         viewModel.createModel(data.encodedSchemeSpecificPart)
-            .takeIf { it.packageName != packageName }
+            .takeIf { viewModel.availableApp(packageName) }
             ?.let(viewPagerAdapter::onNewApp)
     }
 
@@ -86,6 +87,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         checkNotificationsPermissions()
         // askSettingsPermissions()
 
+        binding.appPages.stateProvider = this
         viewModel.stateProvider = this
         binding.bottomAppsList.itemAnimator = null
         binding.motionView.addTransitionListener(this)
@@ -103,9 +105,11 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     private fun checkNotificationsPermissions() {
-        if (!binding.viewList.hasNotificationPermission())
+        if (!binding.viewList.hasNotificationPermission()) {
+            isLaunchNotificationSettings = true
             Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
                 .let(::startActivity)
+        } else sendUpdateNotificationsBroadcast()
     }
 
     private fun askRole() {
@@ -118,13 +122,12 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     private fun calculateAppItemViewHeight() {
-        binding.appPages.requestLayout()
         binding.appPages.post {
             lifecycleScope.launch(Dispatchers.Main) {
                 viewPagerAdapter = withContext(Dispatchers.IO) { createVPAdapter() }
                 binding.appPages.adapter = viewPagerAdapter
-                binding.appPages.offscreenPageLimit = viewPagerAdapter.count
-                binding.pageIndicator.setViewPager2(binding.appPages)
+//                binding.appPages.offscreenPageLimit = viewPagerAdapter.count
+                binding.pageIndicator.setViewPager(binding.appPages)
             }
         }
     }
@@ -206,15 +209,16 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         val holder = currentRecycler.getChildViewHolder(currentView)
 
         if (dragInfo.currentPage == -1) viewPagerAdapter
-            .insertItemToPosition(currentPage, holder.adapterPosition, dragInfo)
+            .insertItemToPosition(currentPage, holder.layoutPosition, dragInfo)
         else viewPagerAdapter
-            .swapItem(dragInfo, holder.adapterPosition, currentPage)
+            .swapItem(dragInfo, holder.layoutPosition, currentPage)
     }
 
     private fun stopMovePagesJob() {
         viewModel.movePageJob?.cancel()
         viewModel.movePageJob = null
     }
+
 
     private fun movePagesRight(dragInfo: DragInfo) {
         viewModel.movePageJob = lifecycleScope.launch(Dispatchers.IO) {
@@ -266,10 +270,8 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             .apply { currentView.getGlobalVisibleRect(this) }
             .let { dragEvent.x <= it.centerX() }
             .let { isLeftSide ->
-
                 val itemPosition = if (isLeftSide) return currentHolder.layoutPosition
                 else currentHolder.layoutPosition + 1
-
                 itemPosition
             }
     }
@@ -305,6 +307,19 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
                 handleMovingPages(event.x)
             return@setOnTouchListener true
         }
+    }
+
+
+    override fun onResume() {
+        super.onResume()
+        if (isLaunchNotificationSettings) {
+            isLaunchNotificationSettings = false
+            sendUpdateNotificationsBroadcast()
+        }
+    }
+
+    private fun sendUpdateNotificationsBroadcast() {
+        sendBroadcast(Intent("rewrite"))
     }
 
     private fun handleMovingPages(touchXPosition: Float) {
@@ -358,4 +373,5 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     override fun isPresentOnHomeScreen() = binding.motionView.progress < 0.2f
+
 }

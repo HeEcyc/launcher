@@ -3,7 +3,6 @@ package com.wlisuha.applauncher.ui
 import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.postDelayed
@@ -12,7 +11,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.PagerAdapter
 import androidx.viewpager.widget.ViewPager
-import androidx.viewpager2.widget.ViewPager2
 import com.wlisuha.applauncher.BR
 import com.wlisuha.applauncher.R
 import com.wlisuha.applauncher.base.BaseAdapter
@@ -41,10 +39,9 @@ class VPAdapter(
     override fun getCount() = listAppPages.size
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
-
         return RecyclerView(container.context).apply {
             overScrollMode = View.OVER_SCROLL_NEVER
-            adapter = createAdapter(position)
+            adapter = recyclersAdapters.getOrElse(position) { createAdapter(position) }
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
@@ -90,7 +87,7 @@ class VPAdapter(
     }
 
     override fun destroyItem(container: ViewGroup, position: Int, `object`: Any) {
-        container.removeViewAt(position)
+        container.removeView(`object` as View)
     }
 
     override fun isViewFromObject(view: View, `object`: Any): Boolean {
@@ -106,7 +103,6 @@ class VPAdapter(
     private fun swapItemBetweenPages(dragInfo: DragInfo, newItemPosition: Int, currentPage: Int) {
         val currentAdapter = getCurrentAppListAdapter(currentPage)
         val swappedItem = currentAdapter.getData()[newItemPosition]
-
 
         swapHelper.requestToSwapBetweenPages(
             newItemPosition,
@@ -202,10 +198,9 @@ class VPAdapter(
 
     private fun removePage(oldPage: Int) {
         listAppPages.removeAt(oldPage)
-        recyclersAdapters.removeAt(oldPage)
-        recyclers.removeAt(oldPage)
+//        recyclersAdapters.removeAt(oldPage)
+//        recyclers.removeAt(oldPage)
         notifyDataSetChanged()
-
     }
 
     fun createPage(): Boolean {
@@ -242,6 +237,8 @@ class VPAdapter(
                 return@forEachIndexed
             }
         }
+
+        if (adapterWithCurrentPackageKey == -1) return
         val currentAdapter = recyclersAdapters[adapterWithCurrentPackageKey]
 
         currentAdapter.remove { it.packageName == packageName }
@@ -283,7 +280,6 @@ class VPAdapter(
 
         if (pageIsEmpty(oldPage)) {
             removePage(oldPage)
-            viewPager.removeViewAt(oldPage)
         }
     }
 
@@ -325,5 +321,9 @@ class VPAdapter(
             if (currentPage == 0) onSwap(1)
             else onSwap(-1)
         }
+    }
+
+    override fun getItemPosition(`object`: Any): Int {
+        return POSITION_NONE
     }
 }

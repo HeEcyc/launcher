@@ -40,7 +40,7 @@
             android:onClick="@{() -> viewModel.removeItem(item.packageName)}"
             android:translationX="5sp"
             android:translationY="-5sp"
-            android:visibility="visible"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="@id/appIcon"
             app:layout_constraintTop_toTopOf="@id/appIcon" />
     </androidx.constraintlayout.widget.ConstraintLayout>

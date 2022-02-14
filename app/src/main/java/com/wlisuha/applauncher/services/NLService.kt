@@ -18,6 +18,8 @@ class NLService : NotificationListenerService() {
             when (intent.action) {
                 "cancel" -> cancelAllNotifications()
                 "cancel_current" -> cancelNotification(intent.getStringExtra("key"))
+                "rewrite" -> LauncherApplication.instance.notificationListener
+                    ?.onNotificationsChanges(getNotificationsList())
             }
         }
     }

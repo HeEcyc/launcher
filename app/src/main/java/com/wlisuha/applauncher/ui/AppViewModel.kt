@@ -11,7 +11,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.databinding.ObservableField
@@ -72,7 +71,6 @@ class AppViewModel : BaseViewModel() {
         createAdapter<InstalledApp, BottomItemApplicationBinding>(R.layout.bottom_item_application) {
             onItemClick = { launchApp(it.packageName) }
             onBind = { item, binding, adapter ->
-
                 binding.setVariable(BR.viewModel, this@AppViewModel)
                 binding.notifyPropertyChanged(BR.viewModel)
                 binding.root.setOnLongClickListener {
@@ -99,12 +97,10 @@ class AppViewModel : BaseViewModel() {
         )
     }
 
-    fun getBottomAppsItemCount() = bottomAppListAdapter.itemCount
+    fun getBottomAppsItemCount() = bottomAppListAdapter.itemCount - 1
 
     fun insertItemToBottomBar(dragInfo: DragInfo, position: Int?) {
         position ?: return
-
-        if (position >= bottomAppListAdapter.getData().size) return
         dragInfo.removeItem()
         if (canAddItem(dragInfo, position)) {
             addItemToPosition(position, dragInfo.draggedItem)
@@ -132,7 +128,7 @@ class AppViewModel : BaseViewModel() {
             addItem(dragInfo, 0, -1)
             return
         }
-        bottomAppListAdapter.addItem(position, dragInfo)
+        bottomAppListAdapter.addItemSafe(position, dragInfo)
         var removeItemPosition = -1
 
         bottomAppListAdapter.getData().forEachIndexed { index, installedApp ->
@@ -174,6 +170,11 @@ class AppViewModel : BaseViewModel() {
         return packageManager.getLaunchIntentForPackage(applicationInfo.packageName) != null
                 && !skipPackagesList.contains(applicationInfo.packageName) &&
                 applicationInfo.enabled
+    }
+
+    fun availableApp(packageName: String): Boolean {
+        return packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
+            .let(::availableApp)
     }
 
     fun removeItem(packageName: String) {
@@ -288,5 +289,9 @@ class AppViewModel : BaseViewModel() {
 
     fun deletePackage(packageName: String) {
         viewModelScope.launch(Dispatchers.IO) { DataBase.dao.deletePackage(packageName) }
+    }
+
+    fun addToLastPosition(dragInfo: DragInfo) {
+
     }
 }

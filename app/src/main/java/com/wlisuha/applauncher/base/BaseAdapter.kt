@@ -1,6 +1,5 @@
 package com.wlisuha.applauncher.base
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,8 +8,6 @@ import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.recyclerview.widget.RecyclerView
 import com.wlisuha.applauncher.BR
-import java.util.*
-import kotlin.collections.HashMap
 
 
 abstract class BaseAdapter<T, V : ViewDataBinding> private constructor(initItems: List<T>? = null) :
@@ -31,10 +28,6 @@ abstract class BaseAdapter<T, V : ViewDataBinding> private constructor(initItems
         val size = items.size
         items.clear()
         notifyItemRangeRemoved(0, size)
-    }
-
-    open fun addItems(newItems: List<T>) {
-        items.addAll(newItems)
     }
 
     open fun reloadData(items: List<T>) {
@@ -93,6 +86,11 @@ abstract class BaseAdapter<T, V : ViewDataBinding> private constructor(initItems
         val removedItem = items.removeLastOrNull()
         notifyItemRemoved(itemCount + 1)
         return removedItem
+    }
+
+    fun addItemSafe(pos: Int, item: T) {
+        if (pos >= items.size) addItem(item)
+        else addItem(pos, item)
     }
 
     abstract class BaseItem<T, V : ViewDataBinding>(val binding: V) :

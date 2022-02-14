@@ -17,7 +17,8 @@ import androidx.appcompat.widget.AppCompatTextView
 @BindingAdapter("onEnableSelected")
 fun AppCompatImageView.isVisibleRemoving(isVisibleRemoving: Boolean) {
 
-    clearAnimation()
+    if (isVisibleRemoving && visibility == View.VISIBLE) return
+    else if (!isVisibleRemoving && visibility == View.GONE) return
 
     with(animate()) {
 
@@ -59,7 +60,7 @@ fun AppCompatImageView.notificationImage(statusBarNotification: StatusBarNotific
             this@notificationImage.setImageDrawable(this)
         }
     }
-String
+    String
 }
 
 @BindingAdapter("notificationAppOwner")
