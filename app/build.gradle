@@ -2,13 +2,15 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-kapt'
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
 }
 
 android {
     compileSdk 31
 
     defaultConfig {
-        applicationId "com.wlisuha.applauncher"
+        applicationId "com.applauncher.applauncher"
         minSdk 23
         targetSdk 31
         versionCode 1
@@ -65,6 +67,8 @@ dependencies {
     implementation 'com.littlemango:stacklayoutmanager:1.0.5'
 
     implementation "androidx.room:room-ktx:2.4.1"
+    implementation 'com.google.firebase:firebase-crashlytics-ktx:18.2.8'
+    implementation 'com.google.firebase:firebase-analytics-ktx:20.1.0'
     kapt "androidx.room:room-compiler:2.4.1"
 
     testImplementation 'junit:junit:4.+'

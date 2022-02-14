@@ -7,7 +7,7 @@
 
         <variable
             name="viewModel"
-            type="com.wlisuha.applauncher.ui.AppViewModel" />
+            type="com.applauncher.applauncher.ui.AppViewModel" />
     </data>
 
     <androidx.drawerlayout.widget.DrawerLayout
@@ -21,7 +21,7 @@
             android:layout_height="match_parent"
             android:background="@mipmap/wallpaper">
 
-            <com.wlisuha.applauncher.ui.custom.ClickableMotionLayout
+            <com.applauncher.applauncher.ui.custom.ClickableMotionLayout
                 android:id="@+id/motionView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -35,7 +35,7 @@
                     android:background="#FFFFFF"
                     android:visibility="gone" />
 
-                <com.wlisuha.applauncher.ui.custom.NonSwipeableViewPager
+                <com.applauncher.applauncher.ui.custom.NonSwipeableViewPager
                     android:id="@+id/appPages"
                     android:layout_width="match_parent"
                     android:layout_height="0sp"
@@ -133,7 +133,7 @@
 
                 </androidx.cardview.widget.CardView>
 
-                <com.wlisuha.applauncher.ui.custom.ShutterView
+                <com.applauncher.applauncher.ui.custom.ShutterView
                     android:id="@+id/viewList"
                     android:layout_width="match_parent"
                     android:layout_height="0sp"
@@ -146,10 +146,10 @@
                     android:layout_height="0sp"
                     app:layout_constraintBottom_toBottomOf="parent" />
 
-            </com.wlisuha.applauncher.ui.custom.ClickableMotionLayout>
+            </com.applauncher.applauncher.ui.custom.ClickableMotionLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <com.wlisuha.applauncher.ui.custom.NotificationScreenView
+        <com.applauncher.applauncher.ui.custom.NotificationScreenView
             android:layout_width="match_parent"
             android:id="@+id/notView"
             android:layout_height="match_parent"

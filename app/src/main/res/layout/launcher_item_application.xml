@@ -5,11 +5,11 @@
 
         <variable
             name="viewModel"
-            type="com.wlisuha.applauncher.ui.AppViewModel" />
+            type="com.applauncher.applauncher.ui.AppViewModel" />
 
         <variable
             name="item"
-            type="com.wlisuha.applauncher.data.InstalledApp" />
+            type="com.applauncher.applauncher.data.InstalledApp" />
 
         <import type="android.view.View" />
     </data>
