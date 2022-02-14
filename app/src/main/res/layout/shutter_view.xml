@@ -30,8 +30,8 @@
                 android:id="@+id/networkSettingsLayout"
                 android:layout_width="0sp"
                 android:layout_height="0sp"
-                android:layout_marginStart="20sp"
-                android:layout_marginTop="20sp"
+                android:layout_marginStart="30sp"
+                android:layout_marginTop="30sp"
                 android:layout_marginEnd="10sp"
                 android:background="@drawable/settings_overlay_big"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -55,7 +55,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintVertical_chainStyle="spread"
-                    app:layout_constraintWidth_percent="0.4" />
+                    app:layout_constraintWidth_percent="0.38"/>
 
                 <androidx.appcompat.widget.AppCompatImageView
                     android:id="@+id/mobileNetworkSettings"
@@ -71,7 +71,7 @@
                     app:layout_constraintStart_toEndOf="@id/airPlaneSettings"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintVertical_chainStyle="spread"
-                    app:layout_constraintWidth_percent="0.4" />
+                    app:layout_constraintWidth_percent="0.38" />
 
 
                 <androidx.appcompat.widget.AppCompatImageView
@@ -86,7 +86,7 @@
                     app:layout_constraintDimensionRatio="1:1"
                     app:layout_constraintStart_toStartOf="@id/airPlaneSettings"
                     app:layout_constraintTop_toBottomOf="@id/airPlaneSettings"
-                    app:layout_constraintWidth_percent="0.4" />
+                    app:layout_constraintWidth_percent="0.38"/>
 
                 <androidx.appcompat.widget.AppCompatImageView
                     android:id="@+id/bluetoothSettings"
@@ -99,7 +99,7 @@
                     app:layout_constraintDimensionRatio="1:1"
                     app:layout_constraintStart_toStartOf="@id/mobileNetworkSettings"
                     app:layout_constraintTop_toTopOf="@id/wifiSettings"
-                    app:layout_constraintWidth_percent="0.4" />
+                    app:layout_constraintWidth_percent="0.38" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -107,8 +107,8 @@
                 android:layout_width="0sp"
                 android:layout_height="0sp"
                 android:layout_marginStart="10sp"
-                android:layout_marginTop="20sp"
-                android:layout_marginEnd="20sp"
+                android:layout_marginTop="30sp"
+                android:layout_marginEnd="30sp"
                 android:background="@drawable/settings_overlay_big"
                 android:clickable="true"
                 android:focusable="true"

@@ -102,10 +102,10 @@ class ShutterView @JvmOverloads constructor(
         msm.getActiveSessions(createComponentName())
             .firstOrNull { it.metadata?.containsKey(MediaMetadata.METADATA_KEY_TITLE) == true }
             ?.let { mediaController ->
-                setSoundInfo(mediaController.metadata)
                 mediaController.registerCallback(mediaCallBack)
                 this.mediaController = mediaController
             }
+        setSoundInfo(mediaController?.metadata)
         setPlayStateIcon()
     }
 
