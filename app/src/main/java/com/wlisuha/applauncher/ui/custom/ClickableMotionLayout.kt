@@ -3,7 +3,6 @@ package com.wlisuha.applauncher.ui.custom
 import android.content.Context
 import android.graphics.Rect
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import androidx.constraintlayout.motion.widget.MotionLayout
 import kotlinx.coroutines.*
@@ -13,11 +12,10 @@ class ClickableMotionLayout @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyle: Int = 0
 ) : MotionLayout(context, attrs, defStyle), CoroutineScope by MainScope() {
-    private var canCallLongCLick = true
+    var canCallLongCLick = true
     private var longClick: OnLongClickListener? = null
     private var longClickTask: Job? = null
     private var touchRect = Rect()
-
 
     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {

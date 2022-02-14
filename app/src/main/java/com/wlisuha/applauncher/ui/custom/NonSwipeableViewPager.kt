@@ -26,5 +26,7 @@ class NonSwipeableViewPager @JvmOverloads constructor(
 
     interface StateProvider {
         fun isPresentOnHomeScreen(): Boolean
+
+        fun onAppSelected()
     }
 }

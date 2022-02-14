@@ -63,6 +63,7 @@ class VPAdapter(
 
                 binding.root.setOnLongClickListener {
                     if (!stateProvider.isPresentOnHomeScreen()) return@setOnLongClickListener false
+                    stateProvider.onAppSelected()
                     viewModel.isSelectionEnabled.set(true)
                     startDragAndDrop(item, binding, adapter, position)
                     false
@@ -184,9 +185,9 @@ class VPAdapter(
                 ?.let { if (it == dragInfo.draggedItem.packageName) return }
         }
 
-        if (!withDelay) insertItemToLastPosition(dragInfo, currentPage, viewPager)
+        if (!withDelay) insertItemToLastPosition(dragInfo, currentPage)
         else swapHelper.requestInsertToLastPosition(currentPage) {
-            insertItemToLastPosition(dragInfo, currentPage, viewPager)
+            insertItemToLastPosition(dragInfo, currentPage)
         }
     }
 
@@ -256,11 +257,7 @@ class VPAdapter(
         }
     }
 
-    private fun insertItemToLastPosition(
-        dragInfo: DragInfo,
-        currentPage: Int,
-        viewPager: ViewPager
-    ) {
+    private fun insertItemToLastPosition(dragInfo: DragInfo, currentPage: Int) {
         val oldPage = dragInfo.currentPage
         val adapter = getCurrentAppListAdapter(currentPage)
         val oldList = adapter.getData().toList()
@@ -270,17 +267,11 @@ class VPAdapter(
         dragInfo.adapter = adapter
         dragInfo.currentPage = currentPage
 
-        adapter.getData().add(dragInfo.draggedItem)
+        adapter.addItem(dragInfo.draggedItem)
 
         viewModel.saveNewPositionItem(dragInfo.draggedItem, dragInfo.draggedItemPos, currentPage)
         dragInfo.updateItemPosition()
-
-        DiffUtil.calculateDiff(AppListDiffUtils(oldList, adapter.getData()))
-            .dispatchUpdatesTo(adapter)
-
-        if (pageIsEmpty(oldPage)) {
-            removePage(oldPage)
-        }
+        if (pageIsEmpty(oldPage)) removePage(oldPage)
     }
 
     fun insertItemToPosition(currentPage: Int, position: Int, dragInfo: DragInfo) {

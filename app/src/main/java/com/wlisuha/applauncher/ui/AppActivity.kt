@@ -8,6 +8,7 @@ import android.content.Intent
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import android.view.DragEvent
 import android.view.View
 import androidx.activity.viewModels
@@ -205,7 +206,6 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             viewPagerAdapter.insertToLastPosition(dragInfo, currentPage, true, binding.appPages)
             return
         }
-
         val holder = currentRecycler.getChildViewHolder(currentView)
 
         if (dragInfo.currentPage == -1) viewPagerAdapter
@@ -218,7 +218,6 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         viewModel.movePageJob?.cancel()
         viewModel.movePageJob = null
     }
-
 
     private fun movePagesRight(dragInfo: DragInfo) {
         viewModel.movePageJob = lifecycleScope.launch(Dispatchers.IO) {
@@ -373,5 +372,9 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     override fun isPresentOnHomeScreen() = binding.motionView.progress < 0.2f
+
+    override fun onAppSelected() {
+        binding.motionView.canCallLongCLick = false
+    }
 
 }

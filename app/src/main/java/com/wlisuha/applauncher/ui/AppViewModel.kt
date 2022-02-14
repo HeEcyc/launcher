@@ -76,6 +76,7 @@ class AppViewModel : BaseViewModel() {
                 binding.root.setOnLongClickListener {
                     if (stateProvider?.isPresentOnHomeScreen() == true) {
                         isSelectionEnabled.set(true)
+                        stateProvider?.onAppSelected()
                         createDragAndDropView(item, binding, adapter)
                     }
                     false
@@ -89,6 +90,7 @@ class AppViewModel : BaseViewModel() {
         binding: BottomItemApplicationBinding,
         adapter: BaseAdapter<InstalledApp, *>
     ) {
+
         binding.root.startDragAndDrop(
             null,
             View.DragShadowBuilder(binding.root),
