@@ -4,6 +4,10 @@
 
     <data>
 
+        <import
+            alias="R"
+            type="com.applauncher.applauncher.R" />
+
         <variable
             name="settingsData"
             type="com.applauncher.applauncher.ui.custom.ShutterView.SettingsData" />
@@ -55,7 +59,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintVertical_chainStyle="spread"
-                    app:layout_constraintWidth_percent="0.38"/>
+                    app:layout_constraintWidth_percent="0.38" />
 
                 <androidx.appcompat.widget.AppCompatImageView
                     android:id="@+id/mobileNetworkSettings"
@@ -73,7 +77,6 @@
                     app:layout_constraintVertical_chainStyle="spread"
                     app:layout_constraintWidth_percent="0.38" />
 
-
                 <androidx.appcompat.widget.AppCompatImageView
                     android:id="@+id/wifiSettings"
                     android:layout_width="0sp"
@@ -86,7 +89,7 @@
                     app:layout_constraintDimensionRatio="1:1"
                     app:layout_constraintStart_toStartOf="@id/airPlaneSettings"
                     app:layout_constraintTop_toBottomOf="@id/airPlaneSettings"
-                    app:layout_constraintWidth_percent="0.38"/>
+                    app:layout_constraintWidth_percent="0.38" />
 
                 <androidx.appcompat.widget.AppCompatImageView
                     android:id="@+id/bluetoothSettings"
@@ -189,7 +192,7 @@
                 app:backgroundCornerRadius="60"
                 app:backgroundFillColor="#66000000"
                 app:icon="@drawable/ic_brightness"
-                app:layout_constraintDimensionRatio="1:1.9"
+                app:layout_constraintBottom_toBottomOf="@id/anhcor"
                 app:layout_constraintEnd_toStartOf="@id/volumeProgressBar"
                 app:layout_constraintStart_toStartOf="@id/mediaControlLayout"
                 app:layout_constraintTop_toBottomOf="@id/mediaControlLayout"
@@ -206,7 +209,7 @@
                 app:backgroundCornerRadius="60"
                 app:backgroundFillColor="#66000000"
                 app:icon="@drawable/ic_volume"
-                app:layout_constraintDimensionRatio="1:1.9"
+                app:layout_constraintBottom_toBottomOf="@id/anhcor"
                 app:layout_constraintEnd_toEndOf="@id/mediaControlLayout"
                 app:layout_constraintStart_toEndOf="@id/brightnessProgressBar"
                 app:layout_constraintTop_toBottomOf="@id/mediaControlLayout"
@@ -214,6 +217,107 @@
                 app:progressBarFillColor="#e2d6d5"
                 bind:progress="@{settingsData.audioVolumePercent}" />
 
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/autoRotateButton"
+                android:layout_width="0sp"
+                android:layout_height="0sp"
+                android:layout_marginEnd="5sp"
+                android:background="@{settingsData.isEnableAutoRotate ? @drawable/settings_overlay_enable : @drawable/settings_overlay_big}"
+                android:padding="20sp"
+                android:src="@drawable/ic_rotate"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintEnd_toStartOf="@id/cameraButton"
+                app:layout_constraintStart_toStartOf="@id/networkSettingsLayout"
+                app:layout_constraintTop_toTopOf="@id/brightnessProgressBar" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/cameraButton"
+                android:layout_width="0sp"
+                android:layout_height="0sp"
+                android:layout_marginStart="5sp"
+                android:background="@drawable/settings_overlay_big"
+                android:padding="20sp"
+                android:src="@drawable/ic_camera"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintEnd_toEndOf="@id/networkSettingsLayout"
+                app:layout_constraintStart_toEndOf="@id/autoRotateButton"
+                app:layout_constraintTop_toTopOf="@id/brightnessProgressBar" />
+
+            <View
+                android:id="@+id/anhcor"
+                android:layout_width="0sp"
+                android:layout_height="0sp"
+                android:layout_marginTop="10sp"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintEnd_toEndOf="@id/autoRotateButton"
+                app:layout_constraintStart_toStartOf="@id/autoRotateButton"
+                app:layout_constraintTop_toBottomOf="@id/autoRotateButton" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/browserButton"
+                android:layout_width="0sp"
+                android:layout_height="0sp"
+                android:layout_marginTop="10sp"
+                android:background="@drawable/settings_overlay_big"
+                app:layout_constraintBottom_toBottomOf="@id/brightnessProgressBar"
+                app:layout_constraintEnd_toEndOf="@id/networkSettingsLayout"
+                app:layout_constraintStart_toStartOf="@id/networkSettingsLayout"
+                app:layout_constraintTop_toBottomOf="@id/autoRotateButton">
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/browserIcon"
+                    android:layout_width="0sp"
+                    android:layout_height="0sp"
+                    android:src="@drawable/ic_browser"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintDimensionRatio="1:1"
+                    app:layout_constraintEnd_toStartOf="@id/browserText"
+                    app:layout_constraintHeight_percent="0.5"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/browserText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/browser"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/browserIcon"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/alarmButton"
+                android:layout_width="0sp"
+                android:layout_height="0sp"
+                android:layout_marginTop="20sp"
+                android:background="@drawable/settings_overlay_big"
+                android:padding="20sp"
+                android:src="@drawable/ic_alarm"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintEnd_toEndOf="@id/autoRotateButton"
+                app:layout_constraintStart_toStartOf="@id/networkSettingsLayout"
+                app:layout_constraintTop_toBottomOf="@id/browserButton" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/flashLightButton"
+                android:layout_width="0sp"
+                android:layout_height="0sp"
+                android:layout_marginTop="20sp"
+                android:background="@{settingsData.isTorch ? @drawable/settings_overlay_enable : @drawable/settings_overlay_big}"
+                android:padding="20sp"
+                android:src="@drawable/ic_highlight"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintEnd_toEndOf="@id/cameraButton"
+                app:layout_constraintStart_toStartOf="@id/cameraButton"
+                app:layout_constraintTop_toBottomOf="@id/browserButton" />
         </androidx.constraintlayout.widget.ConstraintLayout>
+
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -3,7 +3,9 @@ package com.applauncher.applauncher.ui.custom
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.*
+import android.content.pm.PackageManager
 import android.database.ContentObserver
+import android.hardware.camera2.CameraManager
 import android.media.AudioManager
 import android.media.MediaMetadata
 import android.media.session.MediaController
@@ -17,6 +19,8 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
+import android.provider.AlarmClock
+import android.provider.MediaStore
 import android.provider.Settings
 import android.util.AttributeSet
 import android.view.KeyEvent
@@ -26,11 +30,11 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.NotificationManagerCompat
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableField
-import com.shahryar.airbar.AirBar
 import com.applauncher.applauncher.BR
 import com.applauncher.applauncher.R
 import com.applauncher.applauncher.databinding.ShutterViewBinding
 import com.applauncher.applauncher.services.NLService
+import com.shahryar.airbar.AirBar
 import java.lang.reflect.Field
 
 
@@ -40,6 +44,9 @@ class ShutterView @JvmOverloads constructor(
     defStyle: Int = 0
 ) : ConstraintLayout(context, attrs, defStyle), View.OnClickListener,
     AirBar.OnProgressChangedListener {
+    private val cameraManager
+        get() =
+            context.getSystemService(CameraManager::class.java)
 
     private var mediaController: MediaController? = null
 
@@ -127,6 +134,8 @@ class ShutterView @JvmOverloads constructor(
 
     init {
         setupListener()
+        cameraManager.registerTorchCallback(settingsData, Handler(Looper.getMainLooper()))
+
     }
 
     private fun setupListener() {
@@ -139,6 +148,11 @@ class ShutterView @JvmOverloads constructor(
         binding.mobileNetworkSettings.setOnClickListener(this)
         binding.brightnessProgressBar.setOnProgressChangedListener(this)
         binding.volumeProgressBar.setOnProgressChangedListener(this)
+        binding.flashLightButton.setOnClickListener(this)
+        binding.browserButton.setOnClickListener(this)
+        binding.alarmButton.setOnClickListener(this)
+        binding.cameraButton.setOnClickListener(this)
+        binding.autoRotateButton.setOnClickListener(this)
     }
 
     override fun onClick(v: View) {
@@ -149,6 +163,53 @@ class ShutterView @JvmOverloads constructor(
             R.id.bluetoothSettings -> onBluetoothClick()
             R.id.mobileNetworkSettings, R.id.wifiSettings -> onNetworkClick()
             R.id.airPlaneSettings -> onAirplaneSettingsClick()
+            R.id.flashLightButton -> onFlashLightClick()
+            R.id.alarmButton -> openDefaultAlarm()
+            R.id.browserButton -> openBrowser()
+            R.id.cameraButton -> openCamera()
+            R.id.autoRotateButton -> onAutoRotateClick()
+        }
+    }
+
+    private fun onAutoRotateClick() {
+        if (Settings.System.canWrite(context)) {
+            val isEnabledAutoRotate = settingsData.isEnableAutoRotate.get() ?: false
+            Settings.System.putInt(
+                context.contentResolver,
+                Settings.System.ACCELEROMETER_ROTATION,
+                if (isEnabledAutoRotate) 1 else 0
+            )
+        } else askWriteSettingsPermission()
+    }
+
+    private fun openCamera() {
+        Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            .let(::openDefaultApp)
+    }
+
+    private fun openDefaultAlarm() {
+        Intent(AlarmClock.ACTION_SET_ALARM)
+            .let(::openDefaultApp)
+    }
+
+    private fun openBrowser() {
+        Intent("android.intent.action.VIEW", Uri.parse("http://"))
+            .let(::openDefaultApp)
+    }
+
+    private fun openDefaultApp(intent: Intent) {
+        context.packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+            ?.activityInfo?.packageName
+            ?.let(context.packageManager::getLaunchIntentForPackage)
+            ?.let(context::startActivity)
+    }
+
+    private fun onFlashLightClick() {
+        if (!context.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY))
+            return
+        val cameraId = cameraManager.cameraIdList.getOrNull(0) ?: return
+        kotlin.runCatching {
+            cameraManager.setTorchMode(cameraId, !(settingsData.isTorch.get() ?: false))
         }
     }
 
@@ -180,13 +241,16 @@ class ShutterView @JvmOverloads constructor(
         super.onDetachedFromWindow()
         mediaController?.unregisterCallback(mediaCallBack)
         settingsData.onDestroy(context)
+        cameraManager.unregisterTorchCallback(settingsData)
     }
 
-    inner class SettingsData {
+    inner class SettingsData : CameraManager.TorchCallback() {
         val isEnableBluetooth = ObservableField<Boolean>()
         val isEnableAirplaneMode = ObservableField<Boolean>()
         val isEnableMobileNetwork = ObservableField<Boolean>()
         val isEnableWifi = ObservableField<Boolean>()
+        val isTorch = ObservableField(false)
+        val isEnableAutoRotate = ObservableField(false)
         val audioVolumePercent = ObservableField<Double>()
         val brightnessPercent = ObservableField<Double>()
 
@@ -194,6 +258,17 @@ class ShutterView @JvmOverloads constructor(
             override fun onChange(selfChange: Boolean) {
                 readCurrentBrightnessValue(context)
             }
+        }
+        private val autoRotateObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) {
+                readIsAutoRotateValue(context)
+            }
+        }
+
+        private fun readIsAutoRotateValue(context: Context) {
+            val isEnableRotate = Settings.System
+                .getInt(context.contentResolver, Settings.System.ACCELEROMETER_ROTATION) == 0
+            isEnableAutoRotate.set(isEnableRotate)
         }
 
         private val EXTRA_VOLUME_STREAM_TYPE = "android.media.EXTRA_VOLUME_STREAM_TYPE"
@@ -251,6 +326,7 @@ class ShutterView @JvmOverloads constructor(
             readCurrentVolumeValue(context)
             readMaxBrightnessValue(context)
             readCurrentBrightnessValue(context)
+            readIsAutoRotateValue(context)
         }
 
         private fun readCurrentBrightnessValue(context: Context) {
@@ -281,11 +357,17 @@ class ShutterView @JvmOverloads constructor(
                 false,
                 brightnessObserver
             )
+            context.contentResolver.registerContentObserver(
+                Settings.System.getUriFor(Settings.System.ACCELEROMETER_ROTATION),
+                false,
+                autoRotateObserver
+            )
         }
 
         fun onDestroy(context: Context) {
             context.unregisterReceiver(settingsReceiver)
             context.contentResolver.unregisterContentObserver(brightnessObserver)
+            context.contentResolver.unregisterContentObserver(autoRotateObserver)
         }
 
         private fun isAirplaneModeOn(context: Context): Boolean {
@@ -314,6 +396,10 @@ class ShutterView @JvmOverloads constructor(
                 }
             }
             return 255
+        }
+
+        override fun onTorchModeChanged(cameraId: String, enabled: Boolean) {
+            isTorch.set(enabled)
         }
     }
 
@@ -349,13 +435,17 @@ class ShutterView @JvmOverloads constructor(
     }
 
     override fun actionWhenCantChange(airBar: AirBar) {
-        Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
-            .setData(Uri.parse("package:${context.packageName}"))
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            .let(context::startActivity)
+        askWriteSettingsPermission()
     }
 
     override fun canMoveByFinger(airBar: AirBar): Boolean {
         return airBar.id == R.id.brightnessProgressBar
+    }
+
+    private fun askWriteSettingsPermission() {
+        Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
+            .setData(Uri.parse("package:${context.packageName}"))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            .let(context::startActivity)
     }
 }

@@ -5,7 +5,9 @@ import android.view.View
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.databinding.BindingAdapter
 import android.graphics.Outline
+import android.util.Log
 import android.view.ViewOutlineProvider
+import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatTextView
 
 
