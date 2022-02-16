@@ -1,35 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.applauncher.applauncher.ui.bg.BackgroundsViewModel" />
+    </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#EFEFE4"
         android:orientation="vertical">
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/slider"
-            android:layout_width="0sp"
-            app:layout_constraintWidth_percent="0.2"
-            android:layout_height="0sp"
-            app:layout_constraintDimensionRatio="1:0.1"
-            android:layout_gravity="center"
-            android:layout_marginTop="20sp"
-            android:src="@drawable/ic_closer_dialog"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/backgrounds"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="0sp"
-            android:layout_marginTop="20sp"
-            android:overScrollMode="never"
-            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/slider"
-            app:spanCount="2" />
+            android:layout_height="match_parent"
+            android:background="#EFEFE4">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/slider"
+                android:layout_width="0sp"
+                android:layout_height="0sp"
+                android:layout_gravity="center"
+                android:layout_marginTop="20sp"
+                android:src="@drawable/ic_closer_dialog"
+                app:layout_constraintDimensionRatio="1:0.1"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintWidth_percent="0.2" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/backgrounds"
+                android:layout_width="match_parent"
+                android:layout_height="0sp"
+                android:layout_marginTop="20sp"
+                android:overScrollMode="never"
+                app:adapter="@{viewModel.adapter}"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/slider"
+                app:spanCount="2" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

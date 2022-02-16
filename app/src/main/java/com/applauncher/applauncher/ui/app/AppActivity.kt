@@ -5,6 +5,7 @@ import android.app.role.RoleManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
@@ -20,8 +21,8 @@ import com.applauncher.applauncher.R
 import com.applauncher.applauncher.base.BaseActivity
 import com.applauncher.applauncher.data.DragInfo
 import com.applauncher.applauncher.databinding.AppActivityBinding
+import com.applauncher.applauncher.ui.bg.BackgroundsActivity
 import com.applauncher.applauncher.ui.custom.NonSwipeableViewPager
-import com.applauncher.applauncher.ui.dialogs.BgDialogs
 import com.applauncher.applauncher.utils.APP_COLUMN_COUNT
 import com.applauncher.applauncher.utils.MOVING_PAGE_DELAY
 import kotlinx.coroutines.Dispatchers
@@ -103,7 +104,8 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY)
         registerReceiver(broadcastReceiver, viewModel.intentFilter)
         binding.viewList.binding.settingsButton.setOnClickListener {
-            BgDialogs().show(supportFragmentManager, "bg")
+            Intent(this, BackgroundsActivity::class.java)
+                .let(::startActivity)
         }
     }
 
@@ -112,7 +114,10 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             isLaunchNotificationSettings = true
             Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
                 .let(::startActivity)
-        } else sendUpdateNotificationsBroadcast()
+        } else {
+            askRole()
+            sendUpdateNotificationsBroadcast()
+        }
     }
 
     private fun askRole() {
@@ -122,7 +127,11 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
                 startActivityForResult(createRequestRoleIntent(RoleManager.ROLE_HOME), 200)
             }
         } else {
-
+            val launcherIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+            packageManager.resolveActivity(launcherIntent, PackageManager.MATCH_DEFAULT_ONLY)
+                ?.activityInfo?.packageName
+                ?.takeIf { it != packageName }
+                ?.let { startActivity(launcherIntent) }
         }
     }
 
@@ -141,8 +150,6 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             binding.motionView.transitionToStart()
         } else if (binding.drawer.isDrawerOpen(GravityCompat.START)) {
             binding.drawer.closeDrawer(GravityCompat.START)
-        } else {
-            askRole()
         }
     }
 
@@ -313,6 +320,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         if (isLaunchNotificationSettings) {
             isLaunchNotificationSettings = false
             sendUpdateNotificationsBroadcast()
+            askRole()
         }
     }
 

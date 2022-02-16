@@ -1,18 +1,15 @@
 package com.applauncher.applauncher.ui.app
 
 import android.annotation.SuppressLint
-import android.app.WallpaperManager
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.view.View
-import androidx.annotation.ColorInt
 import androidx.databinding.ObservableField
 import androidx.lifecycle.viewModelScope
 import com.applauncher.applauncher.BR
@@ -29,7 +26,7 @@ import com.applauncher.applauncher.utils.APP_COLUMN_COUNT
 import kotlinx.coroutines.*
 import java.text.Collator
 
-class AppViewModel : BaseViewModel() {
+class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChangeListener {
     val labelColor = ObservableField(Color.WHITE)
     val isSelectionEnabled = ObservableField(false)
     val intentFilter = IntentFilter().apply {
@@ -49,21 +46,8 @@ class AppViewModel : BaseViewModel() {
         LauncherApplication.instance.packageName
     )
 
-    private val wallpaperManager = WallpaperManager.getInstance(LauncherApplication.instance)
-
     init {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            // setLabelColor()
-            wallpaperManager.addOnColorsChangedListener(
-                { _, _ -> setLabelColor() }, Handler(Looper.getMainLooper())
-            )
-        }
-    }
-
-    private fun setLabelColor() {
-        getPrimaryColor()
-            ?.let(::getContrastColor)
-            ?.let(labelColor::set)
+        Prefs.sharedPreference.registerOnSharedPreferenceChangeListener(this)
     }
 
     val bottomAppListAdapter =
@@ -151,20 +135,6 @@ class AppViewModel : BaseViewModel() {
         bottomAppListAdapter
             .getData()
             .forEachIndexed { index, installedApp -> addItem(installedApp, index, -1) }
-    }
-
-    @SuppressLint("NewApi")
-    private fun getPrimaryColor() = wallpaperManager
-        .getWallpaperColors(1)
-        ?.primaryColor
-        ?.toArgb()
-
-    private fun getContrastColor(@ColorInt color: Int): Int {
-        val a =
-            1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(
-                color
-            )) / 255
-        return if (a < 0.5) Color.BLACK else Color.WHITE
     }
 
     private fun availableApp(applicationInfo: ApplicationInfo): Boolean {
@@ -257,7 +227,6 @@ class AppViewModel : BaseViewModel() {
         else locale
     }
 
-
     fun createModel(packageName: String): InstalledApp {
         return packageManager.getApplicationInfo(packageName, 0)
             .let(::createModel)
@@ -292,23 +261,15 @@ class AppViewModel : BaseViewModel() {
         viewModelScope.launch(Dispatchers.IO) { DataBase.dao.deletePackage(packageName) }
     }
 
-    fun getBackgrounds() = listOf(
-        Background(R.mipmap.img_0),
-        Background(R.mipmap.img_1),
-        Background(R.mipmap.img_2),
-        Background(R.mipmap.img_3),
-        Background(R.mipmap.img_4),
-        Background(R.mipmap.img_5),
-        Background(R.mipmap.img_6),
-        Background(R.mipmap.img_7),
-        Background(R.mipmap.img_8),
-        Background(R.mipmap.img_9),
-        Background(R.mipmap.img_10),
-    )
-
-    fun onBackgroundSelected(background: Background) {
-        background.isSelected.set(true)
-        launcherBG.set(background.imageRes)
-        Prefs.bgRes = background.imageRes
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+        when (key) {
+            Prefs.bgResKey -> launcherBG.set(sharedPreferences.getInt(key, R.mipmap.img_10))
+        }
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        Prefs.sharedPreference.unregisterOnSharedPreferenceChangeListener(this)
+    }
+
 }

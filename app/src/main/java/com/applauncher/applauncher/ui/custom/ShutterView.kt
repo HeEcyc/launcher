@@ -94,6 +94,7 @@ class ShutterView @JvmOverloads constructor(
     fun onHide() {
         binding.allSettingsLayout.visibility = View.GONE
         mediaController?.unregisterCallback(mediaCallBack)
+        mediaController = null
     }
 
     fun onShow() {

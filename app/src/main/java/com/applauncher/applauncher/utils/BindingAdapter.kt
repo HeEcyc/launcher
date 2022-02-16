@@ -1,5 +1,6 @@
 package com.applauncher.applauncher.utils
 
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.service.notification.StatusBarNotification
 import android.view.View
@@ -10,10 +11,12 @@ import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.PaintDrawable
+import android.media.ThumbnailUtils
 import android.util.Log
 import android.view.ViewOutlineProvider
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.graphics.scale
 
 
 @BindingAdapter("onEnableSelected")

@@ -322,7 +322,6 @@
                 android:id="@+id/flashLightButton"
                 android:layout_width="0sp"
                 android:layout_height="0sp"
-
                 android:background="@{settingsData.isTorch ? @drawable/settings_overlay_enable : @drawable/settings_overlay_big}"
                 android:padding="20sp"
                 android:src="@drawable/ic_highlight"
