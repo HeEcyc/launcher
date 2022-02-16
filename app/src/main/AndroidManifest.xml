@@ -32,7 +32,7 @@
         android:theme="@style/Theme.AppLauncher">
 
         <activity
-            android:name="com.applauncher.applauncher.ui.AppActivity"
+            android:name="com.applauncher.applauncher.ui.app.AppActivity"
             android:clearTaskOnLaunch="true"
             android:configChanges="uiMode"
             android:exported="true"
@@ -40,17 +40,32 @@
             android:screenOrientation="portrait"
             android:stateNotNeeded="true"
             android:taskAffinity=""
+            android:windowSoftInputMode="adjustNothing"
+            tools:ignore="LockedOrientationActivity">
+            <intent-filter>
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
 
+
+        <activity
+            android:name=".ui.EmptyLaunchActivity"
+            android:clearTaskOnLaunch="true"
+            android:configChanges="uiMode"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:stateNotNeeded="true"
+            android:theme="@style/TransparentCompat"
             android:windowSoftInputMode="adjustNothing"
             tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.HOME" />
-                <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
 
         <service
             android:name="com.applauncher.applauncher.services.NLService"

@@ -7,7 +7,7 @@
 
         <variable
             name="viewModel"
-            type="com.applauncher.applauncher.ui.AppViewModel" />
+            type="com.applauncher.applauncher.ui.app.AppViewModel" />
     </data>
 
     <androidx.drawerlayout.widget.DrawerLayout
@@ -19,7 +19,7 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@mipmap/wallpaper">
+            android:background="@mipmap/img_10">
 
             <com.applauncher.applauncher.ui.custom.ClickableMotionLayout
                 android:id="@+id/motionView"

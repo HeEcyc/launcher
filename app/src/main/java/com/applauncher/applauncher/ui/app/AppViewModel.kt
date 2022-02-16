@@ -1,4 +1,4 @@
-package com.applauncher.applauncher.ui
+package com.applauncher.applauncher.ui.app
 
 import android.annotation.SuppressLint
 import android.app.WallpaperManager

@@ -11,7 +11,7 @@ import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.applauncher.applauncher.BR
-import com.applauncher.applauncher.ui.AppViewModel
+import com.applauncher.applauncher.ui.app.AppViewModel
 
 abstract class BaseFragment<B : ViewDataBinding>(@LayoutRes open val layoutId: Int) :
     Fragment() {

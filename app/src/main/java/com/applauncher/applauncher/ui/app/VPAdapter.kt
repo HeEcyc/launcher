@@ -1,4 +1,4 @@
-package com.applauncher.applauncher.ui
+package com.applauncher.applauncher.ui.app
 
 import android.annotation.SuppressLint
 import android.os.Handler
@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.PagerAdapter
-import androidx.viewpager.widget.ViewPager
 import com.applauncher.applauncher.BR
 import com.applauncher.applauncher.R
 import com.applauncher.applauncher.base.BaseAdapter

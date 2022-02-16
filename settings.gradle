@@ -9,4 +9,3 @@ dependencyResolutionManagement {
 rootProject.name = "AppLauncher"
 include ':app'
 include ':AirBar'
-include ':swipeStack'
