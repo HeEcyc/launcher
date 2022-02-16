@@ -188,7 +188,7 @@
                 android:layout_width="0sp"
                 android:layout_height="0sp"
                 android:layout_marginTop="20sp"
-                android:layout_marginEnd="10sp"
+                android:layout_marginEnd="5sp"
                 app:backgroundCornerRadius="60"
                 app:backgroundFillColor="#66000000"
                 app:icon="@drawable/ic_brightness"
@@ -204,7 +204,7 @@
                 android:id="@+id/volumeProgressBar"
                 android:layout_width="0sp"
                 android:layout_height="0sp"
-                android:layout_marginStart="10sp"
+                android:layout_marginStart="5sp"
                 android:layout_marginTop="20sp"
                 app:backgroundCornerRadius="60"
                 app:backgroundFillColor="#66000000"
@@ -292,6 +292,20 @@
 
 
             <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/settingsButton"
+                android:layout_width="0sp"
+                android:layout_height="0sp"
+                android:layout_marginTop="20sp"
+                android:background="@drawable/settings_overlay_big"
+                android:padding="20sp"
+                android:src="@drawable/ic_settings"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintEnd_toEndOf="@id/autoRotateButton"
+                app:layout_constraintStart_toStartOf="@id/networkSettingsLayout"
+                app:layout_constraintTop_toBottomOf="@id/browserButton" />
+
+
+            <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/alarmButton"
                 android:layout_width="0sp"
                 android:layout_height="0sp"
@@ -300,22 +314,22 @@
                 android:padding="20sp"
                 android:src="@drawable/ic_alarm"
                 app:layout_constraintDimensionRatio="1:1"
-                app:layout_constraintEnd_toEndOf="@id/autoRotateButton"
-                app:layout_constraintStart_toStartOf="@id/networkSettingsLayout"
+                app:layout_constraintEnd_toEndOf="@id/cameraButton"
+                app:layout_constraintStart_toStartOf="@id/cameraButton"
                 app:layout_constraintTop_toBottomOf="@id/browserButton" />
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/flashLightButton"
                 android:layout_width="0sp"
                 android:layout_height="0sp"
-                android:layout_marginTop="20sp"
+
                 android:background="@{settingsData.isTorch ? @drawable/settings_overlay_enable : @drawable/settings_overlay_big}"
                 android:padding="20sp"
                 android:src="@drawable/ic_highlight"
+                app:layout_constraintBottom_toBottomOf="@id/settingsButton"
                 app:layout_constraintDimensionRatio="1:1"
-                app:layout_constraintEnd_toEndOf="@id/cameraButton"
-                app:layout_constraintStart_toStartOf="@id/cameraButton"
-                app:layout_constraintTop_toBottomOf="@id/browserButton" />
+                app:layout_constraintStart_toStartOf="@id/brightnessProgressBar"
+                app:layout_constraintTop_toTopOf="@id/settingsButton" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
 

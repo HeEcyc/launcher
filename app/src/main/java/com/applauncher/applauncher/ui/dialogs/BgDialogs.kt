@@ -3,6 +3,7 @@ package com.applauncher.applauncher.ui.dialogs
 import android.app.Dialog
 import android.graphics.Rect
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -34,6 +35,18 @@ class BgDialogs : BottomSheetDialogFragment() {
                     val behaviour = BottomSheetBehavior.from(it)
                     setupFullHeight(it)
                     behaviour.state = BottomSheetBehavior.STATE_EXPANDED
+                    behaviour.addBottomSheetCallback(object :
+                        BottomSheetBehavior.BottomSheetCallback() {
+                        override fun onStateChanged(bottomSheet: View, newState: Int) {
+                            if (newState == BottomSheetBehavior.STATE_COLLAPSED)
+                                dismiss()
+                        }
+
+                        override fun onSlide(bottomSheet: View, slideOffset: Float) {
+
+                        }
+
+                    })
                 }
         }
         return dialog
@@ -63,7 +76,6 @@ class BgDialogs : BottomSheetDialogFragment() {
         binding = DataBindingUtil.inflate(inflater, R.layout.dialog_backgrounds, container, false)!!
         return binding.root
     }
-
 
     override fun onStart() {
         super.onStart()

@@ -77,11 +77,8 @@ fun AppCompatImageView.radius(radius: Float) {
 
 @BindingAdapter("isSelected")
 fun AppCompatImageView.setDrawable(isSelected: Boolean) {
-
-    Log.d("12345", "enter")
     val strokeStrokeColor = if (isSelected) Color.parseColor("#007AFF")
     else Color.parseColor("#C7C7CC")
-
     GradientDrawable().apply {
         cornerRadius = 18f
         setStroke(6, strokeStrokeColor)

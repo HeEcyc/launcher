@@ -102,8 +102,9 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY)
         registerReceiver(broadcastReceiver, viewModel.intentFilter)
-        BgDialogs()
-            .show(supportFragmentManager, "bg")
+        binding.viewList.binding.settingsButton.setOnClickListener {
+            BgDialogs().show(supportFragmentManager, "bg")
+        }
     }
 
     private fun checkNotificationsPermissions() {
@@ -120,6 +121,8 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
                 if (!isRoleAvailable(RoleManager.ROLE_HOME) || isRoleHeld(RoleManager.ROLE_HOME)) return
                 startActivityForResult(createRequestRoleIntent(RoleManager.ROLE_HOME), 200)
             }
+        } else {
+
         }
     }
 
