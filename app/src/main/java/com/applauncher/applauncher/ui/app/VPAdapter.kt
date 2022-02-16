@@ -78,9 +78,9 @@ class VPAdapter(
         position: Int
     ) {
         canCreatePage = adapter.getData().size > 1
-        binding.root.startDragAndDrop(
+        binding.appIcon.startDragAndDrop(
             null,
-            View.DragShadowBuilder(binding.root),
+            View.DragShadowBuilder(binding.appIcon),
             DragInfo(adapter, adapter.getData().indexOf(item), position, item),
             0
         )
@@ -193,8 +193,6 @@ class VPAdapter(
 
     private fun removePage(oldPage: Int) {
         listAppPages.removeAt(oldPage)
-//        recyclersAdapters.removeAt(oldPage)
-//        recyclers.removeAt(oldPage)
         notifyDataSetChanged()
     }
 
@@ -254,7 +252,6 @@ class VPAdapter(
     private fun insertItemToLastPosition(dragInfo: DragInfo, currentPage: Int) {
         val oldPage = dragInfo.currentPage
         val adapter = getCurrentAppListAdapter(currentPage)
-        val oldList = adapter.getData().toList()
 
         dragInfo.removeItem()
 
