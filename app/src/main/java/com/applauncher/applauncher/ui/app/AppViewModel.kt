@@ -21,9 +21,7 @@ import com.applauncher.applauncher.R
 import com.applauncher.applauncher.base.BaseAdapter
 import com.applauncher.applauncher.base.BaseViewModel
 import com.applauncher.applauncher.base.createAdapter
-import com.applauncher.applauncher.data.AppScreenLocation
-import com.applauncher.applauncher.data.DragInfo
-import com.applauncher.applauncher.data.InstalledApp
+import com.applauncher.applauncher.data.*
 import com.applauncher.applauncher.data.db.DataBase
 import com.applauncher.applauncher.databinding.BottomItemApplicationBinding
 import com.applauncher.applauncher.ui.custom.NonSwipeableViewPager
@@ -39,6 +37,7 @@ class AppViewModel : BaseViewModel() {
         addAction(Intent.ACTION_PACKAGE_ADDED)
         addDataScheme("package")
     }
+    val launcherBG = ObservableField(Prefs.bgRes)
     var stateProvider: NonSwipeableViewPager.StateProvider? = null
 
     private var saveDBJob: Job? = null
@@ -291,5 +290,25 @@ class AppViewModel : BaseViewModel() {
 
     fun deletePackage(packageName: String) {
         viewModelScope.launch(Dispatchers.IO) { DataBase.dao.deletePackage(packageName) }
+    }
+
+    fun getBackgrounds() = listOf(
+        Background(R.mipmap.img_0),
+        Background(R.mipmap.img_1),
+        Background(R.mipmap.img_2),
+        Background(R.mipmap.img_3),
+        Background(R.mipmap.img_4),
+        Background(R.mipmap.img_5),
+        Background(R.mipmap.img_6),
+        Background(R.mipmap.img_7),
+        Background(R.mipmap.img_8),
+        Background(R.mipmap.img_9),
+        Background(R.mipmap.img_10),
+    )
+
+    fun onBackgroundSelected(background: Background) {
+        background.isSelected.set(true)
+        launcherBG.set(background.imageRes)
+        Prefs.bgRes = background.imageRes
     }
 }

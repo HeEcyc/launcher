@@ -1,10 +1,15 @@
 package com.applauncher.applauncher.utils
 
+import android.graphics.Color
 import android.service.notification.StatusBarNotification
 import android.view.View
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.databinding.BindingAdapter
 import android.graphics.Outline
+import android.graphics.Paint
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.PaintDrawable
 import android.util.Log
 import android.view.ViewOutlineProvider
 import androidx.annotation.DrawableRes
@@ -48,20 +53,37 @@ fun AppCompatImageView.notificationImage(statusBarNotification: StatusBarNotific
     with(statusBarNotification.notification.getLargeIcon()?.loadDrawable(context)) {
         if (this == null) visibility = View.GONE
         else {
-            object : ViewOutlineProvider() {
-                override fun getOutline(view: View, outline: Outline) {
-                    outline.setRoundRect(0, 0, view.width, view.height, 10f)
-                }
-            }.let(this@notificationImage::setOutlineProvider)
-            this@notificationImage.clipToOutline = true
+            this@notificationImage.radius(10f)
             this@notificationImage.setImageDrawable(this)
         }
     }
-    String
 }
 
 @BindingAdapter("notificationAppOwner")
 fun AppCompatTextView.notificationAppOwner(statusBarNotification: StatusBarNotification) {
     val appInfo = context.packageManager.getApplicationInfo(statusBarNotification.packageName, 0)
     text = context.packageManager.getApplicationLabel(appInfo)
+}
+
+@BindingAdapter("radius")
+fun AppCompatImageView.radius(radius: Float) {
+    object : ViewOutlineProvider() {
+        override fun getOutline(view: View, outline: Outline) {
+            outline.setRoundRect(0, 0, view.width, view.height, radius)
+        }
+    }.let(::setOutlineProvider)
+    clipToOutline = true
+}
+
+@BindingAdapter("isSelected")
+fun AppCompatImageView.setDrawable(isSelected: Boolean) {
+
+    Log.d("12345", "enter")
+    val strokeStrokeColor = if (isSelected) Color.parseColor("#007AFF")
+    else Color.parseColor("#C7C7CC")
+
+    GradientDrawable().apply {
+        cornerRadius = 18f
+        setStroke(6, strokeStrokeColor)
+    }.let(::setImageDrawable)
 }

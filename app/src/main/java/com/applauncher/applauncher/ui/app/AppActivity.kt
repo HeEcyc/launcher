@@ -21,6 +21,7 @@ import com.applauncher.applauncher.base.BaseActivity
 import com.applauncher.applauncher.data.DragInfo
 import com.applauncher.applauncher.databinding.AppActivityBinding
 import com.applauncher.applauncher.ui.custom.NonSwipeableViewPager
+import com.applauncher.applauncher.ui.dialogs.BgDialogs
 import com.applauncher.applauncher.utils.APP_COLUMN_COUNT
 import com.applauncher.applauncher.utils.MOVING_PAGE_DELAY
 import kotlinx.coroutines.Dispatchers
@@ -85,7 +86,6 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         setTouchListenerOnIndicator()
 
         checkNotificationsPermissions()
-        // askSettingsPermissions()
 
         binding.appPages.stateProvider = this
         viewModel.stateProvider = this
@@ -102,6 +102,8 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY)
         registerReceiver(broadcastReceiver, viewModel.intentFilter)
+        BgDialogs()
+            .show(supportFragmentManager, "bg")
     }
 
     private fun checkNotificationsPermissions() {
