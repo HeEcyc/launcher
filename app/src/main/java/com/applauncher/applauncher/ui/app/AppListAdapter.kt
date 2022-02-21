@@ -23,7 +23,7 @@ import com.applauncher.applauncher.utils.diff.utils.AppListDiffUtils
 import java.util.*
 
 
-class VPAdapter(
+class AppListAdapter(
     private val listAppPages: MutableList<List<InstalledApp>>,
     private val visibleApplicationsOnScreen: Int,
     private val viewModel: AppViewModel,

@@ -1,5 +1,6 @@
 package com.applauncher.applauncher.ui.custom
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.*
@@ -44,6 +45,8 @@ class ShutterView @JvmOverloads constructor(
     defStyle: Int = 0
 ) : ConstraintLayout(context, attrs, defStyle), View.OnClickListener,
     AirBar.OnProgressChangedListener {
+    var permissionHelper: PermissionHelper? = null
+
     private val cameraManager
         get() =
             context.getSystemService(CameraManager::class.java)
@@ -83,7 +86,7 @@ class ShutterView @JvmOverloads constructor(
 
     init {
         binding.setVariable(BR.settingsData, settingsData)
-        binding.allSettingsLayout.visibility = View.GONE
+        binding.root.visibility = View.GONE
         settingsData.onInit(context)
     }
 
@@ -92,13 +95,13 @@ class ShutterView @JvmOverloads constructor(
 
 
     fun onHide() {
-        binding.allSettingsLayout.visibility = View.GONE
+        binding.root.visibility = View.GONE
         mediaController?.unregisterCallback(mediaCallBack)
         mediaController = null
     }
 
     fun onShow() {
-        binding.allSettingsLayout.visibility = View.VISIBLE
+        binding.root.visibility = View.VISIBLE
         setupPlayerLayout()
     }
 
@@ -124,7 +127,7 @@ class ShutterView @JvmOverloads constructor(
             ?.getText(MediaMetadata.METADATA_KEY_TITLE)
     }
 
-    fun hasNotificationPermission() = NotificationManagerCompat
+    private fun hasNotificationPermission() = NotificationManagerCompat
         .getEnabledListenerPackages(context).contains(context.packageName)
 
 
@@ -136,7 +139,6 @@ class ShutterView @JvmOverloads constructor(
     init {
         setupListener()
         cameraManager.registerTorchCallback(settingsData, Handler(Looper.getMainLooper()))
-
     }
 
     private fun setupListener() {
@@ -161,7 +163,12 @@ class ShutterView @JvmOverloads constructor(
             R.id.playerRewind -> sendCommand(KeyEvent.KEYCODE_MEDIA_PREVIOUS)
             R.id.playerForward -> sendCommand(KeyEvent.KEYCODE_MEDIA_NEXT)
             R.id.play -> sendCommand(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
-            R.id.bluetoothSettings -> onBluetoothClick()
+            R.id.bluetoothSettings -> if (permissionHelper?.hasBluetoothPermission() == true)
+                onBluetoothClick()
+            else permissionHelper?.aksBluetoothPermission {
+                onBluetoothClick()
+            }
+
             R.id.mobileNetworkSettings, R.id.wifiSettings -> onNetworkClick()
             R.id.airPlaneSettings -> onAirplaneSettingsClick()
             R.id.flashLightButton -> onFlashLightClick()
@@ -226,6 +233,7 @@ class ShutterView @JvmOverloads constructor(
         else wifiManager.isWifiEnabled = !wifiManager.isWifiEnabled
     }
 
+    @SuppressLint("MissingPermission")
     private fun onBluetoothClick() {
         if (bluetoothAdapter.isEnabled) bluetoothAdapter.disable()
         else bluetoothAdapter.enable()
@@ -448,5 +456,11 @@ class ShutterView @JvmOverloads constructor(
             .setData(Uri.parse("package:${context.packageName}"))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             .let(context::startActivity)
+    }
+
+    interface PermissionHelper {
+        fun hasBluetoothPermission(): Boolean
+
+        fun aksBluetoothPermission(action: () -> Unit)
     }
 }

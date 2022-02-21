@@ -7,6 +7,10 @@
         <variable
             name="item"
             type="android.service.notification.StatusBarNotification" />
+
+        <variable
+            name="textColor"
+            type="com.applauncher.applauncher.ui.custom.NotificationScreenView.NotificationTextColor" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -32,7 +36,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="10sp"
             android:alpha="0.8"
-            android:textColor="@android:color/white"
+            notificationTextColor="@{textColor.notificationTextColor}"
             app:layout_constraintBottom_toBottomOf="@id/notificationIcon"
             app:layout_constraintStart_toEndOf="@id/notificationIcon"
             app:layout_constraintTop_toTopOf="@id/notificationIcon" />
@@ -42,9 +46,9 @@
             notificationTitle="@{item}"
             android:layout_width="0sp"
             android:layout_height="wrap_content"
+            notificationTextColor="@{textColor.notificationTextColor}"
             android:layout_marginTop="5sp"
             android:maxLines="1"
-            android:textColor="@android:color/white"
             android:textStyle="bold"
             app:layout_constraintStart_toEndOf="@id/notificationIcon"
             app:layout_constraintStart_toStartOf="@id/notificationIcon"
@@ -54,6 +58,7 @@
             notificationText="@{item}"
             android:layout_width="0sp"
             android:layout_height="wrap_content"
+            notificationTextColor="@{textColor.notificationTextColor}"
             android:layout_marginEnd="16sp"
             android:maxLines="4"
             android:textColor="@android:color/white"

@@ -5,10 +5,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Handler
-import android.os.Looper
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
+import android.util.Log
 import com.applauncher.applauncher.LauncherApplication
 
 class NLService : NotificationListenerService() {
@@ -18,23 +17,14 @@ class NLService : NotificationListenerService() {
             when (intent.action) {
                 "cancel" -> cancelAllNotifications()
                 "cancel_current" -> cancelNotification(intent.getStringExtra("key"))
-                "rewrite" -> LauncherApplication.instance.notificationListener
-                    ?.onNotificationsChanges(getNotificationsList())
             }
         }
     }
 
-    override fun onCreate() {
-        super.onCreate()
+    private fun receiveNotifications() {
         registerReceiver(receiver, IntentFilter("cancel").apply {
-            addAction("rewrite")
             addAction("cancel_current")
         })
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            LauncherApplication.instance.notificationListener
-                ?.onNotificationsChanges(getNotificationsList())
-        }, 1000)
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
@@ -46,7 +36,6 @@ class NLService : NotificationListenerService() {
         LauncherApplication.instance.notificationListener
             ?.onNotificationsChanges(getNotificationsList())
     }
-
 
     private fun getNotificationsList() = try {
         activeNotifications
@@ -63,5 +52,14 @@ class NLService : NotificationListenerService() {
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(receiver)
+    }
+
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        Log.d("12345", "conncetcet")
+
+        receiveNotifications()
+        LauncherApplication.instance.notificationListener
+            ?.onNotificationsChanges(getNotificationsList())
     }
 }

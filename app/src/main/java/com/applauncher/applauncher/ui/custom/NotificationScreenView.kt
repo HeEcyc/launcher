@@ -3,20 +3,23 @@ package com.applauncher.applauncher.ui.custom
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
+import android.graphics.Color
 import android.graphics.Typeface
 import android.service.notification.StatusBarNotification
 import android.util.AttributeSet
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.databinding.DataBindingUtil
-import androidx.drawerlayout.widget.DrawerLayout
+import androidx.databinding.ObservableField
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.applauncher.applauncher.BR
 import com.applauncher.applauncher.LauncherApplication
 import com.applauncher.applauncher.R
 import com.applauncher.applauncher.base.createAdapter
+import com.applauncher.applauncher.data.Prefs
 import com.applauncher.applauncher.databinding.ItemNotificationBinding
 import com.applauncher.applauncher.databinding.NotificationViewBinding
 import com.applauncher.applauncher.utils.diff.utils.NotificationsDiffUtils
@@ -25,8 +28,10 @@ class NotificationScreenView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyle: Int = 0
-) : ConstraintLayout(context, attrs, defStyle), LauncherApplication.NotificationListener {
-    var drawerLayout: DrawerLayout? = null
+) : ConstraintLayout(context, attrs, defStyle), LauncherApplication.NotificationListener,
+    SharedPreferences.OnSharedPreferenceChangeListener {
+
+    private val notificationTextColor = NotificationTextColor()
 
     private val touchCallback =
         object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
@@ -62,23 +67,15 @@ class NotificationScreenView @JvmOverloads constructor(
     private val adapter =
         createAdapter<StatusBarNotification, ItemNotificationBinding>(R.layout.item_notification) {
             onBind = { _, binding, _ ->
-                binding.root.setOnTouchListener { _, event ->
-                    when (event.action) {
-                        MotionEvent.ACTION_DOWN -> drawerLayout?.requestDisallowInterceptTouchEvent(
-                            true
-                        )
-                        MotionEvent.ACTION_UP -> drawerLayout?.requestDisallowInterceptTouchEvent(
-                            false
-                        )
-
-                    }
-                    return@setOnTouchListener false
-                }
+                binding.setVariable(BR.textColor, notificationTextColor)
+                binding.notifyPropertyChanged(BR.textColor)
             }
             onItemClick = {
                 it.notification.contentIntent.send()
             }
         }
+
+
     val binding: NotificationViewBinding = DataBindingUtil.inflate(
         LayoutInflater.from(context),
         R.layout.notification_view,
@@ -100,11 +97,17 @@ class NotificationScreenView @JvmOverloads constructor(
             binding.textClock.typeface = it
             binding.notificationsCenterText.typeface = it
         }
+        Prefs.sharedPreference.registerOnSharedPreferenceChangeListener(this)
+        notificationTextColor.notificationTextColor.set(
+            if (Prefs.bgRes == R.mipmap.img_10) Color.BLACK
+            else Color.WHITE
+        )
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         LauncherApplication.instance.notificationListener = null
+        Prefs.sharedPreference.unregisterOnSharedPreferenceChangeListener(this)
     }
 
     override fun onNotificationsChanges(statusBarNotification: List<StatusBarNotification>) {
@@ -115,5 +118,20 @@ class NotificationScreenView @JvmOverloads constructor(
 
         DiffUtil.calculateDiff(NotificationsDiffUtils(oldList, adapter.getData()))
             .dispatchUpdatesTo(adapter)
+    }
+
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+        if (key == Prefs.bgResKey) {
+            val textColor =
+                if (sharedPreferences.getInt(key, R.mipmap.img_10) == R.mipmap.img_10) Color.BLACK
+                else Color.WHITE
+
+            notificationTextColor.notificationTextColor
+                .set(textColor)
+        }
+    }
+
+    class NotificationTextColor {
+        val notificationTextColor = ObservableField(Color.BLACK)
     }
 }

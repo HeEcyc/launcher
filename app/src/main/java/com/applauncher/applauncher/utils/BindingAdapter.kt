@@ -87,3 +87,10 @@ fun AppCompatImageView.setDrawable(isSelected: Boolean) {
         setStroke(6, strokeStrokeColor)
     }.let(::setImageDrawable)
 }
+
+@BindingAdapter("notificationTextColor")
+fun AppCompatTextView.setNotificationTextColor(notificationTextColor: Int?) {
+    Log.d("12345", "change")
+    notificationTextColor ?: return
+    setTextColor(notificationTextColor)
+}
