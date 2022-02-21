@@ -5,7 +5,6 @@ import android.app.role.RoleManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.constraintlayout.motion.widget.MotionLayout
@@ -22,6 +21,9 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
     private val notificationLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { askRole() }
+
+    private val roleIntent =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { }
 
     override val viewModel: AppViewModel by viewModels()
 
@@ -44,7 +46,8 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             with(getSystemService(RoleManager::class.java)) {
                 if (!isRoleAvailable(RoleManager.ROLE_HOME) || isRoleHeld(RoleManager.ROLE_HOME)) return
-                startActivityForResult(createRequestRoleIntent(RoleManager.ROLE_HOME), 200)
+                createRequestRoleIntent(RoleManager.ROLE_HOME)
+                    .let(roleIntent::launch)
             }
         } else {
             val launcherIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
@@ -70,10 +73,11 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     override fun onBackPressed() {
-        if (findViewById<MotionLayout>(R.id.motionView).progress > 0.2f) {
-            findViewById<MotionLayout>(R.id.motionView).transitionToStart()
-        } else if (binding.mainPages.currentItem == 0)
-            binding.mainPages.currentItem++
-        else super.onBackPressed()
+        when {
+            findViewById<MotionLayout>(R.id.motionView).progress > 0.2f ->
+                findViewById<MotionLayout>(R.id.motionView).transitionToStart()
+            binding.mainPages.currentItem == 0 -> binding.mainPages.currentItem++
+            else -> super.onBackPressed()
+        }
     }
 }
