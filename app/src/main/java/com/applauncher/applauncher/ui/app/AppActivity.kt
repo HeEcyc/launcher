@@ -146,11 +146,11 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     override fun onBackPressed() {
-        if (!isPresentOnHomeScreen()) {
+        if (!isPresentOnHomeScreen())
             binding.motionView.transitionToStart()
-        } else if (binding.drawer.isDrawerOpen(GravityCompat.START)) {
+        else if (binding.drawer.isDrawerOpen(GravityCompat.START))
             binding.drawer.closeDrawer(GravityCompat.START)
-        }
+        else super.onBackPressed()
     }
 
     override fun onDrag(v: View, event: DragEvent): Boolean {

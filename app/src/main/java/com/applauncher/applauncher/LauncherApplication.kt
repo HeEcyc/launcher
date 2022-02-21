@@ -2,7 +2,6 @@ package com.applauncher.applauncher
 
 import android.app.Application
 import android.service.notification.StatusBarNotification
-import java.lang.RuntimeException
 
 class LauncherApplication : Application() {
 

@@ -27,6 +27,7 @@ class NLService : NotificationListenerService() {
     override fun onCreate() {
         super.onCreate()
         registerReceiver(receiver, IntentFilter("cancel").apply {
+            addAction("rewrite")
             addAction("cancel_current")
         })
 
