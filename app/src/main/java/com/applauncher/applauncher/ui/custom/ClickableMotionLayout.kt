@@ -33,7 +33,7 @@ class ClickableMotionLayout @JvmOverloads constructor(
                 )
                 canCallLongCLick = true
                 longClickTask = launch(Dispatchers.IO) {
-                    delay(10)
+                    delay(2000)
                     if (canCallLongCLick) callLongClick()
                 }
             }
