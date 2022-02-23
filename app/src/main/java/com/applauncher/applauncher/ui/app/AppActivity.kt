@@ -12,9 +12,11 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.applauncher.applauncher.R
 import com.applauncher.applauncher.base.BaseActivity
+import com.applauncher.applauncher.data.Prefs
 import com.applauncher.applauncher.databinding.AppActivityBinding
 import com.applauncher.applauncher.ui.custom.ShutterView
 import com.applauncher.applauncher.ui.dialogs.DialogPermission
+import com.applauncher.applauncher.ui.dialogs.DialogTutorial
 
 
 class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_activity),
@@ -24,14 +26,17 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { askRole() }
 
     private val roleIntent =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { }
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            if (!Prefs.isShowingTutorial) DialogTutorial()
+                .show(supportFragmentManager, "tutorial")
+        }
 
     override val viewModel: AppViewModel by viewModels()
 
     override fun setupUI() {
         binding.mainPages.adapter = MainVPAdapter(viewModel, this)
         binding.mainPages.currentItem = 1
-        //checkNotificationsPermissions()
+        checkNotificationsPermissions()
     }
 
     private fun checkNotificationsPermissions() {
@@ -55,7 +60,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             packageManager.resolveActivity(launcherIntent, PackageManager.MATCH_DEFAULT_ONLY)
                 ?.activityInfo?.packageName
                 ?.takeIf { it != packageName }
-                ?.let { startActivity(launcherIntent) }
+                ?.let { roleIntent.launch(launcherIntent) }
         }
     }
 
@@ -86,4 +91,6 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             else -> super.onBackPressed()
         }
     }
+
+
 }
