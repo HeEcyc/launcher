@@ -452,15 +452,14 @@ class ShutterView @JvmOverloads constructor(
     }
 
     private fun askWriteSettingsPermission() {
-        Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
-            .setData(Uri.parse("package:${context.packageName}"))
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            .let(context::startActivity)
+        permissionHelper?.showPermissionsDialog()
     }
 
     interface PermissionHelper {
         fun hasBluetoothPermission(): Boolean
 
         fun aksBluetoothPermission(action: () -> Unit)
+
+        fun showPermissionsDialog()
     }
 }

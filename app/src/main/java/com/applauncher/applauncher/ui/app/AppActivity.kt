@@ -14,6 +14,7 @@ import com.applauncher.applauncher.R
 import com.applauncher.applauncher.base.BaseActivity
 import com.applauncher.applauncher.databinding.AppActivityBinding
 import com.applauncher.applauncher.ui.custom.ShutterView
+import com.applauncher.applauncher.ui.dialogs.DialogPermission
 
 
 class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_activity),
@@ -30,7 +31,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     override fun setupUI() {
         binding.mainPages.adapter = MainVPAdapter(viewModel, this)
         binding.mainPages.currentItem = 1
-        checkNotificationsPermissions()
+        //checkNotificationsPermissions()
     }
 
     private fun checkNotificationsPermissions() {
@@ -70,6 +71,11 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
                 action.invoke()
             }
         }
+    }
+
+    override fun showPermissionsDialog() {
+        DialogPermission()
+            .show(supportFragmentManager, "dialog_permission")
     }
 
     override fun onBackPressed() {

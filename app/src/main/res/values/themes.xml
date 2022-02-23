@@ -21,4 +21,11 @@
         <item name="android:windowIsTranslucent">true</item>
     </style>
 
+
+    <style name="WideDialog" parent="Base.Theme.AppCompat.Dialog">
+        <item name="android:windowMinWidthMajor">60%</item>
+        <item name="android:windowMinWidthMinor">95%</item>
+    </style>
+
+
 </resources>
