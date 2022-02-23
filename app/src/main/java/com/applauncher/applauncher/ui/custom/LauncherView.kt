@@ -76,8 +76,6 @@ class LauncherView @JvmOverloads constructor(
     }
 
     private fun initView() {
-
-
         binding.fakeNavBar.layoutParams.height = with(getNavBarSize()) {
             if (!hasNavigationBar()) this
             else this / 2
@@ -92,6 +90,8 @@ class LauncherView @JvmOverloads constructor(
         binding.bottomAppsOverlay.setOnDragListener(this)
         binding.appPages.setOnDragListener(this)
         binding.motionView.setOnLongClickListener {
+            if (viewModel.isSelectionEnabled.get() == false)
+                viewModel.vibrate()
             viewModel.isSelectionEnabled.set(!(viewModel.isSelectionEnabled.get() ?: false))
             true
         }
@@ -118,9 +118,6 @@ class LauncherView @JvmOverloads constructor(
             ?.let(viewPagerAdapter::onNewApp)
     }
 
-    init {
-
-    }
 
     private fun calculateAppItemViewHeight() {
         binding.appPages.post {

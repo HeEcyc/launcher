@@ -23,8 +23,8 @@
         <androidx.viewpager.widget.ViewPager
             android:id="@+id/mainPages"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-        </androidx.viewpager.widget.ViewPager>
+            android:layout_height="match_parent"
+            android:overScrollMode="never" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 

@@ -9,7 +9,10 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.view.View
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.databinding.ObservableField
 import androidx.lifecycle.viewModelScope
 import com.applauncher.applauncher.BR
@@ -25,6 +28,7 @@ import com.applauncher.applauncher.ui.custom.NonSwipeableViewPager
 import com.applauncher.applauncher.utils.APP_COLUMN_COUNT
 import kotlinx.coroutines.*
 import java.text.Collator
+
 
 class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChangeListener {
     val labelColor = ObservableField(Color.WHITE)
@@ -58,7 +62,6 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
                 binding.notifyPropertyChanged(BR.viewModel)
                 binding.root.setOnLongClickListener {
                     if (stateProvider?.isPresentOnHomeScreen() == true) {
-                        isSelectionEnabled.set(true)
                         stateProvider?.onAppSelected()
                         createDragAndDropView(item, binding, adapter)
                     }
@@ -73,13 +76,23 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         binding: BottomItemApplicationBinding,
         adapter: BaseAdapter<InstalledApp, *>
     ) {
-
+        vibrate()
+        isSelectionEnabled.set(true)
         binding.root.startDragAndDrop(
             null,
             View.DragShadowBuilder(binding.root),
             DragInfo(adapter, adapter.getData().indexOf(item), -1, item),
             0
         )
+    }
+
+    fun vibrate() {
+        if (isSelectionEnabled.get() == true) return
+        with(LauncherApplication.instance.getSystemService(Vibrator::class.java)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                vibrate(VibrationEffect.createOneShot(10, VibrationEffect.DEFAULT_AMPLITUDE))
+            else vibrate(10)
+        }
     }
 
     fun getBottomAppsItemCount() = bottomAppListAdapter.itemCount - 1

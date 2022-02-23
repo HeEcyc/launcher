@@ -59,11 +59,10 @@ class AppListAdapter(
 
                 binding.setVariable(BR.viewModel, viewModel)
                 binding.notifyPropertyChanged(BR.viewModel)
-
                 binding.root.setOnLongClickListener {
                     if (!stateProvider.isPresentOnHomeScreen()) return@setOnLongClickListener false
                     stateProvider.onAppSelected()
-                    viewModel.isSelectionEnabled.set(true)
+
                     startDragAndDrop(item, binding, adapter, position)
                     false
                 }
@@ -77,6 +76,8 @@ class AppListAdapter(
         adapter: BaseAdapter<InstalledApp, *>,
         position: Int
     ) {
+        viewModel.vibrate()
+        viewModel.isSelectionEnabled.set(true)
         canCreatePage = adapter.getData().size > 1
         binding.appIcon.startDragAndDrop(
             null,
