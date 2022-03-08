@@ -197,8 +197,6 @@ class AirBar(context: Context, attrs: AttributeSet) : View(context, attrs) {
         if (event!!.action == MotionEvent.ACTION_MOVE) {
             if (mListener?.canChange(this) == false) return true
             isVirgin = false
-            Log.d("AIR", "${event.y}")
-
             val percent = 1 - event.y / mBottom.toDouble()
 
             if (mListener?.canMoveByFinger(this) == true) {

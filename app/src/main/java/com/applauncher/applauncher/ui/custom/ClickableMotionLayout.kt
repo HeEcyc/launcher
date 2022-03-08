@@ -3,6 +3,7 @@ package com.applauncher.applauncher.ui.custom
 import android.content.Context
 import android.graphics.Rect
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import androidx.constraintlayout.motion.widget.MotionLayout
 import kotlinx.coroutines.*

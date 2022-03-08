@@ -17,6 +17,7 @@ import com.applauncher.applauncher.base.createAdapter
 import com.applauncher.applauncher.data.DragInfo
 import com.applauncher.applauncher.data.InstalledApp
 import com.applauncher.applauncher.databinding.LauncherItemApplicationBinding
+import com.applauncher.applauncher.ui.custom.ClickableMotionLayout
 import com.applauncher.applauncher.ui.custom.NonSwipeableViewPager
 import com.applauncher.applauncher.utils.SwapHelper
 import com.applauncher.applauncher.utils.diff.utils.AppListDiffUtils
@@ -27,7 +28,8 @@ class AppListAdapter(
     private val listAppPages: MutableList<List<InstalledApp>>,
     private val visibleApplicationsOnScreen: Int,
     private val viewModel: AppViewModel,
-    private val stateProvider: NonSwipeableViewPager.StateProvider
+    private val stateProvider: NonSwipeableViewPager.StateProvider,
+    private val motionLayout: ClickableMotionLayout
 ) : PagerAdapter() {
 
     private val swapHelper = SwapHelper(Handler(Looper.getMainLooper()))
@@ -51,18 +53,23 @@ class AppListAdapter(
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun createAdapter(position: Int) =
         createAdapter<InstalledApp, LauncherItemApplicationBinding>(R.layout.launcher_item_application) {
             initItems = listAppPages.getOrNull(position) ?: listOf()
-            onItemClick = { viewModel.launchApp(it.packageName) }
+            onItemClick = {
+                viewModel.launchApp(it.packageName)
+            }
             onBind = { item, binding, adapter ->
-
+                binding.root.setOnTouchListener { _, _ ->
+                    motionLayout.canCallLongCLick = false
+                    false
+                }
                 binding.setVariable(BR.viewModel, viewModel)
                 binding.notifyPropertyChanged(BR.viewModel)
                 binding.root.setOnLongClickListener {
                     if (!stateProvider.isPresentOnHomeScreen()) return@setOnLongClickListener false
                     stateProvider.onAppSelected()
-
                     startDragAndDrop(item, binding, adapter, position)
                     false
                 }
@@ -76,7 +83,6 @@ class AppListAdapter(
         adapter: BaseAdapter<InstalledApp, *>,
         position: Int
     ) {
-        viewModel.vibrate()
         viewModel.isSelectionEnabled.set(true)
         canCreatePage = adapter.getData().size > 1
         binding.appIcon.startDragAndDrop(
@@ -267,7 +273,6 @@ class AppListAdapter(
     }
 
     fun insertItemToPosition(currentPage: Int, position: Int, dragInfo: DragInfo) {
-
         val currentAdapter = getCurrentAppListAdapter(currentPage)
         swapHelper.requestInsertToPosition(currentPage, position) {
             if (currentAdapter.getData().size == visibleApplicationsOnScreen)

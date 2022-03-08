@@ -12,7 +12,6 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.view.View
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.databinding.ObservableField
 import androidx.lifecycle.viewModelScope
 import com.applauncher.applauncher.BR
@@ -21,7 +20,10 @@ import com.applauncher.applauncher.R
 import com.applauncher.applauncher.base.BaseAdapter
 import com.applauncher.applauncher.base.BaseViewModel
 import com.applauncher.applauncher.base.createAdapter
-import com.applauncher.applauncher.data.*
+import com.applauncher.applauncher.data.AppScreenLocation
+import com.applauncher.applauncher.data.DragInfo
+import com.applauncher.applauncher.data.InstalledApp
+import com.applauncher.applauncher.data.Prefs
 import com.applauncher.applauncher.data.db.DataBase
 import com.applauncher.applauncher.databinding.BottomItemApplicationBinding
 import com.applauncher.applauncher.ui.custom.NonSwipeableViewPager
@@ -32,7 +34,12 @@ import java.text.Collator
 
 class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChangeListener {
     val labelColor = ObservableField(Color.WHITE)
-    val isSelectionEnabled = ObservableField(false)
+    val isSelectionEnabled = object : ObservableField<Boolean>(false) {
+        override fun set(value: Boolean?) {
+            if (value == true) vibrate()
+            super.set(value)
+        }
+    }
     val intentFilter = IntentFilter().apply {
         addAction(Intent.ACTION_PACKAGE_REMOVED)
         addAction(Intent.ACTION_PACKAGE_ADDED)
@@ -48,6 +55,12 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
     private val skipPackagesList = arrayOf(
         "com.android.traceur",
         LauncherApplication.instance.packageName
+    )
+
+    private val defaultBottomAppList = arrayOf(
+        "com.google.android.gm",
+        "com.android.contacts",
+        "com.google.android.youtube"
     )
 
     init {
@@ -76,7 +89,6 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         binding: BottomItemApplicationBinding,
         adapter: BaseAdapter<InstalledApp, *>
     ) {
-        vibrate()
         isSelectionEnabled.set(true)
         binding.root.startDragAndDrop(
             null,
@@ -87,11 +99,10 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
     }
 
     fun vibrate() {
-        if (isSelectionEnabled.get() == true) return
         with(LauncherApplication.instance.getSystemService(Vibrator::class.java)) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                vibrate(VibrationEffect.createOneShot(10, VibrationEffect.DEFAULT_AMPLITUDE))
-            else vibrate(10)
+                vibrate(VibrationEffect.createOneShot(5, VibrationEffect.DEFAULT_AMPLITUDE))
+            else vibrate(5)
         }
     }
 
@@ -99,7 +110,6 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
 
     fun insertItemToBottomBar(dragInfo: DragInfo, position: Int?) {
         position ?: return
-        dragInfo.removeItem()
         if (canAddItem(dragInfo, position)) {
             addItemToPosition(position, dragInfo.draggedItem)
             dragInfo.currentPage = -1
@@ -178,8 +188,16 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         return if (DataBase.dao.getRowCount() == 0) {
             val appList = getInstalledAppList(itemCountOnPage)
             saveApplicationToDB(appList)
+            saveBottomAppList()
             appList.toMutableList()
         } else readAppFromDB().toMutableList()
+    }
+
+    private fun saveBottomAppList() {
+        bottomAppListAdapter.getData().forEachIndexed { index, installedApp ->
+            AppScreenLocation(installedApp.packageName, -1, index)
+                .let(DataBase.dao::addItem)
+        }
     }
 
     private fun saveApplicationToDB(appList: List<List<InstalledApp>>) {
@@ -226,13 +244,36 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
     private fun getInstalledAppList(itemCountOnPage: Int): List<List<InstalledApp>> {
         val collator = Collator
             .getInstance(getCurrentLocale())
-
         return packageManager
             .getInstalledApplications(PackageManager.GET_META_DATA)
+            .asSequence()
             .filter(::availableApp)
+            .filter(::notBottomBarAppList)
             .map(::createModel)
             .sortedWith(compareBy(collator) { it.name })
             .chunked(itemCountOnPage)
+            .toList()
+    }
+
+    private fun notBottomBarAppList(applicationInfo: ApplicationInfo): Boolean {
+        if (isDefaultBottomApp(applicationInfo)) {
+            viewModelScope.launch(Dispatchers.Main) {
+                bottomAppListAdapter.addItem(createModel(applicationInfo.packageName))
+            }
+            return false
+        }
+        return true
+    }
+
+    private fun isDefaultBottomApp(applicationInfo: ApplicationInfo): Boolean {
+        return if (defaultBottomAppList.contains(applicationInfo.packageName)) true
+        else Intent("android.intent.action.VIEW", Uri.parse("http://"))
+            .let(::getPackageName) == applicationInfo.packageName
+    }
+
+    private fun getPackageName(intent: Intent): String? {
+        return packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+            ?.activityInfo?.packageName
     }
 
     private fun getCurrentLocale() = with(LauncherApplication.instance.resources.configuration) {

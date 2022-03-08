@@ -90,7 +90,6 @@ fun AppCompatImageView.setDrawable(isSelected: Boolean) {
 
 @BindingAdapter("notificationTextColor")
 fun AppCompatTextView.setNotificationTextColor(notificationTextColor: Int?) {
-    Log.d("12345", "change")
     notificationTextColor ?: return
     setTextColor(notificationTextColor)
 }

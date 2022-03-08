@@ -18,8 +18,8 @@ import com.applauncher.applauncher.BR
 import com.applauncher.applauncher.R
 import com.applauncher.applauncher.data.DragInfo
 import com.applauncher.applauncher.databinding.LauncherViewBinding
-import com.applauncher.applauncher.ui.app.AppViewModel
 import com.applauncher.applauncher.ui.app.AppListAdapter
+import com.applauncher.applauncher.ui.app.AppViewModel
 import com.applauncher.applauncher.ui.bg.BackgroundsActivity
 import com.applauncher.applauncher.utils.APP_COLUMN_COUNT
 import com.applauncher.applauncher.utils.MOVING_PAGE_DELAY
@@ -90,10 +90,8 @@ class LauncherView @JvmOverloads constructor(
         binding.bottomAppsOverlay.setOnDragListener(this)
         binding.appPages.setOnDragListener(this)
         binding.motionView.setOnLongClickListener {
-            if (viewModel.isSelectionEnabled.get() == false)
-                viewModel.vibrate()
             viewModel.isSelectionEnabled.set(!(viewModel.isSelectionEnabled.get() ?: false))
-            true
+            false
         }
 
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY)
@@ -151,8 +149,6 @@ class LauncherView @JvmOverloads constructor(
             }
             DragEvent.ACTION_DRAG_EXITED -> {
                 viewPagerAdapter.canCreatePage = true
-                dragInfo.adapter = viewModel.bottomAppListAdapter
-                dragInfo.currentPage = -1
             }
         }
         return true
@@ -266,7 +262,8 @@ class LauncherView @JvmOverloads constructor(
             viewModel.readAllPackage(visibleItemCountOnPageScreen),
             visibleItemCountOnPageScreen,
             viewModel,
-            this
+            this,
+            binding.motionView
         )
     }
 

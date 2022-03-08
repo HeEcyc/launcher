@@ -56,8 +56,6 @@ class NLService : NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
-        Log.d("12345", "conncetcet")
-
         receiveNotifications()
         LauncherApplication.instance.notificationListener
             ?.onNotificationsChanges(getNotificationsList())

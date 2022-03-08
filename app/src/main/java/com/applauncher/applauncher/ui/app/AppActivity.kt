@@ -88,9 +88,15 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             findViewById<MotionLayout>(R.id.motionView).progress > 0.2f ->
                 findViewById<MotionLayout>(R.id.motionView).transitionToStart()
             binding.mainPages.currentItem == 0 -> binding.mainPages.currentItem++
-            else -> super.onBackPressed()
+            else -> {
+                viewModel.isSelectionEnabled.set(false)
+                super.onBackPressed()
+            }
         }
     }
 
-
+    override fun onStop() {
+        super.onStop()
+        viewModel.isSelectionEnabled.set(false)
+    }
 }
