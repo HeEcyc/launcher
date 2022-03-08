@@ -12,6 +12,14 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <Constraint
+            android:id="@+id/viewList"
+            android:layout_width="match_parent"
+            android:layout_height="0sp"
+            android:alpha="0"
+            app:layout_constraintHeight_percent="1"
+            app:layout_constraintTop_toTopOf="parent" />
     </ConstraintSet>
 
     <ConstraintSet android:id="@+id/end">
@@ -23,32 +31,23 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
+
+        <Constraint
+            android:id="@+id/viewList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:alpha="1"
+            app:layout_constraintHeight_percent="1"
+            app:layout_constraintTop_toTopOf="parent" />
     </ConstraintSet>
 
     <Transition
-
         app:constraintSetEnd="@id/end"
         app:constraintSetStart="@+id/start"
-        app:duration="2000">
-        <OnSwipe
+        app:duration="100">
 
+        <OnSwipe
             app:dragDirection="dragUp"
             app:touchAnchorId="@id/beacon" />
-
-        <KeyFrameSet>
-
-            <KeyAttribute
-                android:alpha="0"
-                app:framePosition="0"
-                app:motionTarget="@id/viewList" />
-
-            <KeyAttribute
-                android:alpha="1"
-                app:framePosition="80"
-                app:motionTarget="@id/viewList" />
-
-        </KeyFrameSet>
     </Transition>
-
-
 </MotionScene>

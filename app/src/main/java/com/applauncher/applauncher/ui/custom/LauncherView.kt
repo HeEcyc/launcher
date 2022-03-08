@@ -82,7 +82,6 @@ class LauncherView @JvmOverloads constructor(
         }
         calculateAppItemViewHeight()
         setTouchListenerOnIndicator()
-
         binding.appPages.stateProvider = this
         viewModel.stateProvider = this
         binding.bottomAppsList.itemAnimator = null
