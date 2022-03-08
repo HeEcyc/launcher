@@ -36,7 +36,7 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
     val labelColor = ObservableField(Color.WHITE)
     val isSelectionEnabled = object : ObservableField<Boolean>(false) {
         override fun set(value: Boolean?) {
-            if (value == true) vibrate()
+            if (value == true && get() == false) vibrate()
             super.set(value)
         }
     }
@@ -111,6 +111,7 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
     fun insertItemToBottomBar(dragInfo: DragInfo, position: Int?) {
         position ?: return
         if (canAddItem(dragInfo, position)) {
+            dragInfo.removeItem()
             addItemToPosition(position, dragInfo.draggedItem)
             dragInfo.currentPage = -1
             dragInfo.adapter = bottomAppListAdapter

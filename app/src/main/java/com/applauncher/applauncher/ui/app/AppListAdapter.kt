@@ -57,9 +57,7 @@ class AppListAdapter(
     private fun createAdapter(position: Int) =
         createAdapter<InstalledApp, LauncherItemApplicationBinding>(R.layout.launcher_item_application) {
             initItems = listAppPages.getOrNull(position) ?: listOf()
-            onItemClick = {
-                viewModel.launchApp(it.packageName)
-            }
+            onItemClick = { viewModel.launchApp(it.packageName) }
             onBind = { item, binding, adapter ->
                 binding.root.setOnTouchListener { _, _ ->
                     motionLayout.canCallLongCLick = false
