@@ -44,18 +44,9 @@
 
             <KeyAttribute
                 android:alpha="1"
-                app:framePosition="10"
+                app:framePosition="80"
                 app:motionTarget="@id/viewList" />
 
-            <KeyAttribute
-                android:alpha="0"
-                app:framePosition="0"
-                app:motionTarget="@id/overlay" />
-
-            <KeyAttribute
-                android:alpha="0.8"
-                app:framePosition="100"
-                app:motionTarget="@id/overlay" />
         </KeyFrameSet>
     </Transition>
 

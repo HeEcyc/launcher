@@ -3,7 +3,6 @@ package com.applauncher.applauncher.ui.custom
 import android.content.Context
 import android.graphics.Rect
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import androidx.constraintlayout.motion.widget.MotionLayout
 import kotlinx.coroutines.*
@@ -28,26 +27,33 @@ class ClickableMotionLayout @JvmOverloads constructor(
                 return super.onInterceptTouchEvent(event)
             }
             MotionEvent.ACTION_DOWN -> {
-                touchRect.set(
-                    (event.x - 20).toInt(), (event.y - 20).toInt(),
-                    (event.x + 20).toInt(), (event.y + 20).toInt()
-                )
+
                 canCallLongCLick = true
+
+                val top = event.x.toInt() - 15
+                val bottom = event.x.toInt() + 15
+                val left = event.y.toInt() - 15
+                val right = event.y.toInt() + 15
+
+                touchRect.set(top, left, bottom, right)
+
                 longClickTask = launch(Dispatchers.IO) {
                     delay(2000)
-                    if (canCallLongCLick) callLongClick()
+                    callLongClick()
                 }
             }
             MotionEvent.ACTION_UP -> {
-                if (10 < event.eventTime - event.downTime && canCallLongCLick)
+                if (10 < event.eventTime - event.downTime) {
+                    longClickTask?.cancel()
                     callLongClick()
+                }
             }
-
         }
         return false
     }
 
     private fun callLongClick() {
+        if (!canCallLongCLick) return
         canCallLongCLick = false
         longClick?.onLongClick(this)
     }
