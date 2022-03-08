@@ -7,10 +7,10 @@ import android.content.Intent
 import android.graphics.Rect
 import android.net.Uri
 import android.util.AttributeSet
+import android.util.Log
 import android.view.DragEvent
 import android.view.LayoutInflater
 import android.view.View
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.databinding.DataBindingUtil
@@ -32,7 +32,7 @@ class LauncherView @JvmOverloads constructor(
     defStyle: Int = 0
 ) : ConstraintLayout(context, attrs, defStyle), View.OnDragListener,
     NonSwipeableViewPager.StateProvider, MotionLayout.TransitionListener,
-    CoroutineScope by MainScope() {
+    View.OnLongClickListener, CoroutineScope by MainScope() {
 
     val binding: LauncherViewBinding = DataBindingUtil.inflate(
         LayoutInflater.from(context),
@@ -88,12 +88,7 @@ class LauncherView @JvmOverloads constructor(
         binding.motionView.addTransitionListener(this)
         binding.bottomAppsOverlay.setOnDragListener(this)
         binding.appPages.setOnDragListener(this)
-        binding.motionView.setOnLongClickListener {
-            viewModel.isSelectionEnabled.set(!(viewModel.isSelectionEnabled.get() ?: false))
-            false
-        }
-
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY)
+        binding.motionView.setOnLongClickListener(this)
         context.registerReceiver(broadcastReceiver, viewModel.intentFilter)
         binding.viewList.binding.settingsButton.setOnClickListener {
             Intent(context, BackgroundsActivity::class.java)
@@ -282,7 +277,7 @@ class LauncherView @JvmOverloads constructor(
         binding.indicatorTouch.setOnTouchListener { _, event ->
             if (touchRect.contains(event.x.toInt(), event.y.toInt()))
                 handleMovingPages(event.x)
-            return@setOnTouchListener true
+            return@setOnTouchListener false
         }
     }
 
@@ -301,6 +296,8 @@ class LauncherView @JvmOverloads constructor(
         endId: Int,
         progress: Float
     ) {
+
+        Log.d("12345", "progress $progress")
         binding.motionView.canCallLongCLick = false
         with(binding.viewList) {
             if (progress > 0.2f) onShow()
@@ -309,7 +306,8 @@ class LauncherView @JvmOverloads constructor(
     }
 
     override fun onTransitionCompleted(motionLayout: MotionLayout, currentId: Int) {
-
+        if (currentId == R.id.start) binding.motionView.setOnLongClickListener(this)
+        else binding.motionView.setOnLongClickListener(null)
     }
 
     override fun onTransitionTrigger(
@@ -325,6 +323,11 @@ class LauncherView @JvmOverloads constructor(
 
     override fun onAppSelected() {
         binding.motionView.canCallLongCLick = false
+    }
+
+    override fun onLongClick(p0: View?): Boolean {
+        viewModel.isSelectionEnabled.set(!(viewModel.isSelectionEnabled.get() ?: false))
+        return true
     }
 
 }
