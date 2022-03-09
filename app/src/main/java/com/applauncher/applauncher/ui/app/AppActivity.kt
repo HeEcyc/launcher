@@ -10,6 +10,7 @@ import androidx.activity.viewModels
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.viewpager.widget.ViewPager
 import com.applauncher.applauncher.R
 import com.applauncher.applauncher.base.BaseActivity
 import com.applauncher.applauncher.data.Prefs
@@ -35,6 +36,24 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
     override fun setupUI() {
         binding.mainPages.adapter = MainVPAdapter(viewModel, this, binding.mainPages)
+        binding.mainPages.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+            override fun onPageScrolled(
+                position: Int,
+                positionOffset: Float,
+                positionOffsetPixels: Int
+            ) {
+
+            }
+
+            override fun onPageSelected(position: Int) {
+                if (position == 0) viewModel.isSelectionEnabled.set(false)
+            }
+
+            override fun onPageScrollStateChanged(state: Int) {
+
+            }
+
+        })
         binding.mainPages.currentItem = 1
         checkNotificationsPermissions()
     }
