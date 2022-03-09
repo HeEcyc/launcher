@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.view.MotionEvent
 import android.view.View
 import androidx.databinding.ObservableField
 import androidx.lifecycle.viewModelScope
@@ -33,11 +34,14 @@ import java.text.Collator
 
 
 class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChangeListener {
+    var disableSelection = false
     val labelColor = ObservableField(Color.WHITE)
     val isSelectionEnabled = object : ObservableField<Boolean>(false) {
         override fun set(value: Boolean?) {
-            if (value == true && get() == false) vibrate()
-            super.set(value)
+            if (!disableSelection) {
+                if (value == true && get() == false) vibrate()
+                super.set(value)
+            }
         }
     }
     val intentFilter = IntentFilter().apply {
@@ -67,10 +71,20 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         Prefs.sharedPreference.registerOnSharedPreferenceChangeListener(this)
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     val bottomAppListAdapter =
         createAdapter<InstalledApp, BottomItemApplicationBinding>(R.layout.bottom_item_application) {
             onItemClick = { launchApp(it.packageName) }
             onBind = { item, binding, adapter ->
+                binding.root.setOnTouchListener { _, motionEvent ->
+                    if (stateProvider?.isPresentOnHomeScreen() == false)
+                        return@setOnTouchListener false
+                    else when (motionEvent.action) {
+                        MotionEvent.ACTION_UP -> disableSelection = false
+                        MotionEvent.ACTION_DOWN -> disableSelection = true
+                    }
+                    false
+                }
                 binding.setVariable(BR.viewModel, this@AppViewModel)
                 binding.notifyPropertyChanged(BR.viewModel)
                 binding.root.setOnLongClickListener {
@@ -89,6 +103,7 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         binding: BottomItemApplicationBinding,
         adapter: BaseAdapter<InstalledApp, *>
     ) {
+        disableSelection = false
         isSelectionEnabled.set(true)
         binding.root.startDragAndDrop(
             null,
@@ -277,10 +292,11 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
             ?.activityInfo?.packageName
     }
 
-    private fun getCurrentLocale() = with(LauncherApplication.instance.resources.configuration) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) locales[0]
-        else locale
-    }
+    private fun getCurrentLocale() =
+        with(LauncherApplication.instance.resources.configuration) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) locales[0]
+            else locale
+        }
 
     fun createModel(packageName: String): InstalledApp {
         return packageManager.getApplicationInfo(packageName, 0)
@@ -316,7 +332,10 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         viewModelScope.launch(Dispatchers.IO) { DataBase.dao.deletePackage(packageName) }
     }
 
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+    override fun onSharedPreferenceChanged(
+        sharedPreferences: SharedPreferences,
+        key: String
+    ) {
         when (key) {
             Prefs.bgResKey -> launcherBG.set(sharedPreferences.getInt(key, R.mipmap.img_10))
         }
@@ -326,5 +345,6 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         super.onCleared()
         Prefs.sharedPreference.unregisterOnSharedPreferenceChangeListener(this)
     }
+
 
 }

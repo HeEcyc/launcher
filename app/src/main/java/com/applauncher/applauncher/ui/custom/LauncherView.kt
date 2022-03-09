@@ -299,7 +299,13 @@ class LauncherView @JvmOverloads constructor(
         endId: Int,
         progress: Float
     ) {
-        binding.motionView.canCallLongCLick = false
+        val canSwipeViewPager = progress < 0.2f
+
+        binding.motionView.active = canSwipeViewPager
+
+        viewPager.canSwipe = canSwipeViewPager
+        binding.appPages.canSwipe = canSwipeViewPager
+
         with(binding.viewList) {
             if (progress > 0.2f) onShow()
             else onHide()
@@ -307,11 +313,7 @@ class LauncherView @JvmOverloads constructor(
     }
 
     override fun onTransitionCompleted(motionLayout: MotionLayout, currentId: Int) {
-        if (currentId == R.id.start) binding.motionView.setOnLongClickListener(this)
-        else binding.motionView.setOnLongClickListener(null)
-        val canSwipeViewPager = currentId == R.id.start
-        viewPager.canSwipe = canSwipeViewPager
-        binding.appPages.canSwipe = canSwipeViewPager
+
 
         if (currentId == R.id.end) viewModel.isSelectionEnabled.set(false)
     }

@@ -13,6 +13,8 @@ class ClickableMotionLayout @JvmOverloads constructor(
     defStyle: Int = 0
 ) : MotionLayout(context, attrs, defStyle), CoroutineScope by MainScope() {
     var canCallLongCLick = true
+    var active = true
+
     private var longClick: OnLongClickListener? = null
     private var longClickTask: Job? = null
     private var touchRect = Rect()
@@ -27,7 +29,6 @@ class ClickableMotionLayout @JvmOverloads constructor(
                 return super.onInterceptTouchEvent(event)
             }
             MotionEvent.ACTION_DOWN -> {
-
                 canCallLongCLick = true
 
                 val top = event.x.toInt() - 15
@@ -53,7 +54,7 @@ class ClickableMotionLayout @JvmOverloads constructor(
     }
 
     private fun callLongClick() {
-        if (!canCallLongCLick) return
+        if (!canCallLongCLick || !active) return
         canCallLongCLick = false
         longClick?.onLongClick(this)
     }
@@ -61,5 +62,4 @@ class ClickableMotionLayout @JvmOverloads constructor(
     override fun setOnLongClickListener(longClick: OnLongClickListener?) {
         this.longClick = longClick
     }
-
 }
