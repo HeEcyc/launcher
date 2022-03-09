@@ -9,16 +9,16 @@ class NonSwipeableViewPager @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : ViewPager(context, attrs) {
-    var stateProvider: StateProvider? = null
+    var canSwipe = true
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
-        return if (stateProvider?.isPresentOnHomeScreen() == true) {
+        return if (canSwipe) {
             super.onTouchEvent(event)
         } else false
     }
 
     override fun onInterceptTouchEvent(event: MotionEvent?): Boolean {
-        return if (stateProvider?.isPresentOnHomeScreen() == true) {
+        return if (canSwipe) {
             super.onInterceptTouchEvent(event)
         } else false
     }

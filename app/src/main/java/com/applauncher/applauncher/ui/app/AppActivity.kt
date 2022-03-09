@@ -34,7 +34,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     override val viewModel: AppViewModel by viewModels()
 
     override fun setupUI() {
-        binding.mainPages.adapter = MainVPAdapter(viewModel, this)
+        binding.mainPages.adapter = MainVPAdapter(viewModel, this, binding.mainPages)
         binding.mainPages.currentItem = 1
         checkNotificationsPermissions()
     }

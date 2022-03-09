@@ -20,7 +20,7 @@
             android:scaleType="centerCrop"
             app:imageResource="@{viewModel.launcherBG}" />
 
-        <androidx.viewpager.widget.ViewPager
+        <com.applauncher.applauncher.ui.custom.NonSwipeableViewPager
             android:id="@+id/mainPages"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

@@ -3,13 +3,16 @@ package com.applauncher.applauncher.ui.app
 import android.view.View
 import android.view.ViewGroup
 import androidx.viewpager.widget.PagerAdapter
+import androidx.viewpager.widget.ViewPager
 import com.applauncher.applauncher.ui.custom.LauncherView
+import com.applauncher.applauncher.ui.custom.NonSwipeableViewPager
 import com.applauncher.applauncher.ui.custom.NotificationScreenView
 import com.applauncher.applauncher.ui.custom.ShutterView
 
 class MainVPAdapter(
     private val viewModel: AppViewModel,
-    private val permissionHelper: ShutterView.PermissionHelper
+    private val permissionHelper: ShutterView.PermissionHelper,
+    private val mainViewPager: NonSwipeableViewPager
 ) : PagerAdapter() {
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
@@ -25,6 +28,7 @@ class MainVPAdapter(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
+            viewPager = mainViewPager
             container.addView(this)
             binding.viewList.permissionHelper = permissionHelper
             setViewModel(this@MainVPAdapter.viewModel)

@@ -7,9 +7,9 @@ import android.content.Intent
 import android.graphics.Rect
 import android.net.Uri
 import android.util.AttributeSet
-import android.util.Log
 import android.view.DragEvent
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -33,7 +33,7 @@ class LauncherView @JvmOverloads constructor(
 ) : ConstraintLayout(context, attrs, defStyle), View.OnDragListener,
     NonSwipeableViewPager.StateProvider, MotionLayout.TransitionListener,
     View.OnLongClickListener, CoroutineScope by MainScope() {
-
+    lateinit var viewPager: NonSwipeableViewPager
     val binding: LauncherViewBinding = DataBindingUtil.inflate(
         LayoutInflater.from(context),
         R.layout.launcher_view,
@@ -53,7 +53,7 @@ class LauncherView @JvmOverloads constructor(
         }
     }
     private val touchRect by lazy {
-        Rect(0, 0, binding.indicatorTouch.width, binding.indicatorTouch.height)
+        Rect(0, 0, binding.indicatorOverlayMax.width, binding.indicatorOverlayMax.height)
     }
 
     private val moveLeftRect by lazy {
@@ -82,7 +82,6 @@ class LauncherView @JvmOverloads constructor(
         }
         calculateAppItemViewHeight()
         setTouchListenerOnIndicator()
-        binding.appPages.stateProvider = this
         viewModel.stateProvider = this
         binding.bottomAppsList.itemAnimator = null
         binding.motionView.addTransitionListener(this)
@@ -274,15 +273,19 @@ class LauncherView @JvmOverloads constructor(
 
     @SuppressLint("ClickableViewAccessibility")
     fun setTouchListenerOnIndicator() {
-        binding.indicatorTouch.setOnTouchListener { _, event ->
-            if (touchRect.contains(event.x.toInt(), event.y.toInt()))
-                handleMovingPages(event.x)
-            return@setOnTouchListener false
+        binding.indicatorOverlayMax.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> viewPager.canSwipe = false
+                MotionEvent.ACTION_UP -> viewPager.canSwipe = true
+            }
+            binding.motionView.canCallLongCLick = false
+            if (touchRect.contains(event.x.toInt(), event.y.toInt())) handleMovingPages(event.x)
+            true
         }
     }
 
     private fun handleMovingPages(touchXPosition: Float) {
-        val percent = touchXPosition / binding.indicatorTouch.width
+        val percent = touchXPosition / binding.indicatorOverlayMax.width
         binding.appPages.currentItem = (viewPagerAdapter.count * percent).roundToInt()
     }
 
@@ -296,8 +299,6 @@ class LauncherView @JvmOverloads constructor(
         endId: Int,
         progress: Float
     ) {
-
-        Log.d("12345", "progress $progress")
         binding.motionView.canCallLongCLick = false
         with(binding.viewList) {
             if (progress > 0.2f) onShow()
@@ -308,6 +309,11 @@ class LauncherView @JvmOverloads constructor(
     override fun onTransitionCompleted(motionLayout: MotionLayout, currentId: Int) {
         if (currentId == R.id.start) binding.motionView.setOnLongClickListener(this)
         else binding.motionView.setOnLongClickListener(null)
+        val canSwipeViewPager = currentId == R.id.start
+        viewPager.canSwipe = canSwipeViewPager
+        binding.appPages.canSwipe = canSwipeViewPager
+
+        if (currentId == R.id.end) viewModel.isSelectionEnabled.set(false)
     }
 
     override fun onTransitionTrigger(
