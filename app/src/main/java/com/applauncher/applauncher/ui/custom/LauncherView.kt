@@ -7,6 +7,7 @@ import android.content.Intent
 import android.graphics.Rect
 import android.net.Uri
 import android.util.AttributeSet
+import android.util.Log
 import android.view.DragEvent
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -299,16 +300,22 @@ class LauncherView @JvmOverloads constructor(
         endId: Int,
         progress: Float
     ) {
-        val canSwipeViewPager = progress < 0.2f
+
+        val roundProgress = (progress * 100).toInt() / 100f
+
+        Log.d("12345", roundProgress.toString())
+
+        val canSwipeViewPager = roundProgress < 0.1f
 
         binding.motionView.active = canSwipeViewPager
         binding.motionView.longClickTask?.cancel()
+
         viewPager.canSwipe = canSwipeViewPager
         binding.appPages.canSwipe = canSwipeViewPager
 
         with(binding.viewList) {
-            if (progress > 0.2f) onShow()
-            else onHide()
+            if (canSwipeViewPager) onHide()
+            else onShow()
         }
     }
 
