@@ -7,7 +7,6 @@ import android.content.Intent
 import android.graphics.Rect
 import android.net.Uri
 import android.util.AttributeSet
-import android.util.Log
 import android.view.DragEvent
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -303,13 +302,11 @@ class LauncherView @JvmOverloads constructor(
 
         val roundProgress = (progress * 100).toInt() / 100f
 
-        Log.d("12345", roundProgress.toString())
-
         val canSwipeViewPager = roundProgress < 0.1f
 
-        binding.motionView.active = canSwipeViewPager
         binding.motionView.longClickTask?.cancel()
 
+        viewModel.disableSelection = !canSwipeViewPager
         viewPager.canSwipe = canSwipeViewPager
         binding.appPages.canSwipe = canSwipeViewPager
 
@@ -321,6 +318,9 @@ class LauncherView @JvmOverloads constructor(
 
     override fun onTransitionCompleted(motionLayout: MotionLayout, currentId: Int) {
         if (currentId == R.id.end) viewModel.isSelectionEnabled.set(false)
+        if (currentId == R.id.start) {
+            viewModel.disableSelection = false
+        }
     }
 
     override fun onTransitionTrigger(

@@ -14,7 +14,6 @@ class ClickableMotionLayout @JvmOverloads constructor(
     defStyle: Int = 0
 ) : MotionLayout(context, attrs, defStyle), CoroutineScope by MainScope() {
     var canCallLongCLick = true
-    var active = true
 
     private var longClick: OnLongClickListener? = null
     var longClickTask: Job? = null
@@ -24,19 +23,17 @@ class ClickableMotionLayout @JvmOverloads constructor(
         when (event.action) {
             MotionEvent.ACTION_MOVE -> {
                 if (!touchRect.contains(event.x.toInt(), event.y.toInt())) {
-                    Log.d("12345", "cancel")
                     longClickTask?.cancel()
-                    canCallLongCLick = false
                 }
                 return super.onInterceptTouchEvent(event)
             }
             MotionEvent.ACTION_DOWN -> {
                 canCallLongCLick = true
 
-                val top = event.y.toInt() - 15
-                val bottom = event.y.toInt() + 15
-                val left = event.x.toInt() - 15
-                val right = event.x.toInt() + 15
+                val top = event.y.toInt() - 150
+                val bottom = event.y.toInt() + 150
+                val left = event.x.toInt() - 150
+                val right = event.x.toInt() + 150
                 touchRect.set(top, left, bottom, right)
 
                 longClickTask = launch(Dispatchers.IO) {
@@ -45,11 +42,7 @@ class ClickableMotionLayout @JvmOverloads constructor(
                 }
             }
             MotionEvent.ACTION_UP -> {
-                Log.d("12345", "up")
                 if (10 < event.eventTime - event.downTime) callLongClick()
-                canCallLongCLick = false
-
-
                 longClickTask?.cancel()
             }
         }
@@ -57,7 +50,7 @@ class ClickableMotionLayout @JvmOverloads constructor(
     }
 
     private fun callLongClick() {
-        if (!canCallLongCLick || !active) return
+        if (!canCallLongCLick) return
         canCallLongCLick = false
         longClick?.onLongClick(this)
     }
