@@ -3,6 +3,7 @@ package com.applauncher.applauncher.ui.custom
 import android.content.Context
 import android.graphics.Rect
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import androidx.constraintlayout.motion.widget.MotionLayout
 import kotlinx.coroutines.*
@@ -16,13 +17,14 @@ class ClickableMotionLayout @JvmOverloads constructor(
     var active = true
 
     private var longClick: OnLongClickListener? = null
-    private var longClickTask: Job? = null
+    var longClickTask: Job? = null
     private var touchRect = Rect()
 
     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_MOVE -> {
                 if (!touchRect.contains(event.x.toInt(), event.y.toInt())) {
+                    Log.d("12345", "cancel")
                     longClickTask?.cancel()
                     canCallLongCLick = false
                 }
@@ -31,11 +33,10 @@ class ClickableMotionLayout @JvmOverloads constructor(
             MotionEvent.ACTION_DOWN -> {
                 canCallLongCLick = true
 
-                val top = event.x.toInt() - 15
-                val bottom = event.x.toInt() + 15
-                val left = event.y.toInt() - 15
-                val right = event.y.toInt() + 15
-
+                val top = event.y.toInt() - 15
+                val bottom = event.y.toInt() + 15
+                val left = event.x.toInt() - 15
+                val right = event.x.toInt() + 15
                 touchRect.set(top, left, bottom, right)
 
                 longClickTask = launch(Dispatchers.IO) {
@@ -44,10 +45,12 @@ class ClickableMotionLayout @JvmOverloads constructor(
                 }
             }
             MotionEvent.ACTION_UP -> {
-                if (10 < event.eventTime - event.downTime) {
-                    longClickTask?.cancel()
-                    callLongClick()
-                }
+                Log.d("12345", "up")
+                if (10 < event.eventTime - event.downTime) callLongClick()
+                canCallLongCLick = false
+
+
+                longClickTask?.cancel()
             }
         }
         return false

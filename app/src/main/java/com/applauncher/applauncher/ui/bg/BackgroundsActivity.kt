@@ -14,6 +14,9 @@ class BackgroundsActivity :
 
     override fun setupUI() {
         binding.backgrounds.addItemDecoration(createItemDecoration())
+        binding.closeButton.setOnClickListener {
+            finish()
+        }
     }
 
     private fun createItemDecoration() = object : RecyclerView.ItemDecoration() {
@@ -32,7 +35,8 @@ class BackgroundsActivity :
                 outRect.right = 40
             }
 
-            outRect.bottom = 40
+            outRect.bottom = if (position + 1 == parent.adapter?.itemCount) 400
+            else 40
         }
     }
 

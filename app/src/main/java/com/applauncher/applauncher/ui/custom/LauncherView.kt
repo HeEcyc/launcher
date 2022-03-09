@@ -302,7 +302,7 @@ class LauncherView @JvmOverloads constructor(
         val canSwipeViewPager = progress < 0.2f
 
         binding.motionView.active = canSwipeViewPager
-
+        binding.motionView.longClickTask?.cancel()
         viewPager.canSwipe = canSwipeViewPager
         binding.appPages.canSwipe = canSwipeViewPager
 
@@ -313,8 +313,6 @@ class LauncherView @JvmOverloads constructor(
     }
 
     override fun onTransitionCompleted(motionLayout: MotionLayout, currentId: Int) {
-
-
         if (currentId == R.id.end) viewModel.isSelectionEnabled.set(false)
     }
 
