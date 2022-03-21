@@ -36,6 +36,11 @@ import java.text.Collator
 class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChangeListener {
     var disableSelection = false
     val labelColor = ObservableField(Color.WHITE)
+
+    private val browserPackage by lazy {
+        Intent("android.intent.action.VIEW", Uri.parse("http://"))
+            .let { packageManager.resolveActivity(it, 0)?.activityInfo?.packageName }
+    }
     val isSelectionEnabled = object : ObservableField<Boolean>(false) {
         override fun set(value: Boolean?) {
             if (!disableSelection) {
@@ -283,13 +288,7 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
 
     private fun isDefaultBottomApp(applicationInfo: ApplicationInfo): Boolean {
         return if (defaultBottomAppList.contains(applicationInfo.packageName)) true
-        else Intent("android.intent.action.VIEW", Uri.parse("http://"))
-            .let(::getPackageName) == applicationInfo.packageName
-    }
-
-    private fun getPackageName(intent: Intent): String? {
-        return packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
-            ?.activityInfo?.packageName
+        else browserPackage == applicationInfo.packageName
     }
 
     private fun getCurrentLocale() =
