@@ -4,27 +4,34 @@ import android.app.Dialog
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.DialogFragment
 import com.applauncher.applauncher.R
-import com.applauncher.applauncher.databinding.DialogPermissionBinding
+import com.applauncher.applauncher.databinding.DialogNotificationsPermissionBinding
 
-class DialogPermission : DialogFragment() {
-
-    protected lateinit var binding: DialogPermissionBinding
+class DialogNotificationsPermissions : DialogFragment() {
+    private val notificationLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            dismiss()
+        }
+    private lateinit var binding: DialogNotificationsPermissionBinding
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = DataBindingUtil.inflate(inflater, R.layout.dialog_permission, container, false)!!
+        binding = DataBindingUtil.inflate(
+            inflater,
+            R.layout.dialog_notifications_permission,
+            container,
+            false
+        )!!
         return binding.root
     }
 
@@ -46,12 +53,10 @@ class DialogPermission : DialogFragment() {
         binding.dismissButton.setOnClickListener {
             dismiss()
         }
+
         binding.allowButton.setOnClickListener {
-            Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
-                .setData(Uri.parse("package:${requireActivity().packageName}"))
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .let(requireActivity()::startActivity)
-            dismiss()
+            Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+                .let(notificationLauncher::launch)
         }
     }
 

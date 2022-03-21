@@ -10,28 +10,36 @@ import androidx.activity.viewModels
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.viewpager.widget.ViewPager
 import com.applauncher.applauncher.R
 import com.applauncher.applauncher.base.BaseActivity
 import com.applauncher.applauncher.data.Prefs
 import com.applauncher.applauncher.databinding.AppActivityBinding
 import com.applauncher.applauncher.ui.custom.ShutterView
+import com.applauncher.applauncher.ui.dialogs.DialogNotificationsPermissions
 import com.applauncher.applauncher.ui.dialogs.DialogPermission
 import com.applauncher.applauncher.ui.dialogs.DialogTutorial
 
 
 class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_activity),
     ShutterView.PermissionHelper {
-
-    private val notificationLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { askRole() }
-
     private val roleIntent =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            if (!Prefs.isShowingTutorial) DialogTutorial()
-                .show(supportFragmentManager, "tutorial")
+
         }
 
+    private val fragmentLifecycleCallback = object : FragmentManager.FragmentLifecycleCallbacks() {
+        override fun onFragmentViewDestroyed(fm: FragmentManager, f: Fragment) {
+            if (f is DialogTutorial && !hasNotificationPermission()) {
+                DialogNotificationsPermissions().show(supportFragmentManager, "tag")
+            } else {
+                askRole()
+                supportFragmentManager.unregisterFragmentLifecycleCallbacks(this)
+            }
+        }
+    }
     override val viewModel: AppViewModel by viewModels()
 
     override fun setupUI() {
@@ -55,13 +63,31 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
         })
         binding.mainPages.currentItem = 1
-        checkNotificationsPermissions()
-    }
 
-    private fun checkNotificationsPermissions() {
-        if (!hasNotificationPermission()) Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
-            .let(notificationLauncher::launch)
-        else askRole()
+        if (!Prefs.isShowingTutorial) {
+            DialogTutorial().show(supportFragmentManager, "tag")
+        } else if (!hasNotificationPermission()) {
+            DialogNotificationsPermissions().show(supportFragmentManager, "tag")
+        } else {
+            askRole()
+            supportFragmentManager.unregisterFragmentLifecycleCallbacks(fragmentLifecycleCallback)
+        }
+
+        supportFragmentManager.registerFragmentLifecycleCallbacks(object :
+            FragmentManager.FragmentLifecycleCallbacks() {
+            override fun onFragmentViewDestroyed(fm: FragmentManager, f: Fragment) {
+                super.onFragmentViewDestroyed(fm, f)
+                if (f is DialogNotificationsPermissions) {
+                    askRole()
+                    supportFragmentManager.unregisterFragmentLifecycleCallbacks(this)
+                } else if (!hasNotificationPermission()) DialogNotificationsPermissions()
+                    .show(supportFragmentManager, "tag")
+                else {
+                    askRole()
+                    supportFragmentManager.unregisterFragmentLifecycleCallbacks(this)
+                }
+            }
+        }, true)
     }
 
     private fun hasNotificationPermission() = NotificationManagerCompat
