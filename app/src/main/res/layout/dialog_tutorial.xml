@@ -25,11 +25,11 @@
             android:id="@+id/swipeTopText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="to open shutter"
+            android:text="Swipe down\nto open shutter"
             android:textColor="@android:color/white"
             android:textSize="20sp"
             app:layout_constraintBottom_toBottomOf="@id/swipeTopDown"
-            app:layout_constraintEnd_toEndOf="@id/swipeTopDown"
+            app:layout_constraintStart_toStartOf="@id/swipeTopDown"
             app:layout_constraintTop_toTopOf="@id/swipeTopDown"
             app:layout_constraintVertical_bias="0.7" />
 
@@ -52,7 +52,7 @@
             android:id="@+id/swipeLeftText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="to open notifications"
+            android:text="Swipe right\nto open notifications"
             android:textColor="@android:color/white"
             android:textSize="20sp"
             android:visibility="gone"
