@@ -4,6 +4,7 @@ import android.app.Application
 import android.service.notification.StatusBarNotification
 
 class LauncherApplication : Application() {
+    //requestDisallowInterceptTouchEvent(boolean)
 
     var notificationListener: NotificationListener? = null
 

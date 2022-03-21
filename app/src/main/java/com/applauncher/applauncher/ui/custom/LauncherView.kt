@@ -33,6 +33,7 @@ class LauncherView @JvmOverloads constructor(
 ) : ConstraintLayout(context, attrs, defStyle), View.OnDragListener,
     NonSwipeableViewPager.StateProvider, MotionLayout.TransitionListener,
     View.OnLongClickListener, CoroutineScope by MainScope() {
+
     lateinit var viewPager: NonSwipeableViewPager
     val binding: LauncherViewBinding = DataBindingUtil.inflate(
         LayoutInflater.from(context),
@@ -108,7 +109,6 @@ class LauncherView @JvmOverloads constructor(
             .takeIf { viewModel.availableApp(context.packageName) }
             ?.let(viewPagerAdapter::onNewApp)
     }
-
 
     private fun calculateAppItemViewHeight() {
         binding.appPages.post {
