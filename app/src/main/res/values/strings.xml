@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">AppLauncher</string>
+    <string name="app_name">IOS Phone Launcher</string>
     <string name="notifications_center">Notifications Center</string>
     <string name="browser">Browser</string>
 </resources>
