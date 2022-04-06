@@ -7,14 +7,14 @@
 
         <variable
             name="viewModel"
-            type="com.applauncher.applauncher.ui.app.AppViewModel" />
+            type="com.iosapp.ioslauncher.ui.app.AppViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.applauncher.applauncher.ui.custom.ClickableMotionLayout
+        <com.iosapp.ioslauncher.ui.custom.ClickableMotionLayout
             android:id="@+id/motionView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -28,7 +28,7 @@
                 android:background="#FFFFFF"
                 android:visibility="gone" />
 
-            <com.applauncher.applauncher.ui.custom.NonSwipeableViewPager
+            <com.iosapp.ioslauncher.ui.custom.NonSwipeableViewPager
                 android:id="@+id/appPages"
                 android:layout_width="match_parent"
                 android:layout_height="0sp"
@@ -130,7 +130,7 @@
 
             </androidx.cardview.widget.CardView>
 
-            <com.applauncher.applauncher.ui.custom.ShutterView
+            <com.iosapp.ioslauncher.ui.custom.ShutterView
                 android:id="@+id/viewList"
                 android:layout_width="match_parent"
                 android:layout_height="0sp"
@@ -143,6 +143,6 @@
                 android:layout_height="0sp"
                 app:layout_constraintBottom_toBottomOf="parent" />
 
-        </com.applauncher.applauncher.ui.custom.ClickableMotionLayout>
+        </com.iosapp.ioslauncher.ui.custom.ClickableMotionLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

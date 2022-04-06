@@ -10,7 +10,7 @@
 
         <variable
             name="textColor"
-            type="com.applauncher.applauncher.ui.custom.NotificationScreenView.NotificationTextColor" />
+            type="com.iosapp.ioslauncher.ui.custom.NotificationScreenView.NotificationTextColor" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

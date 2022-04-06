@@ -5,7 +5,7 @@
 
         <variable
             name="item"
-            type="com.applauncher.applauncher.data.Background" />
+            type="com.iosapp.ioslauncher.data.Background" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"

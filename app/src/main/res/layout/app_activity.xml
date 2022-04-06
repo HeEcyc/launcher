@@ -6,7 +6,7 @@
 
         <variable
             name="viewModel"
-            type="com.applauncher.applauncher.ui.app.AppViewModel" />
+            type="com.iosapp.ioslauncher.ui.app.AppViewModel" />
     </data>
 
 
@@ -20,7 +20,7 @@
             android:scaleType="centerCrop"
             app:imageResource="@{viewModel.launcherBG}" />
 
-        <com.applauncher.applauncher.ui.custom.NonSwipeableViewPager
+        <com.iosapp.ioslauncher.ui.custom.NonSwipeableViewPager
             android:id="@+id/mainPages"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

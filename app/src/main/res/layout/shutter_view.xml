@@ -6,11 +6,11 @@
 
         <import
             alias="R"
-            type="com.applauncher.applauncher.R" />
+            type="com.iosapp.ioslauncher.R" />
 
         <variable
             name="settingsData"
-            type="com.applauncher.applauncher.ui.custom.ShutterView.SettingsData" />
+            type="com.iosapp.ioslauncher.ui.custom.ShutterView.SettingsData" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
