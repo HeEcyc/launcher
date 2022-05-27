@@ -1,15 +1,12 @@
 package com.iosapp.ioslauncher.utils
 
 import android.graphics.Color
-import android.service.notification.StatusBarNotification
-import android.view.View
-import androidx.appcompat.widget.AppCompatImageView
-import androidx.databinding.BindingAdapter
 import android.graphics.Outline
 import android.graphics.drawable.GradientDrawable
+import android.view.View
 import android.view.ViewOutlineProvider
-import androidx.appcompat.widget.AppCompatTextView
-
+import androidx.appcompat.widget.AppCompatImageView
+import androidx.databinding.BindingAdapter
 
 @BindingAdapter("onEnableSelected")
 fun AppCompatImageView.isVisibleRemoving(isVisibleRemoving: Boolean) {
@@ -25,39 +22,6 @@ fun AppCompatImageView.isVisibleRemoving(isVisibleRemoving: Boolean) {
         withEndAction { if (!isVisibleRemoving) visibility = View.GONE }
 
     }.duration = ENABLED_ANIMATION_DURATION
-}
-
-@BindingAdapter("notificationIcon")
-fun AppCompatImageView.notificationIcon(packageName: String) {
-    context.packageManager.getApplicationIcon(packageName)
-        .let(::setImageDrawable)
-}
-
-@BindingAdapter("notificationTitle")
-fun AppCompatTextView.notificationTitle(statusBarNotification: StatusBarNotification) {
-    text = statusBarNotification.notification.extras.getString("android.title")
-}
-
-@BindingAdapter("notificationText")
-fun AppCompatTextView.notificationText(statusBarNotification: StatusBarNotification) {
-    text = statusBarNotification.notification.extras.get("android.text").toString()
-}
-
-@BindingAdapter("notificationImage")
-fun AppCompatImageView.notificationImage(statusBarNotification: StatusBarNotification) {
-    with(statusBarNotification.notification.getLargeIcon()?.loadDrawable(context)) {
-        if (this == null) visibility = View.GONE
-        else {
-            this@notificationImage.radius(10f)
-            this@notificationImage.setImageDrawable(this)
-        }
-    }
-}
-
-@BindingAdapter("notificationAppOwner")
-fun AppCompatTextView.notificationAppOwner(statusBarNotification: StatusBarNotification) {
-    val appInfo = context.packageManager.getApplicationInfo(statusBarNotification.packageName, 0)
-    text = context.packageManager.getApplicationLabel(appInfo)
 }
 
 @BindingAdapter("radius")
@@ -78,10 +42,4 @@ fun AppCompatImageView.setDrawable(isSelected: Boolean) {
         cornerRadius = 18f
         setStroke(6, strokeStrokeColor)
     }.let(::setImageDrawable)
-}
-
-@BindingAdapter("notificationTextColor")
-fun AppCompatTextView.setNotificationTextColor(notificationTextColor: Int?) {
-    notificationTextColor ?: return
-    setTextColor(notificationTextColor)
 }

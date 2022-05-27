@@ -1,6 +1,5 @@
 package com.iosapp.ioslauncher.ui.app
 
-import android.Manifest
 import android.app.role.RoleManager
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -8,24 +7,18 @@ import android.os.Build
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.constraintlayout.motion.widget.MotionLayout
-import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import androidx.viewpager.widget.ViewPager
 import com.iosapp.ioslauncher.R
 import com.iosapp.ioslauncher.base.BaseActivity
 import com.iosapp.ioslauncher.data.Prefs
 import com.iosapp.ioslauncher.databinding.AppActivityBinding
-import com.iosapp.ioslauncher.ui.custom.ShutterView
-import com.iosapp.ioslauncher.ui.dialogs.DialogNotificationsPermissions
-import com.iosapp.ioslauncher.ui.dialogs.DialogPermission
 import com.iosapp.ioslauncher.ui.dialogs.DialogTutorial
 import com.iosapp.ioslauncher.utils.IRON_SOURCE_APP_KEY
 import com.ironsource.mediationsdk.IronSource
 
-class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_activity),
-    ShutterView.PermissionHelper {
+class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_activity) {
+
     private val roleIntent =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
 
@@ -33,12 +26,8 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
     private val fragmentLifecycleCallback = object : FragmentManager.FragmentLifecycleCallbacks() {
         override fun onFragmentViewDestroyed(fm: FragmentManager, f: Fragment) {
-            if (f is DialogTutorial && !hasNotificationPermission()) {
-                DialogNotificationsPermissions().show(supportFragmentManager, "tag")
-            } else {
-                askRole()
-                supportFragmentManager.unregisterFragmentLifecycleCallbacks(this)
-            }
+            askRole()
+            supportFragmentManager.unregisterFragmentLifecycleCallbacks(this)
         }
     }
     override val viewModel: AppViewModel by viewModels()
@@ -53,35 +42,12 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         IronSource.onPause(this)
     }
 
-
     override fun setupUI() {
         IronSource.setMetaData("is_child_directed","false")
         IronSource.init(this, IRON_SOURCE_APP_KEY)
-        binding.mainPages.adapter = MainVPAdapter(viewModel, this, binding.mainPages)
-        binding.mainPages.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
-            override fun onPageScrolled(
-                position: Int,
-                positionOffset: Float,
-                positionOffsetPixels: Int
-            ) {
-
-            }
-
-            override fun onPageSelected(position: Int) {
-                if (position == 0) viewModel.isSelectionEnabled.set(false)
-            }
-
-            override fun onPageScrollStateChanged(state: Int) {
-
-            }
-
-        })
-        binding.mainPages.currentItem = 1
 
         if (!Prefs.isShowingTutorial) {
             DialogTutorial().show(supportFragmentManager, "tag")
-        } else if (!hasNotificationPermission()) {
-            DialogNotificationsPermissions().show(supportFragmentManager, "tag")
         } else {
             askRole()
             supportFragmentManager.unregisterFragmentLifecycleCallbacks(fragmentLifecycleCallback)
@@ -91,21 +57,11 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
             FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentViewDestroyed(fm: FragmentManager, f: Fragment) {
                 super.onFragmentViewDestroyed(fm, f)
-                if (f is DialogNotificationsPermissions) {
-                    askRole()
-                    supportFragmentManager.unregisterFragmentLifecycleCallbacks(this)
-                } else if (!hasNotificationPermission()) DialogNotificationsPermissions()
-                    .show(supportFragmentManager, "tag")
-                else {
-                    askRole()
-                    supportFragmentManager.unregisterFragmentLifecycleCallbacks(this)
-                }
+                askRole()
+                supportFragmentManager.unregisterFragmentLifecycleCallbacks(this)
             }
         }, true)
     }
-
-    private fun hasNotificationPermission() = NotificationManagerCompat
-        .getEnabledListenerPackages(this).contains(packageName)
 
     private fun askRole() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -123,30 +79,10 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         }
     }
 
-    override fun hasBluetoothPermission() =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-            ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) ==
-                    PackageManager.PERMISSION_GRANTED
-        else true
-
-    override fun aksBluetoothPermission(action: () -> Unit) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            askPermission(arrayOf(Manifest.permission.BLUETOOTH_CONNECT)) {
-                action.invoke()
-            }
-        }
-    }
-
-    override fun showPermissionsDialog() {
-        DialogPermission()
-            .show(supportFragmentManager, "dialog_permission")
-    }
-
     override fun onBackPressed() {
         when {
             findViewById<MotionLayout>(R.id.motionView).progress > 0.2f ->
                 findViewById<MotionLayout>(R.id.motionView).transitionToStart()
-            binding.mainPages.currentItem == 0 -> binding.mainPages.currentItem++
             else -> {
                 viewModel.isSelectionEnabled.set(false)
                 super.onBackPressed()

@@ -32,7 +32,6 @@ import com.iosapp.ioslauncher.utils.APP_COLUMN_COUNT
 import kotlinx.coroutines.*
 import java.text.Collator
 
-
 class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChangeListener {
     var disableSelection = false
     val labelColor = ObservableField(Color.WHITE)
@@ -44,7 +43,11 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
     val isSelectionEnabled = object : ObservableField<Boolean>(false) {
         override fun set(value: Boolean?) {
             if (!disableSelection) {
-                if (value == true && get() == false) vibrate()
+                println("xyz $value")
+                if (value == true && get() == false) {
+                    println("xyz " + get())
+                    vibrate()
+                }
                 super.set(value)
             }
         }
@@ -121,8 +124,8 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
     fun vibrate() {
         with(LauncherApplication.instance.getSystemService(Vibrator::class.java)) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                vibrate(VibrationEffect.createOneShot(5, VibrationEffect.DEFAULT_AMPLITUDE))
-            else vibrate(5)
+                vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
+            else vibrate(100)
         }
     }
 

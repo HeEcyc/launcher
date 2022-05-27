@@ -9,7 +9,6 @@ import android.net.Uri
 import android.util.AttributeSet
 import android.view.DragEvent
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -20,7 +19,6 @@ import com.iosapp.ioslauncher.data.DragInfo
 import com.iosapp.ioslauncher.databinding.LauncherViewBinding
 import com.iosapp.ioslauncher.ui.app.AppListAdapter
 import com.iosapp.ioslauncher.ui.app.AppViewModel
-import com.iosapp.ioslauncher.ui.bg.BackgroundsActivity
 import com.iosapp.ioslauncher.utils.APP_COLUMN_COUNT
 import com.iosapp.ioslauncher.utils.MOVING_PAGE_DELAY
 import kotlinx.coroutines.*
@@ -90,10 +88,6 @@ class LauncherView @JvmOverloads constructor(
         binding.appPages.setOnDragListener(this)
         binding.motionView.setOnLongClickListener(this)
         context.registerReceiver(broadcastReceiver, viewModel.intentFilter)
-        binding.viewList.binding.settingsButton.setOnClickListener {
-            Intent(context, BackgroundsActivity::class.java)
-                .let(context::startActivity)
-        }
     }
 
     private fun getRectWidth() = (binding.appPages.width * 0.08).toInt()
@@ -274,10 +268,6 @@ class LauncherView @JvmOverloads constructor(
     @SuppressLint("ClickableViewAccessibility")
     fun setTouchListenerOnIndicator() {
         binding.indicatorOverlayMax.setOnTouchListener { _, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> viewPager.canSwipe = false
-                MotionEvent.ACTION_UP -> viewPager.canSwipe = true
-            }
             binding.motionView.canCallLongCLick = false
             if (touchRect.contains(event.x.toInt(), event.y.toInt())) handleMovingPages(event.x)
             true
@@ -307,13 +297,7 @@ class LauncherView @JvmOverloads constructor(
         binding.motionView.longClickTask?.cancel()
 
         viewModel.disableSelection = !canSwipeViewPager
-        viewPager.canSwipe = canSwipeViewPager
         binding.appPages.canSwipe = canSwipeViewPager
-
-        with(binding.viewList) {
-            if (canSwipeViewPager) onHide()
-            else onShow()
-        }
     }
 
     override fun onTransitionCompleted(motionLayout: MotionLayout, currentId: Int) {

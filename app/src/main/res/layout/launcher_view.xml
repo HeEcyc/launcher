@@ -130,13 +130,6 @@
 
             </androidx.cardview.widget.CardView>
 
-            <com.iosapp.ioslauncher.ui.custom.ShutterView
-                android:id="@+id/viewList"
-                android:layout_width="match_parent"
-                android:layout_height="0sp"
-                app:layout_constraintHeight_percent="1"
-                app:layout_constraintTop_toTopOf="parent" />
-
             <Space
                 android:id="@+id/fakeNavBar"
                 android:layout_width="match_parent"

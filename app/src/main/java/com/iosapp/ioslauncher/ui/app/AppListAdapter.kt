@@ -22,7 +22,7 @@ import com.iosapp.ioslauncher.ui.custom.NonSwipeableViewPager
 import com.iosapp.ioslauncher.utils.SwapHelper
 import com.iosapp.ioslauncher.utils.diff.utils.AppListDiffUtils
 import java.util.*
-
+import kotlin.math.min
 
 class AppListAdapter(
     private val listAppPages: MutableList<List<InstalledApp>>,
@@ -107,7 +107,8 @@ class AppListAdapter(
 
     private fun swapItemBetweenPages(dragInfo: DragInfo, newItemPosition: Int, currentPage: Int) {
         val currentAdapter = getCurrentAppListAdapter(currentPage)
-        val swappedItem = currentAdapter.getData()[newItemPosition]
+        val swappedItem = currentAdapter.getData().getOrNull(newItemPosition)
+        val hasSwappedItem = swappedItem !== null
 
         swapHelper.requestToSwapBetweenPages(
             newItemPosition,
@@ -117,10 +118,10 @@ class AppListAdapter(
         ) {
 
             currentAdapter.addItem(newItemPosition, dragInfo.draggedItem)
-            dragInfo.adapter.addItem(dragInfo.draggedItemPos, swappedItem)
+            if (hasSwappedItem) dragInfo.adapter.addItem(dragInfo.draggedItemPos, swappedItem!!)
 
             dragInfo.removeItem()
-            currentAdapter.removeItem(swappedItem)
+            if (hasSwappedItem) currentAdapter.removeItem(swappedItem!!)
 
             dragInfo.adapter = currentAdapter
             dragInfo.currentPage = currentPage
@@ -129,7 +130,9 @@ class AppListAdapter(
         }
     }
 
+    @Suppress("NAME_SHADOWING")
     private fun swapItemInSamePage(dragInfo: DragInfo, newPosition: Int, currentPage: Int) {
+        val newPosition = min(newPosition, getCurrentAppListAdapter(currentPage).itemCount)
         val oldItemPosition = dragInfo.getCurrentItemPosition()
         swapHelper.requestToSwapInSomePage(oldItemPosition, newPosition) {
 
