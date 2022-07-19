@@ -85,7 +85,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
                 findViewById<MotionLayout>(R.id.motionView).transitionToStart()
             else -> {
                 viewModel.isSelectionEnabled.set(false)
-                super.onBackPressed()
+//                super.onBackPressed()
             }
         }
     }

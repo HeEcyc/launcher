@@ -6,7 +6,7 @@ import androidx.room.RoomDatabase
 import com.iosapp.ioslauncher.LauncherApplication
 import com.iosapp.ioslauncher.data.AppScreenLocation
 
-@Database(entities = [AppScreenLocation::class], version = 1, exportSchema = false)
+@Database(entities = [AppScreenLocation::class], version = 2, exportSchema = false)
 abstract class DataBase : RoomDatabase() {
 
     abstract fun dao(): Dao

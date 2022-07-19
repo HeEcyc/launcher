@@ -5,8 +5,10 @@ import android.graphics.Outline
 import android.graphics.drawable.GradientDrawable
 import android.view.View
 import android.view.ViewOutlineProvider
+import android.widget.FrameLayout
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.databinding.BindingAdapter
+import com.iosapp.ioslauncher.data.InstalledApp
 
 @BindingAdapter("onEnableSelected")
 fun AppCompatImageView.isVisibleRemoving(isVisibleRemoving: Boolean) {
@@ -43,3 +45,6 @@ fun AppCompatImageView.setDrawable(isSelected: Boolean) {
         setStroke(6, strokeStrokeColor)
     }.let(::setImageDrawable)
 }
+
+@BindingAdapter("app")
+fun FrameLayout.setApp(app: InstalledApp?) {}

@@ -9,7 +9,6 @@ import androidx.databinding.ViewDataBinding
 import androidx.recyclerview.widget.RecyclerView
 import com.iosapp.ioslauncher.BR
 
-
 abstract class BaseAdapter<T, V : ViewDataBinding> private constructor(initItems: List<T>? = null) :
     RecyclerView.Adapter<BaseAdapter.BaseItem<T, out ViewDataBinding>>() {
     protected var items: MutableList<T> = mutableListOf()
@@ -115,7 +114,9 @@ abstract class BaseAdapter<T, V : ViewDataBinding> private constructor(initItems
         var itemViewTypeProvider: ((T) -> Int)? = null
         var viewBinding: ((inflater: LayoutInflater, viewGroup: ViewGroup, viewType: Int) -> V)? =
             null
+        var onPreBind: ((item: T, binding: V, adapter: BaseAdapter<T, *>) -> Unit)? = null
         var onBind: ((item: T, binding: V, adapter: BaseAdapter<T, *>) -> Unit)? = null
+        var onPostBind: ((item: T, binding: V, adapter: BaseAdapter<T, *>) -> Unit)? = null
         var viewsClick = HashMap<Int, ((item: T) -> Unit)>()
         var handleView: ((View) -> Unit)? = null
         var itemsSize: (() -> Int?)? = null
@@ -148,6 +149,7 @@ abstract class BaseAdapter<T, V : ViewDataBinding> private constructor(initItems
 
             override fun onBindViewHolder(holder: BaseItem<T, out ViewDataBinding>, position: Int) {
                 provideItem(position).let { item ->
+                    onPreBind?.invoke(item, holder.binding as V, this)
                     holderBind?.invoke(holder)
                     holder.setVariable(item)
                     holder.binding.root.setOnClickListener {
@@ -159,6 +161,7 @@ abstract class BaseAdapter<T, V : ViewDataBinding> private constructor(initItems
                     setViewsClick(holder, item)
                     setViewsHandler(holder.binding.root)
                     onBind?.invoke(item, holder.binding as V, this)
+                    onPostBind?.invoke(item, holder.binding as V, this)
                 }
             }
 

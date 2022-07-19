@@ -1,22 +1,27 @@
 package com.iosapp.ioslauncher.data
 
 import com.iosapp.ioslauncher.base.BaseAdapter
+import com.iosapp.ioslauncher.utils.PAGE_INDEX_JUST_MENU
 
 class DragInfo(
-    var adapter: BaseAdapter<InstalledApp, *>,
+    var cell: DesktopCell?,
     var draggedItemPos: Int,
     var currentPage: Int = -1,
-    val draggedItem: InstalledApp
+    val draggedItem: InstalledApp,
+    val removeFromOriginalPlace: Boolean = true,
+    private val bottomAdapter: BaseAdapter<InstalledApp, *>? = null
 ) {
 
     fun removeItem() {
-        adapter.removeItem(draggedItem)
+        cell?.app?.set(null)
+        bottomAdapter?.removeItem(draggedItem)
     }
 
-    fun getCurrentItemPosition() = adapter.getData()
-        .indexOf(draggedItem)
+    fun getCurrentItemPosition() = cell?.position
 
     fun updateItemPosition() {
-        draggedItemPos = adapter.getData().indexOf(draggedItem)
+        draggedItemPos = cell?.position ?: -1
+        currentPage = cell?.page ?: PAGE_INDEX_JUST_MENU
     }
+
 }

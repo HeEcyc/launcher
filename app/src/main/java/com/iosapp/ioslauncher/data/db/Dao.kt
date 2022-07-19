@@ -22,6 +22,9 @@ interface Dao {
     @Query("DELETE FROM AppScreenLocation WHERE packageName = :packageName")
     fun deletePackage(packageName: String)
 
+    @Query("DELETE FROM AppScreenLocation WHERE page = :page AND position = :position")
+    fun deleteShortcutByPosition(page: Int, position: Int)
+
     @Update
     fun updateItem(appScreenLocation: AppScreenLocation)
 }

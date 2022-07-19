@@ -1,11 +1,15 @@
 package com.iosapp.ioslauncher.ui.app
 
 import android.annotation.SuppressLint
+import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.postDelayed
+import androidx.core.view.children
+import androidx.databinding.OnRebindCallback
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -14,30 +18,35 @@ import com.iosapp.ioslauncher.BR
 import com.iosapp.ioslauncher.R
 import com.iosapp.ioslauncher.base.BaseAdapter
 import com.iosapp.ioslauncher.base.createAdapter
+import com.iosapp.ioslauncher.data.DesktopCell
 import com.iosapp.ioslauncher.data.DragInfo
 import com.iosapp.ioslauncher.data.InstalledApp
 import com.iosapp.ioslauncher.databinding.LauncherItemApplicationBinding
+import com.iosapp.ioslauncher.databinding.LauncherItemApplicationMenuBinding
 import com.iosapp.ioslauncher.ui.custom.ClickableMotionLayout
 import com.iosapp.ioslauncher.ui.custom.NonSwipeableViewPager
+import com.iosapp.ioslauncher.utils.PAGE_INDEX_BOTTOM
 import com.iosapp.ioslauncher.utils.SwapHelper
 import com.iosapp.ioslauncher.utils.diff.utils.AppListDiffUtils
-import java.util.*
-import kotlin.math.min
 
 class AppListAdapter(
-    private val listAppPages: MutableList<List<InstalledApp>>,
+    private val listAppPages: MutableList<List<DesktopCell>>,
     private val visibleApplicationsOnScreen: Int,
     private val viewModel: AppViewModel,
     private val stateProvider: NonSwipeableViewPager.StateProvider,
     private val motionLayout: ClickableMotionLayout
 ) : PagerAdapter() {
 
+    init {
+        listAppPages.forEach { page -> page.forEach { cell -> cell } }
+    }
+
     private val swapHelper = SwapHelper(Handler(Looper.getMainLooper()))
     private var recyclers = mutableListOf<RecyclerView>()
-    private var recyclersAdapters = mutableListOf<BaseAdapter<InstalledApp, *>>()
-    var canCreatePage = false
+    private var recyclersAdapters = mutableListOf<BaseAdapter<DesktopCell, *>>()
+    val canCreatePage get() = listAppPages.size <= 5
 
-    override fun getCount() = listAppPages.size
+    override fun getCount() = listAppPages.size.takeIf { it > 0 } ?: 1
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
         return RecyclerView(container.context).apply {
@@ -48,28 +57,63 @@ class AppListAdapter(
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
             layoutManager = GridLayoutManager(context, 4)
-            recyclers.add(position, this)
+            recyclers.getOrNull(position)?.let { recyclers.set(position, this) } ?: recyclers.add(position, this)
             container.addView(this)
         }
     }
 
     @SuppressLint("ClickableViewAccessibility")
     private fun createAdapter(position: Int) =
-        createAdapter<InstalledApp, LauncherItemApplicationBinding>(R.layout.launcher_item_application) {
-            initItems = listAppPages.getOrNull(position) ?: listOf()
-            onItemClick = { viewModel.launchApp(it.packageName) }
-            onBind = { item, binding, adapter ->
-                binding.root.setOnTouchListener { _, _ ->
-                    motionLayout.canCallLongCLick = false
-                    false
-                }
-                binding.setVariable(BR.viewModel, viewModel)
-                binding.notifyPropertyChanged(BR.viewModel)
-                binding.root.setOnLongClickListener {
-                    if (!stateProvider.isPresentOnHomeScreen()) return@setOnLongClickListener false
-                    stateProvider.onAppSelected()
-                    startDragAndDrop(item, binding, adapter, position)
-                    false
+        createAdapter<DesktopCell, LauncherItemApplicationBinding>(R.layout.launcher_item_application) {
+//            initItems = listAppPages.getOrNull(position) ?: listOf()
+            initItems = listAppPages[position]
+            onPreBind = { cell, cellBinding, adapter ->
+                cellBinding.addOnRebindCallback(object : OnRebindCallback<LauncherItemApplicationBinding>() {
+                    override fun onBound(binding: LauncherItemApplicationBinding) {
+                        val app = cell.app.get()
+                        if (app === null) {
+                            cellBinding.frame.children.forEach { try { cellBinding.frame.removeView(it) } catch (e: Exception) {} }
+                        } else {
+                            val appBinding = LauncherItemApplicationMenuBinding.inflate(LayoutInflater.from(cellBinding.root.context))
+                            appBinding.item = app
+                            appBinding.viewModel = app.viewModel
+                            appBinding.isShortcut = true
+                            appBinding.cell = cell
+                            appBinding.root.setOnClickListener {
+                                cell.app.get()?.packageName?.let(viewModel::launchApp)
+                            }
+                            appBinding.root.setOnTouchListener { _, _ ->
+                                motionLayout.canCallLongCLick = false
+                                false
+                            }
+                            appBinding.setVariable(BR.viewModel, app.viewModel)
+                            appBinding.label.setTextColor(Color.WHITE)
+                            appBinding.notifyPropertyChanged(BR.viewModel)
+                            appBinding.root.setOnLongClickListener {
+                                if (!stateProvider.isPresentOnHomeScreen()) return@setOnLongClickListener false
+                                stateProvider.onAppSelected()
+                                startDragAndDrop(app, appBinding, cell, position)
+                                false
+                            }
+                            cellBinding.frame.removeAllViews()
+                            cellBinding.frame.addView(appBinding.root, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+                        }
+                    }
+                })
+            }
+            onBind = { item, cellBinding, _ ->
+                cellBinding.item = item
+            }
+            onPostBind = { item, _, _ ->
+                viewModel.observe(item.app) { _, _ ->
+                    if (item.app.get() !== null) {
+                        for(page in listAppPages.indices.reversed()) {
+                            if (pageIsEmpty(page)) removePage(page)
+                            else break
+                        }
+                    }
+
+                    saveItemPositionsOnPage(listOf(item), item.page)
                 }
             }
         }.apply { recyclersAdapters.add(position, this) }
@@ -77,16 +121,16 @@ class AppListAdapter(
     @SuppressLint("NewApi")
     private fun startDragAndDrop(
         item: InstalledApp,
-        binding: LauncherItemApplicationBinding,
-        adapter: BaseAdapter<InstalledApp, *>,
+        binding: LauncherItemApplicationMenuBinding,
+        cell: DesktopCell,
         position: Int
     ) {
-        viewModel.isSelectionEnabled.set(true)
-        canCreatePage = adapter.getData().size > 1
+//        viewModel.isSelectionEnabled.set(true)
+//        canCreatePage = adapter.getData().size > 1
         binding.appIcon.startDragAndDrop(
             null,
             View.DragShadowBuilder(binding.appIcon),
-            DragInfo(adapter, adapter.getData().indexOf(item), position, item),
+            DragInfo(cell, cell.position, position, item),
             0
         )
     }
@@ -100,14 +144,15 @@ class AppListAdapter(
     }
 
     fun swapItem(dragInfo: DragInfo, newPosition: Int, currentPage: Int) {
-        if (isSwapInSameAdapter(dragInfo.draggedItem, currentPage))
+        if (/*isSwapInSameAdapter(dragInfo.draggedItem, currentPage)*/ currentPage == dragInfo.currentPage)
             swapItemInSamePage(dragInfo, newPosition, currentPage)
         else swapItemBetweenPages(dragInfo, newPosition, currentPage)
     }
 
     private fun swapItemBetweenPages(dragInfo: DragInfo, newItemPosition: Int, currentPage: Int) {
         val currentAdapter = getCurrentAppListAdapter(currentPage)
-        val swappedItem = currentAdapter.getData().getOrNull(newItemPosition)
+        val swappedItemCell = currentAdapter.getData()[newItemPosition]
+        val swappedItem = swappedItemCell.app.get()
         val hasSwappedItem = swappedItem !== null
 
         swapHelper.requestToSwapBetweenPages(
@@ -117,23 +162,33 @@ class AppListAdapter(
             currentPage
         ) {
 
-            currentAdapter.addItem(newItemPosition, dragInfo.draggedItem)
-            if (hasSwappedItem) dragInfo.adapter.addItem(dragInfo.draggedItemPos, swappedItem!!)
+//            currentAdapter.addItem(newItemPosition, dragInfo.draggedItem)
+            currentAdapter.getData()[newItemPosition].app.set(dragInfo.draggedItem)
 
-            dragInfo.removeItem()
-            if (hasSwappedItem) currentAdapter.removeItem(swappedItem!!)
+//            if (dragInfo.replaceIfCollide) {
+                if (hasSwappedItem) {
+                    if (dragInfo.currentPage != PAGE_INDEX_BOTTOM)
+                        dragInfo.cell?.app?.set(swappedItem)
+                    else {
+                        viewModel.bottomAppListAdapter.getData()[dragInfo.draggedItemPos] = swappedItem!!
+                        viewModel.bottomAppListAdapter.notifyItemChanged(dragInfo.draggedItemPos)
+                    }
+                }
 
-            dragInfo.adapter = currentAdapter
-            dragInfo.currentPage = currentPage
+//                dragInfo.removeItem()
+//                if (hasSwappedItem) currentAdapter.removeItem(swappedItem!!)
+//            }
 
+            dragInfo.cell = currentAdapter.getData()[newItemPosition]
+//            dragInfo.currentPage = currentPage
             dragInfo.updateItemPosition()
         }
     }
 
     @Suppress("NAME_SHADOWING")
     private fun swapItemInSamePage(dragInfo: DragInfo, newPosition: Int, currentPage: Int) {
-        val newPosition = min(newPosition, getCurrentAppListAdapter(currentPage).itemCount)
-        val oldItemPosition = dragInfo.getCurrentItemPosition()
+//        val newPosition = min(newPosition, getCurrentAppListAdapter(currentPage).itemCount)
+        val oldItemPosition = dragInfo.getCurrentItemPosition()!!
         swapHelper.requestToSwapInSomePage(oldItemPosition, newPosition) {
 
             moveItem(dragInfo, newPosition)
@@ -141,25 +196,40 @@ class AppListAdapter(
             val swappedItem = getCurrentAppListAdapter(currentPage).getData()[newPosition]
 
             viewModel.saveNewPositionItem(dragInfo.draggedItem, newPosition, currentPage)
-            viewModel.saveNewPositionItem(swappedItem, oldItemPosition, currentPage)
+            viewModel.saveNewPositionItem(swappedItem.app.get(), oldItemPosition, currentPage)
         }
     }
 
     private fun moveItem(dragInfo: DragInfo, newPosition: Int) {
-        val currentItemPosition = dragInfo.getCurrentItemPosition()
+        val currentItemPosition = dragInfo.getCurrentItemPosition() ?: -1
         if (currentItemPosition == -1) {
             swapHelper.clearRequest()
             return
         }
 
-        val adapter = dragInfo.adapter
-        val oldList = adapter.getData().toList()
+        val currentCell = listAppPages[dragInfo.currentPage][currentItemPosition]
+        val tmp = currentCell.app.get()
+        val newCell = listAppPages[dragInfo.currentPage][newPosition]
 
-        dragInfo.draggedItemPos = newPosition
+//        val adapter = dragInfo.cell
+//        val oldList = adapter.getData().toList()
+//
+        dragInfo.cell = newCell
+//        dragInfo.draggedItemPos = newPosition
+        dragInfo.updateItemPosition()
+//
+//        Collections.swap(adapter.getData(), currentItemPosition, newPosition)
+//        updateItems(oldList, adapter)
 
-        Collections.swap(adapter.getData(), currentItemPosition, newPosition)
-        updateItems(oldList, adapter)
+        currentCell.app.set(newCell.app.get())
+        currentCell.app.notifyChange()
+        newCell.app.set(tmp)
+        newCell.app.notifyChange()
+        updateItems(recyclersAdapters[dragInfo.currentPage], currentItemPosition, newPosition)
+    }
 
+    private fun updateItems(adapter: BaseAdapter<DesktopCell, *>, vararg indices: Int) {
+        indices.forEach { adapter.notifyItemChanged(it) }
     }
 
     private fun updateItems(oldList: List<InstalledApp>, adapter: BaseAdapter<InstalledApp, *>) {
@@ -169,7 +239,7 @@ class AppListAdapter(
 
     private fun isSwapInSameAdapter(item: InstalledApp, currentPage: Int) =
         getCurrentAppListAdapter(currentPage)
-            .getData().any { it.packageName == item.packageName }
+            .getData().any { it.app.get()?.packageName == item.packageName }
 
     fun getCurrentAppListView(page: Int) = recyclers[page]
 
@@ -181,8 +251,9 @@ class AppListAdapter(
 
     fun insertToLastPosition(dragInfo: DragInfo, currentPage: Int, withDelay: Boolean) {
         with(getCurrentAppListAdapter(currentPage)) {
-            if (itemCount == visibleApplicationsOnScreen) return
+            if (getData().last().app.get() !== null /*itemCount == visibleApplicationsOnScreen*/) return
             else getData().lastOrNull()
+                ?.app?.get()
                 ?.packageName
                 ?.let { if (it == dragInfo.draggedItem.packageName) return }
         }
@@ -196,7 +267,7 @@ class AppListAdapter(
     private fun pageIsEmpty(oldPage: Int) = when {
         oldPage == -1 -> false
         oldPage >= recyclersAdapters.size -> false
-        else -> getCurrentAppListAdapter(oldPage).getData().isEmpty()
+        else -> getCurrentAppListAdapter(oldPage).getData().none { it.app.get() !== null }
     }
 
     private fun removePage(oldPage: Int) {
@@ -207,82 +278,106 @@ class AppListAdapter(
     fun createPage(): Boolean {
         if (!canCreatePage) return false
 
-        listAppPages.add(listOf())
-        recyclersAdapters.add(createAdapter(listAppPages.size - 1))
+//        listAppPages.add(listOf())
+        List(visibleApplicationsOnScreen) {
+            DesktopCell(it, listAppPages.size)
+        }.let(listAppPages::add)
+//        recyclersAdapters.add(createAdapter(listAppPages.size - 1))
         notifyDataSetChanged()
-        canCreatePage = false
+//        canCreatePage = false
         return true
     }
 
     fun onNewApp(installedApp: InstalledApp) {
         val lastAdapter = recyclersAdapters.last()
-        if (lastAdapter.getData().size == visibleApplicationsOnScreen) {
-            canCreatePage = true
-            createPage()
-            onNewApp(installedApp)
-        } else {
-            lastAdapter.addItem(installedApp)
+//        if (lastAdapter.getData().size == visibleApplicationsOnScreen) {
+//            canCreatePage = true
+//            createPage()
+//            onNewApp(installedApp)
+//        } else {
+//            lastAdapter.addItem(installedApp)
             viewModel.addItem(
                 installedApp,
                 lastAdapter.itemCount - 1,
                 recyclersAdapters.size - 1
             )
-        }
+//        }
     }
 
     fun onRemovedApp(packageName: String, onSwap: (Int) -> Unit) {
-        var adapterWithCurrentPackageKey = -1
-        recyclersAdapters.forEachIndexed { index, it ->
-            if (it.getData().any { it.packageName == packageName }) {
-                adapterWithCurrentPackageKey = index
-                return@forEachIndexed
-            }
-        }
-
-        if (adapterWithCurrentPackageKey == -1) return
-        val currentAdapter = recyclersAdapters[adapterWithCurrentPackageKey]
-
-        currentAdapter.remove { it.packageName == packageName }
+//        var adapterWithCurrentPackageKey = -1
+//        recyclersAdapters.forEachIndexed { index, it ->
+//            if (it.getData().any { it.app.get()?.packageName == packageName }) {
+//                adapterWithCurrentPackageKey = index
+//                return@forEachIndexed
+//            }
+//        }
+//
         viewModel.deletePackage(packageName)
-        if (currentAdapter.getData().isEmpty()) {
-            if (adapterWithCurrentPackageKey == 0) onSwap(1)
-            else onSwap(-1)
-            Handler(Looper.getMainLooper()).postDelayed(200) {
-                try {
-                    removePage(adapterWithCurrentPackageKey)
-                } catch (e: Exception) {
-
-                }
+//
+//        if (adapterWithCurrentPackageKey == -1) return
+//        val currentAdapter = recyclersAdapters[adapterWithCurrentPackageKey]
+//
+//        currentAdapter.remove { it.app.get()?.packageName == packageName }
+//        if (currentAdapter.getData().none { it.app.get() !== null }) {
+//            if (adapterWithCurrentPackageKey == 0) onSwap(1)
+//            else onSwap(-1)
+//            Handler(Looper.getMainLooper()).postDelayed(200) {
+//                try {
+//                    removePage(adapterWithCurrentPackageKey)
+//                } catch (e: Exception) {
+//
+//                }
+//            }
+//        }
+        listAppPages.forEach { it.forEach { cell ->
+            if (cell.app.get()?.packageName == packageName) {
+                cell.app.set(null)
             }
+        } }
+        for(page in listAppPages.indices.reversed()) {
+            if (pageIsEmpty(page)) removePage(page)
+            else break
         }
     }
 
     private fun insertItemToLastPosition(dragInfo: DragInfo, currentPage: Int) {
         val oldPage = dragInfo.currentPage
-        val adapter = getCurrentAppListAdapter(currentPage)
+//        val adapter = getCurrentAppListAdapter(currentPage)
 
-        dragInfo.removeItem()
+        if (dragInfo.removeFromOriginalPlace) dragInfo.removeItem()
 
-        dragInfo.adapter = adapter
+//        dragInfo.cell = adapter
         dragInfo.currentPage = currentPage
+//
+//        adapter.addItem(dragInfo.draggedItem)
 
-        adapter.addItem(dragInfo.draggedItem)
+        val cells = recyclersAdapters[currentPage].getData()
+        cells.dropLastWhile {
+            val size = cells.size
+            (size > 1 || cells[size - 2].app.get() === null) && it.app.get() === null
+        }
+
+        cells.last { it.app.get() === null }.also { dragInfo.cell = it }.app.set(dragInfo.draggedItem)
 
         viewModel.saveNewPositionItem(dragInfo.draggedItem, dragInfo.draggedItemPos, currentPage)
         dragInfo.updateItemPosition()
-        if (pageIsEmpty(oldPage)) removePage(oldPage)
+        if (oldPage > currentPage && pageIsEmpty(oldPage)) removePage(oldPage)
     }
 
     fun insertItemToPosition(currentPage: Int, position: Int, dragInfo: DragInfo) {
         val currentAdapter = getCurrentAppListAdapter(currentPage)
+        val oldPosition = dragInfo.draggedItemPos
         swapHelper.requestInsertToPosition(currentPage, position) {
-            if (currentAdapter.getData().size == visibleApplicationsOnScreen)
-                moveItems(currentPage + 1, currentAdapter.removeLastItem())
+            if (currentAdapter.getData().filter { it.app.get() !== null }.size == visibleApplicationsOnScreen)
+                moveItems(currentPage + 1, currentAdapter.removeLastItem()?.app?.get())
             dragInfo.removeItem()
-            currentAdapter.addItem(position, dragInfo.draggedItem)
-            dragInfo.adapter = currentAdapter
+            currentAdapter.getData()[position].app.set(dragInfo.draggedItem)
+            dragInfo.cell = currentAdapter.getData()[position]
             dragInfo.currentPage = currentPage
             dragInfo.updateItemPosition()
+//            dragInfo.cell?.app?.set(dragInfo.draggedItem)
+            updateItems(recyclersAdapters[currentPage], oldPosition, position)
             saveItemPositionsOnPage(currentAdapter.getData(), currentPage)
         }
     }
@@ -291,21 +386,56 @@ class AppListAdapter(
         lastItem ?: return
         if (recyclersAdapters.getOrNull(newAdapterPage) == null) createPage()
         val newAdapter = getCurrentAppListAdapter(newAdapterPage)
-        newAdapter.addItem(0, lastItem)
+//        newAdapter.addItem(0, lastItem)
+        newAdapter.getData()[0].app.set(lastItem)
         saveItemPositionsOnPage(newAdapter.getData(), newAdapterPage)
-        if (newAdapter.itemCount > visibleApplicationsOnScreen) {
-            moveItems(newAdapterPage + 1, newAdapter.removeLastItem())
+//        if (newAdapter.itemCount > visibleApplicationsOnScreen) {
+//            moveItems(newAdapterPage + 1, newAdapter.removeLastItem()?.app?.get())
+//        }
+    }
+
+    fun insertAndMoveOtherForward(dragInfo: DragInfo, targetPage: Int, targetPosition: Int) {
+        val itemsToMove = recyclersAdapters
+            .flatMap { it.getData() }
+            .dropWhile { it.page != targetPage || it.position != targetPosition }
+            .takeWhile { it.app.get() !== null }
+
+        val needToCreateNewPage = with(itemsToMove) {
+            last().page == listAppPages.size - 1 && last().position == visibleApplicationsOnScreen - 1
+        }
+        swapHelper.requestInsertToPosition(targetPage, targetPosition) {
+            if (needToCreateNewPage) createPage()
+            moveBy1(itemsToMove)
+            val targetCell = recyclersAdapters[targetPage].getData()[targetPosition]
+            targetCell.app.set(dragInfo.draggedItem)
+            dragInfo.cell = targetCell
+            dragInfo.updateItemPosition()
         }
     }
 
-    private fun saveItemPositionsOnPage(items: List<InstalledApp>, newAdapterPage: Int) {
-        items.forEachIndexed { index, installedApp ->
-            viewModel.saveNewPositionItem(installedApp, index, newAdapterPage)
+    private fun moveBy1(items: List<DesktopCell>) {
+        if (items.isEmpty()) return
+        val currentCell = items.last()
+        val newPage = currentCell.page.takeIf { currentCell.position < visibleApplicationsOnScreen - 1 } ?: (currentCell.page + 1)
+        val newPosition = 0.takeIf { currentCell.position == visibleApplicationsOnScreen - 1 } ?: (currentCell.position + 1)
+        val newCell = recyclersAdapters[newPage].getData()[newPosition]
+        val app = currentCell.app.get()
+//        swapHelper.requestInsertToPosition(newPage, newPosition) {
+            currentCell.app.set(null)
+            newCell.app.set(app)
+            moveBy1(items.dropLast(1))
+//        }
+    }
+
+    private fun saveItemPositionsOnPage(items: List<DesktopCell>, newAdapterPage: Int) {
+        items.forEach { cell ->
+            viewModel.saveNewPositionItem(cell.app.get(), cell.position, newAdapterPage)
         }
     }
 
     fun checkForRemovePage(currentPage: Int, onSwap: (Int) -> Unit) {
-        if (pageIsEmpty(currentPage)) {
+        if (currentPage == 0) return
+        if (currentPage == count - 1 && pageIsEmpty(currentPage)) {
             removePage(currentPage)
             if (currentPage == 0) onSwap(1)
             else onSwap(-1)
@@ -315,4 +445,9 @@ class AppListAdapter(
     override fun getItemPosition(`object`: Any): Int {
         return POSITION_NONE
     }
+
+    fun getAdapterIndex(targetAdapter: BaseAdapter<DesktopCell, LauncherItemApplicationBinding>): Int {
+        return recyclersAdapters.indexOfFirst { it === targetAdapter }
+    }
+
 }

@@ -13,43 +13,49 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.view.MotionEvent
 import android.view.View
+import androidx.databinding.ObservableBoolean
 import androidx.databinding.ObservableField
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import androidx.recyclerview.widget.RecyclerView
 import com.iosapp.ioslauncher.BR
 import com.iosapp.ioslauncher.LauncherApplication
 import com.iosapp.ioslauncher.R
 import com.iosapp.ioslauncher.base.BaseAdapter
 import com.iosapp.ioslauncher.base.BaseViewModel
 import com.iosapp.ioslauncher.base.createAdapter
-import com.iosapp.ioslauncher.data.AppScreenLocation
-import com.iosapp.ioslauncher.data.DragInfo
-import com.iosapp.ioslauncher.data.InstalledApp
-import com.iosapp.ioslauncher.data.Prefs
+import com.iosapp.ioslauncher.data.*
 import com.iosapp.ioslauncher.data.db.DataBase
 import com.iosapp.ioslauncher.databinding.BottomItemApplicationBinding
+import com.iosapp.ioslauncher.databinding.LauncherItemApplicationMenuBinding as LauncherItemApplicationBinding
 import com.iosapp.ioslauncher.ui.custom.NonSwipeableViewPager
 import com.iosapp.ioslauncher.utils.APP_COLUMN_COUNT
+import com.iosapp.ioslauncher.utils.PAGE_INDEX_BOTTOM
+import com.iosapp.ioslauncher.utils.PAGE_INDEX_JUST_MENU
 import kotlinx.coroutines.*
 import java.text.Collator
+import kotlin.math.max
 
 class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChangeListener {
+
+    val onMenuItemLongClick = MutableLiveData<Unit>()
+    val disableMotionLayoutLongClick = MutableLiveData<Unit>()
+
     var disableSelection = false
-    val labelColor = ObservableField(Color.WHITE)
 
     private val browserPackage by lazy {
         Intent("android.intent.action.VIEW", Uri.parse("http://"))
             .let { packageManager.resolveActivity(it, 0)?.activityInfo?.packageName }
     }
-    val isSelectionEnabled = object : ObservableField<Boolean>(false) {
-        override fun set(value: Boolean?) {
+    val isSelectionEnabled = object : ObservableBoolean(false) {
+        override fun set(value: Boolean) {
             if (!disableSelection) {
-                println("xyz $value")
-                if (value == true && get() == false) {
-                    println("xyz " + get())
+                if (value && !get()) {
                     vibrate()
                 }
                 super.set(value)
             }
+            notifyChange()
         }
     }
     val intentFilter = IntentFilter().apply {
@@ -75,8 +81,24 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         "com.google.android.youtube"
     )
 
-    init {
-        Prefs.sharedPreference.registerOnSharedPreferenceChangeListener(this)
+    @SuppressLint("ClickableViewAccessibility")
+    val menuAdapter = createAdapter<InstalledApp, LauncherItemApplicationBinding>(R.layout.launcher_item_application_menu) {
+        onItemClick = { launchApp(it.packageName) }
+        onBind = { item, binding, adapter ->
+            binding.isShortcut = false
+            binding.root.setOnTouchListener { _, _ ->
+                disableMotionLayoutLongClick.postValue(Unit)
+                false
+            }
+            binding.setVariable(BR.viewModel, this@AppViewModel)
+            binding.label.setTextColor(Color.BLACK)
+            binding.notifyPropertyChanged(BR.viewModel)
+            binding.root.setOnLongClickListener {
+                onMenuItemLongClick.postValue(Unit)
+                startDragAndDrop(item, binding, adapter, 0, false)
+                false
+            }
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -103,7 +125,82 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
                     false
                 }
             }
+        }.also {
+            it.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+
+                private var previousItems: List<InstalledApp>? = null
+
+                private fun saveChanges() = runBlocking(Dispatchers.IO) {
+                    val newItems = listOf(*it.getData().toTypedArray())
+                    val updatedIndices = max(newItems.size, previousItems?.size ?: 0)
+                    if (updatedIndices > 0)
+                        for (i in 0 until updatedIndices) {
+                            val item = newItems.getOrNull(i)
+                            if (item?.packageName == previousItems?.getOrNull(i)?.packageName) continue
+                            if (item !== null)
+                                DataBase.dao.addItem(AppScreenLocation(item.packageName, -1, i))
+                            else
+                                DataBase.dao.deleteShortcutByPosition(-1, i)
+                        }
+                    previousItems = newItems
+                }
+
+                override fun onChanged() {
+                    saveChanges()
+                }
+
+                override fun onItemRangeChanged(positionStart: Int, itemCount: Int) {
+                    saveChanges()
+                }
+
+                override fun onItemRangeChanged(positionStart: Int, itemCount: Int, payload: Any?) {
+                    saveChanges()
+                }
+
+                override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                    saveChanges()
+                }
+
+                override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
+                    saveChanges()
+                }
+
+                override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) {
+                    saveChanges()
+                }
+
+            })
         }
+
+    init {
+        Prefs.sharedPreference.registerOnSharedPreferenceChangeListener(this)
+        viewModelScope.launch(Dispatchers.IO) {
+            val apps = readAllAppPositions()
+            launch(Dispatchers.Main) {
+                menuAdapter.reloadData(apps.distinctBy { it.packageName }.map { createModel(it.packageName) })
+            }
+        }
+    }
+
+    @SuppressLint("NewApi")
+    private fun startDragAndDrop(
+        item: InstalledApp,
+        binding: LauncherItemApplicationBinding,
+        adapter: BaseAdapter<InstalledApp, *>,
+        position: Int,
+        removeFromOriginalPlace: Boolean = true,
+    ) {
+//        viewModel.isSelectionEnabled.set(true)
+//        canCreatePage = adapter.getData().size > 1
+        binding.appIcon.startDragAndDrop(
+            null,
+            View.DragShadowBuilder(binding.appIcon),
+            DragInfo(DesktopCell(adapter.getData().indexOf(item), PAGE_INDEX_JUST_MENU, item), adapter.getData().indexOf(item), position, item, removeFromOriginalPlace),
+            0
+        )
+    }
+
+    fun onEditClick() = isSelectionEnabled.set(!isSelectionEnabled.get())
 
     @SuppressLint("NewApi")
     private fun createDragAndDropView(
@@ -112,11 +209,17 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         adapter: BaseAdapter<InstalledApp, *>
     ) {
         disableSelection = false
-        isSelectionEnabled.set(true)
+//        isSelectionEnabled.set(true)
         binding.root.startDragAndDrop(
             null,
             View.DragShadowBuilder(binding.root),
-            DragInfo(adapter, adapter.getData().indexOf(item), -1, item),
+            DragInfo(
+                DesktopCell(adapter.getData().indexOf(item), PAGE_INDEX_BOTTOM, item),
+                adapter.getData().indexOf(item),
+                -1,
+                item,
+                bottomAdapter = adapter
+            ),
             0
         )
     }
@@ -134,10 +237,10 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
     fun insertItemToBottomBar(dragInfo: DragInfo, position: Int?) {
         position ?: return
         if (canAddItem(dragInfo, position)) {
-            dragInfo.removeItem()
+            if (dragInfo.removeFromOriginalPlace) dragInfo.removeItem()
             addItemToPosition(position, dragInfo.draggedItem)
             dragInfo.currentPage = -1
-            dragInfo.adapter = bottomAppListAdapter
+            dragInfo.cell = DesktopCell(position, PAGE_INDEX_BOTTOM, dragInfo.draggedItem)
         }
     }
 
@@ -201,11 +304,90 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
             .let(LauncherApplication.instance::startActivity)
     }
 
+    fun deleteShortcut(app: InstalledApp) {
+        val index = bottomAppListAdapter.getData().indexOf(app)
+        bottomAppListAdapter.removeItem(index)
+        bottomAppListAdapter.notifyItemRemoved(index)
+    }
+
     fun launchApp(packageName: String) {
         if (stateProvider?.isPresentOnHomeScreen() == false) return
         packageManager.getLaunchIntentForPackage(packageName)
             ?.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             ?.let(LauncherApplication.instance::startActivity)
+    }
+
+    suspend fun getFormattedAppPositions(itemsPerPage: Int): MutableList<List<DesktopCell>> {
+        val positions = readAllAppPositions().filterNot { it.page in listOf(PAGE_INDEX_JUST_MENU, PAGE_INDEX_BOTTOM) }
+        val pages = positions.groupBy { it.page }
+        return MutableList((pages.keys.maxOrNull() ?: 0) + 1) { page ->
+            List(itemsPerPage) { index -> DesktopCell(
+                index, page, pages[page]?.find { it.position == index }?.let { createModel(it.packageName) }
+            ) }
+        }
+    }
+
+    suspend fun readAllAppPositions(): List<AppScreenLocation> {
+        return if (DataBase.dao.getRowCount() == 0) {
+            val apps = getInstalledApps()
+            saveAppsToDB(apps)
+            saveBottomAppList()
+            apps.toDefaultAppPositions()
+        } else {
+            readAllAppPositionsFromDB()
+        }.also {
+            listOf(*it.toTypedArray())
+                .filter { it.page == PAGE_INDEX_BOTTOM }
+                .sortedBy { it.position }
+                .map { createModel(it.packageName) }
+                .let { withContext(Dispatchers.Main) { bottomAppListAdapter.reloadData(it) } }
+        }
+    }
+
+    private fun getInstalledApps(): List<InstalledApp> {
+        val collator = Collator
+            .getInstance(getCurrentLocale())
+        return packageManager
+            .getInstalledApplications(PackageManager.GET_META_DATA)
+            .asSequence()
+            .filter(::availableApp)
+            .map(::createModel)
+            .sortedWith(compareBy(collator) { it.name })
+            .toList()
+    }
+
+    private fun saveAppsToDB(apps: List<InstalledApp>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            var currentBottomAppIndex = 0
+            apps.forEachIndexed { index, installedApp ->
+                val isDefaultBottomApp = isDefaultBottomApp(installedApp.packageName)
+                addItem(
+                    installedApp,
+                    if (isDefaultBottomApp) currentBottomAppIndex++ else index,
+                    if (isDefaultBottomApp) -1 else PAGE_INDEX_JUST_MENU
+                )
+            }
+        }
+    }
+
+    private fun List<InstalledApp>.toDefaultAppPositions() = mapIndexed { index, installedApp ->
+        AppScreenLocation(
+            installedApp.packageName,
+            if (isDefaultBottomApp(installedApp.packageName)) -1 else PAGE_INDEX_JUST_MENU,
+            index
+        )
+    }
+
+    private fun readAllAppPositionsFromDB(): List<AppScreenLocation> {
+        val appList = DataBase.dao
+            .getAppsPositions()
+            .filter(::appExist)
+            .toMutableList()
+
+        val collator = Collator
+            .getInstance(getCurrentLocale())
+
+        return appList.sortedWith(compareBy(collator) { createModel(it.packageName).name })
     }
 
     suspend fun readAllPackage(itemCountOnPage: Int): MutableList<List<InstalledApp>> {
@@ -228,7 +410,11 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         viewModelScope.launch(Dispatchers.IO) {
             appList.forEachIndexed { pageIndex, list ->
                 list.forEachIndexed { index, installedApp ->
-                    addItem(installedApp, index, pageIndex)
+                    addItem(
+                        installedApp,
+                        index,
+                        if (isDefaultBottomApp(installedApp.packageName)) -1 else pageIndex
+                    )
                 }
             }
         }
@@ -241,7 +427,7 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
             .toMutableList()
 
         val bottomApps = appList.filter { it.page == -1 }
-        appList.removeAll(bottomApps)
+//        appList.removeAll(bottomApps)
 
         bottomApps.sortedBy { it.position }
             .map { createModel(it.packageName) }
@@ -249,12 +435,13 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
                 withContext(Dispatchers.Main) { bottomAppListAdapter.reloadData(it) }
             }
 
-        return appList.sortedBy { it.page }
-            .groupBy { it.page }
-            .map {
-                it.value.sortedBy { appScreenLocation -> appScreenLocation.position }
-                    .map { appScreenLocation -> createModel(appScreenLocation.packageName) }
-            }
+        val collator = Collator
+            .getInstance(getCurrentLocale())
+
+        return appList
+            .map { createModel(it.packageName) }
+            .sortedWith(compareBy(collator) { it.name })
+            .chunked(16)
     }
 
     private fun appExist(appScreenLocation: AppScreenLocation): Boolean = try {
@@ -272,7 +459,7 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
             .getInstalledApplications(PackageManager.GET_META_DATA)
             .asSequence()
             .filter(::availableApp)
-            .filter(::notBottomBarAppList)
+//            .filter(::notBottomBarAppList)
             .map(::createModel)
             .sortedWith(compareBy(collator) { it.name })
             .chunked(itemCountOnPage)
@@ -280,7 +467,7 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
     }
 
     private fun notBottomBarAppList(applicationInfo: ApplicationInfo): Boolean {
-        if (isDefaultBottomApp(applicationInfo)) {
+        if (isDefaultBottomApp(applicationInfo.packageName)) {
             viewModelScope.launch(Dispatchers.Main) {
                 bottomAppListAdapter.addItem(createModel(applicationInfo.packageName))
             }
@@ -289,9 +476,9 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         return true
     }
 
-    private fun isDefaultBottomApp(applicationInfo: ApplicationInfo): Boolean {
-        return if (defaultBottomAppList.contains(applicationInfo.packageName)) true
-        else browserPackage == applicationInfo.packageName
+    private fun isDefaultBottomApp(packageName: String): Boolean {
+        return if (defaultBottomAppList.contains(packageName)) true
+        else browserPackage == packageName
     }
 
     private fun getCurrentLocale() =
@@ -310,16 +497,20 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
             rf.flags and (ApplicationInfo.FLAG_SYSTEM or ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) == 0
         return InstalledApp(
             rf.loadLabel(packageManager).toString(),
-            rf.loadIcon(packageManager),
+            runBlocking(Dispatchers.IO) { rf.loadIcon(packageManager) },
             rf.packageName,
-            isNotSystemApp
+            isNotSystemApp,
+            this
         )
     }
 
-    fun saveNewPositionItem(item: InstalledApp, newPosition: Int, page: Int) {
+    fun saveNewPositionItem(item: InstalledApp?, newPosition: Int, page: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            AppScreenLocation(item.packageName, page, newPosition)
-                .let(DataBase.dao::updateItem)
+            if (item === null)
+                DataBase.dao.deleteShortcutByPosition(page, newPosition)
+            else
+                AppScreenLocation(item.packageName, page, newPosition)
+                    .let(DataBase.dao::addItem)
         }
     }
 
@@ -330,8 +521,31 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         }
     }
 
+    fun onAppInstalled(installedApp: InstalledApp) {
+        if (menuAdapter.getData().contains(installedApp)) return
+        val collator = Collator.getInstance(getCurrentLocale())
+        val newIndex = menuAdapter.getData()
+            .toMutableList()
+            .apply { add(installedApp); sortWith(compareBy(collator) { it.name }) }
+            .indexOf(installedApp)
+        menuAdapter.addItem(newIndex, installedApp)
+        menuAdapter.notifyDataSetChanged()
+        viewModelScope.launch(Dispatchers.IO) {
+            AppScreenLocation(installedApp.packageName, 0, newIndex).let(DataBase.dao::addItem)
+        }
+    }
+
     fun deletePackage(packageName: String) {
         viewModelScope.launch(Dispatchers.IO) { DataBase.dao.deletePackage(packageName) }
+        val index = menuAdapter.getData().indexOfFirst { it.packageName == packageName }
+        if (index == -1) return
+        menuAdapter.removeItem(index)
+//        menuAdapter.notifyItemRemoved(index)
+        menuAdapter.notifyDataSetChanged()
+        val bottomIndex = bottomAppListAdapter.getData().indexOfFirst { it.packageName == packageName }
+        if (bottomIndex == -1) return
+        bottomAppListAdapter.removeItem(bottomIndex)
+        bottomAppListAdapter.notifyItemRemoved(bottomIndex)
     }
 
     override fun onSharedPreferenceChanged(
