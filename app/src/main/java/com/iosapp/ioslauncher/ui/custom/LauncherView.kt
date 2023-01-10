@@ -30,6 +30,7 @@ import com.iosapp.ioslauncher.utils.APP_COLUMN_COUNT
 import com.iosapp.ioslauncher.utils.MOVING_PAGE_DELAY
 import com.iosapp.ioslauncher.utils.PAGE_INDEX_JUST_MENU
 import kotlinx.coroutines.*
+import java.lang.reflect.Method
 import kotlin.math.roundToInt
 
 class LauncherView @JvmOverloads constructor(
@@ -114,6 +115,14 @@ class LauncherView @JvmOverloads constructor(
         }
         viewModel.disableMotionLayoutLongClick.observe(lifecycleOwner) {
             binding.motionView.canCallLongCLick = false
+        }
+        binding.srl.setProgressViewOffset(false, -200, -300)
+        binding.srl.setOnRefreshListener {
+            val sbs = context.getSystemService("statusbar")
+            val statusbarManager = Class.forName("android.app.StatusBarManager")
+            val showsb: Method = statusbarManager.getMethod("expandNotificationsPanel")
+            showsb.invoke(sbs)
+            binding.srl.isRefreshing = false
         }
     }
 
@@ -366,9 +375,13 @@ class LauncherView @JvmOverloads constructor(
     }
 
     override fun onTransitionCompleted(motionLayout: MotionLayout, currentId: Int) {
-        if (currentId == R.id.end) viewModel.isSelectionEnabled.set(false)
+        if (currentId == R.id.end) {
+            viewModel.isSelectionEnabled.set(false)
+            binding.srl.isEnabled = false
+        }
         if (currentId == R.id.start) {
             viewModel.disableSelection = false
+            binding.srl.isEnabled = true
         }
     }
 
