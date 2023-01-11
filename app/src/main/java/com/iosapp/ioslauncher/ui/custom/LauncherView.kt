@@ -10,12 +10,16 @@ import android.util.AttributeSet
 import android.view.DragEvent
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.ImageView
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.children
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.findViewTreeLifecycleOwner
+import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
 import androidx.viewpager.widget.ViewPager
 import com.iosapp.ioslauncher.BR
 import com.iosapp.ioslauncher.R
@@ -76,6 +80,15 @@ class LauncherView @JvmOverloads constructor(
         )
     }
 
+    private var lastTimeIdleMillis = System.currentTimeMillis()
+    private val onRefreshListener = OnRefreshListener {
+        val sbs = context.getSystemService("statusbar")
+        val statusbarManager = Class.forName("android.app.StatusBarManager")
+        val showsb: Method = statusbarManager.getMethod("expandNotificationsPanel")
+        showsb.invoke(sbs)
+        binding.srl.isRefreshing = false
+    }
+
     fun setViewModel(viewModel: AppViewModel) {
         binding.setVariable(BR.viewModel, viewModel)
         binding.notifyChange()
@@ -117,12 +130,19 @@ class LauncherView @JvmOverloads constructor(
             binding.motionView.canCallLongCLick = false
         }
         binding.srl.setProgressViewOffset(false, -200, -300)
-        binding.srl.setOnRefreshListener {
-            val sbs = context.getSystemService("statusbar")
-            val statusbarManager = Class.forName("android.app.StatusBarManager")
-            val showsb: Method = statusbarManager.getMethod("expandNotificationsPanel")
-            showsb.invoke(sbs)
-            binding.srl.isRefreshing = false
+        binding.srl.setOnRefreshListener(onRefreshListener)
+        viewModel.viewModelScope.launch {
+            while (true) {
+                delay(100)
+                val pos = binding.srl.children.first { it is ImageView }.y
+                if (pos == -200f)
+                    lastTimeIdleMillis = System.currentTimeMillis()
+                else {
+                    if (System.currentTimeMillis() - lastTimeIdleMillis >= 200) {
+                        onRefreshListener.onRefresh()
+                    }
+                }
+            }
         }
     }
 
