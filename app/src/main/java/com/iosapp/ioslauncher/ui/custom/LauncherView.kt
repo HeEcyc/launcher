@@ -1,15 +1,18 @@
 package com.iosapp.ioslauncher.ui.custom
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
 import android.net.Uri
+import android.os.Build
 import android.util.AttributeSet
 import android.view.DragEvent
 import android.view.LayoutInflater
 import android.view.View
+import android.view.WindowInsetsController
 import android.widget.ImageView
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -138,7 +141,7 @@ class LauncherView @JvmOverloads constructor(
                 if (pos == -200f)
                     lastTimeIdleMillis = System.currentTimeMillis()
                 else {
-                    if (System.currentTimeMillis() - lastTimeIdleMillis >= 200) {
+                    if (System.currentTimeMillis() - lastTimeIdleMillis >= 500) {
                         onRefreshListener.onRefresh()
                     }
                 }
@@ -398,10 +401,12 @@ class LauncherView @JvmOverloads constructor(
         if (currentId == R.id.end) {
             viewModel.isSelectionEnabled.set(false)
             binding.srl.isEnabled = false
+            setLightStatusBar(true)
         }
         if (currentId == R.id.start) {
             viewModel.disableSelection = false
             binding.srl.isEnabled = true
+            setLightStatusBar(false)
         }
     }
 
@@ -423,6 +428,21 @@ class LauncherView @JvmOverloads constructor(
     override fun onLongClick(p0: View?): Boolean {
 //        viewModel.isSelectionEnabled.set(!(viewModel.isSelectionEnabled.get() ?: false))
         return true
+    }
+
+    private fun setLightStatusBar(isLight: Boolean) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            context.let { it as Activity }.window.insetsController?.setSystemBarsAppearance(
+                if (isLight) WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS else 0,
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+            )
+        } else setLightStatusBarLegacy(isLight)
+    }
+
+    @Suppress("DEPRECATION")
+    private fun setLightStatusBarLegacy(isLight: Boolean) {
+        context.let { it as Activity }.window.decorView.systemUiVisibility =
+            if (isLight) View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR else 0
     }
 
 }
