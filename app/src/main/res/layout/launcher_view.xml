@@ -56,7 +56,7 @@
                     android:id="@+id/indicatorOverlay"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    app:layout_constraintBottom_toTopOf="@id/bottomRoot"
+                    app:layout_constraintBottom_toTopOf="@id/bottomMenuHitBox"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent">
 
@@ -89,50 +89,14 @@
                         app:progressMode="true" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/bottomRoot"
+                <View
+                    android:id="@+id/bottomMenuHitBox"
                     android:layout_width="match_parent"
                     android:layout_height="0sp"
                     android:layout_marginHorizontal="10sp"
-                    app:cardBackgroundColor="@android:color/transparent"
-                    app:cardCornerRadius="20sp"
-                    app:cardElevation="0sp"
                     app:layout_constraintBottom_toTopOf="@id/fakeNavBar"
                     app:layout_constraintDimensionRatio="1:0.24"
-                    tools:layout_editor_absoluteX="10dp">
-
-                    <com.github.mmin18.widget.RealtimeBlurView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:realtimeBlurRadius="5sp"
-                        app:realtimeOverlayColor="#60ffffff" />
-
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent">
-
-                        <RelativeLayout
-                            android:id="@+id/bottomAppsOverlay"
-                            android:layout_width="match_parent"
-                            android:layout_height="0sp"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintHeight_percent="0.85"
-                            app:layout_constraintTop_toTopOf="parent">
-
-                            <androidx.recyclerview.widget.RecyclerView
-                                android:id="@+id/bottomAppsList"
-                                android:layout_width="wrap_content"
-                                android:layout_height="match_parent"
-                                android:layout_centerInParent="true"
-                                android:adapter="@{viewModel.bottomAppListAdapter}"
-                                android:orientation="horizontal"
-                                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                                app:spanCount="4" />
-                        </RelativeLayout>
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-
-                </androidx.cardview.widget.CardView>
+                    tools:layout_editor_absoluteX="10dp"/>
 
                 <View
                     android:id="@+id/fakeNavBar"
@@ -144,7 +108,7 @@
                     android:id="@+id/menu"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
-                    app:layout_constraintTop_toBottomOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/bottomMenuHitBox"
                     app:layout_constraintHeight_percent="1"
                     android:background="@color/white">
                     <View
@@ -209,6 +173,55 @@
                             android:adapter="@{viewModel.menuAdapter}"/>
 
                     </androidx.appcompat.widget.LinearLayoutCompat>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <com.iosapp.ioslauncher.ui.custom.ArrowView
+                    android:id="@+id/arrow"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    app:layout_constraintBottom_toTopOf="@id/menu"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintDimensionRatio="1:1"
+                    app:layout_constraintWidth_percent="0.05"
+                    android:layout_marginBottom="10dp"/>
+
+                <View
+                    android:id="@+id/menuTouchInterceptor"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    app:layout_constraintTop_toTopOf="@id/menu"
+                    app:layout_constraintBottom_toBottomOf="@id/menu"
+                    app:layout_constraintStart_toStartOf="@id/menu"
+                    app:layout_constraintEnd_toEndOf="@id/menu"/>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/bottomRoot"
+                    android:layout_width="match_parent"
+                    android:layout_height="0sp"
+                    android:layout_marginHorizontal="10sp"
+                    app:layout_constraintTop_toTopOf="@id/menu"
+                    app:layout_constraintDimensionRatio="1:0.24"
+                    tools:layout_editor_absoluteX="10dp">
+
+                    <RelativeLayout
+                        android:id="@+id/bottomAppsOverlay"
+                        android:layout_width="match_parent"
+                        android:layout_height="0sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintHeight_percent="0.85"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/bottomAppsList"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_centerInParent="true"
+                            android:adapter="@{viewModel.bottomAppListAdapter}"
+                            android:orientation="horizontal"
+                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                            app:spanCount="5" />
+                    </RelativeLayout>
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
             </com.iosapp.ioslauncher.ui.custom.ClickableMotionLayout>

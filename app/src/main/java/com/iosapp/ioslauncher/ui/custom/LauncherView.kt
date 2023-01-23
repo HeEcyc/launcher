@@ -1,5 +1,6 @@
 package com.iosapp.ioslauncher.ui.custom
 
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.BroadcastReceiver
@@ -16,6 +17,7 @@ import android.view.WindowInsetsController
 import android.widget.ImageView
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.animation.addListener
 import androidx.core.view.children
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.findViewTreeLifecycleOwner
@@ -38,6 +40,8 @@ import com.iosapp.ioslauncher.utils.MOVING_PAGE_DELAY
 import com.iosapp.ioslauncher.utils.PAGE_INDEX_JUST_MENU
 import kotlinx.coroutines.*
 import java.lang.reflect.Method
+import kotlin.math.abs
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 class LauncherView @JvmOverloads constructor(
@@ -100,6 +104,8 @@ class LauncherView @JvmOverloads constructor(
 
     @SuppressLint("ClickableViewAccessibility")
     private fun initView() {
+        binding.arrow.state = -1f
+        binding.menu.post { binding.menu.alpha = 0f }
         binding.allAps.addOnScrollListener(getOnScrollListener())
         binding.appsContainer.layoutParams.let { it as LayoutParams }.setMargins(0, getStatusBarHeight(), 0, 0)
 
@@ -147,6 +153,7 @@ class LauncherView @JvmOverloads constructor(
                 }
             }
         }
+        binding.menuTouchInterceptor.setOnTouchListener { _, _ -> true }
     }
 
     private fun getOnScrollListener() = object : RecyclerView.OnScrollListener() {
@@ -381,6 +388,7 @@ class LauncherView @JvmOverloads constructor(
 
     }
 
+    private var menuProgress = 0f
     override fun onTransitionChange(
         motionLayout: MotionLayout?,
         startId: Int,
@@ -395,18 +403,64 @@ class LauncherView @JvmOverloads constructor(
         binding.motionView.longClickTask?.cancel()
 
         binding.appPages.canSwipe = canSwipeViewPager
+
+
+        val alphaProgress = min(progress, 0.66f)
+        val newAlpha = alphaProgress / 0.66f
+        binding.menu.alpha = newAlpha
+        binding.bottomRoot.alpha = 1f - newAlpha
+        binding.bottomRoot.translationY = if (alphaProgress < 0.66f) 0f else -100000f
+        binding.appPages.alpha = 1f - newAlpha
+        binding.appPages.translationY = -200 * newAlpha
+
+        if (abs(progress - menuProgress) < 0.001f) {
+            animateArrow(binding.arrow.state, 0f)
+        } else if (progress < menuProgress) {
+            animateArrow(binding.arrow.state, 1f)
+        } else if (progress > menuProgress) {
+            animateArrow(binding.arrow.state, -1f)
+        } else {
+            animateArrow(binding.arrow.state, 0f)
+        }
+        menuProgress = progress
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTransitionCompleted(motionLayout: MotionLayout, currentId: Int) {
         if (currentId == R.id.end) {
             viewModel.isSelectionEnabled.set(false)
             binding.srl.isEnabled = false
             setLightStatusBar(true)
+            binding.menuTouchInterceptor.setOnTouchListener(null)
         }
         if (currentId == R.id.start) {
             viewModel.disableSelection = false
             binding.srl.isEnabled = true
             setLightStatusBar(false)
+            binding.menuTouchInterceptor.setOnTouchListener { _, _ -> true }
+            animateArrow(binding.arrow.state, -1f)
+            binding.menu.alpha = 0f
+        }
+    }
+
+    private var animator: ValueAnimator? = null
+    private var endValue: Float? = null
+    private fun animateArrow(from: Float, to: Float) {
+        if (to == endValue) return
+        if (to == binding.arrow.state) {
+            animator?.cancel()
+            return
+        }
+        animator?.cancel()
+        animator = ValueAnimator.ofFloat(from, to).apply {
+            duration = 200
+            addUpdateListener { binding.arrow.state = it.animatedValue as Float }
+            addListener(
+                onStart = { endValue = to },
+                onEnd = { endValue = null },
+                onCancel = { endValue = null }
+            )
+            start()
         }
     }
 
