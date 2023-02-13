@@ -20,6 +20,15 @@
             app:layout_constraintTop_toTopOf="@id/bottomMenuHitBox"
             app:layout_constraintHeight_percent="1"/>
 
+        <Constraint
+            android:id="@+id/fieldDelete"
+            android:layout_width="0dp"
+            android:layout_height="96dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintWidth_percent="0.5"
+            app:visibilityMode="ignore"/>
+
     </ConstraintSet>
 
     <ConstraintSet android:id="@+id/end">
@@ -39,6 +48,15 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintHeight_percent="1"/>
+
+        <Constraint
+            android:id="@+id/fieldDelete"
+            android:layout_width="0dp"
+            android:layout_height="96dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintWidth_percent="0.5"
+            app:visibilityMode="ignore"/>
 
     </ConstraintSet>
 

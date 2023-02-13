@@ -12,18 +12,21 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:clipChildren="false">
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/srl"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:swipeRefreshLayoutProgressSpinnerBackgroundColor="@android:color/transparent"
-            android:alpha="1">
+            android:alpha="1"
+            android:clipChildren="false">
             <com.iosapp.ioslauncher.ui.custom.ClickableMotionLayout
                 android:id="@+id/motionView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:layoutDescription="@xml/app_activity_scene">
+                app:layoutDescription="@xml/app_activity_scene"
+                android:clipChildren="false">
 
                 <View
                     android:id="@+id/overlay"
@@ -33,15 +36,104 @@
                     android:background="#FFFFFF"
                     android:visibility="gone" />
 
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/topFields"
+                    android:layout_width="match_parent"
+                    android:layout_height="96dp"
+                    app:layout_constraintBottom_toTopOf="parent"
+                    android:clipChildren="false">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/fieldDelete"
+                        android:layout_width="0dp"
+                        android:layout_height="96dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintWidth_percent="0.5"
+                        android:visibility="gone">
+                        <androidx.appcompat.widget.AppCompatTextView
+                            android:id="@+id/shadowTextDelete"
+                            android:layout_width="wrap_content"
+                            android:layout_height="24dp"
+                            android:layout_margin="10dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintHorizontal_bias="0"
+                            android:gravity="center"
+                            android:textSize="20sp"
+                            android:text="@string/delete"
+                            android:lines="1"
+                            app:drawableEndCompat="@drawable/ic_delete"
+                            android:visibility="invisible"/>
+                        <androidx.appcompat.widget.AppCompatTextView
+                            android:layout_width="0dp"
+                            android:layout_height="24dp"
+                            app:layout_constraintBottom_toBottomOf="@id/shadowTextDelete"
+                            app:layout_constraintStart_toStartOf="@id/shadowTextDelete"
+                            app:layout_constraintEnd_toEndOf="@id/shadowTextDelete"
+                            app:layout_constraintHorizontal_bias="0"
+                            android:gravity="center"
+                            app:autoSizeTextType="uniform"
+                            app:autoSizeMaxTextSize="20sp"
+                            app:autoSizeMinTextSize="1sp"
+                            android:textColor="@color/white"
+                            android:lines="1"
+                            android:text="@string/delete"
+                            app:drawableEndCompat="@drawable/ic_delete"/>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/fieldRemove"
+                        android:layout_width="0dp"
+                        android:layout_height="96dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintWidth_percent="0.5">
+                        <androidx.appcompat.widget.AppCompatTextView
+                            android:id="@+id/shadowTextRemove"
+                            android:layout_width="wrap_content"
+                            android:layout_height="24dp"
+                            android:layout_margin="10dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintHorizontal_bias="1"
+                            android:gravity="center"
+                            android:textSize="20sp"
+                            android:text="@string/remove"
+                            android:lines="1"
+                            app:drawableStartCompat="@drawable/ic_close"
+                            android:visibility="invisible"/>
+                        <androidx.appcompat.widget.AppCompatTextView
+                            android:layout_width="0dp"
+                            android:layout_height="24dp"
+                            app:layout_constraintBottom_toBottomOf="@id/shadowTextRemove"
+                            app:layout_constraintStart_toStartOf="@id/shadowTextRemove"
+                            app:layout_constraintEnd_toEndOf="@id/shadowTextRemove"
+                            app:layout_constraintHorizontal_bias="1"
+                            android:gravity="center"
+                            app:autoSizeTextType="uniform"
+                            app:autoSizeMaxTextSize="20sp"
+                            app:autoSizeMinTextSize="1sp"
+                            android:textColor="@color/white"
+                            android:lines="1"
+                            android:text="@string/remove"
+                            app:drawableStartCompat="@drawable/ic_close"/>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
                 <com.iosapp.ioslauncher.ui.custom.NonSwipeableViewPager
                     android:id="@+id/appPages"
                     android:layout_width="match_parent"
                     android:layout_height="0sp"
-                    android:paddingTop="24dp"
                     android:fitsSystemWindows="true"
                     android:overScrollMode="never"
+                    android:paddingTop="24dp"
+                    app:layout_constraintBottom_toTopOf="@id/indicatorOverlay"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toTopOf="@id/indicatorOverlay"/>
+                    tools:ignore="SpeakableTextPresentCheck" />
 
                 <View
                     android:id="@+id/beacon"
@@ -50,7 +142,8 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:ignore="SmallSp" />
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/indicatorOverlay"

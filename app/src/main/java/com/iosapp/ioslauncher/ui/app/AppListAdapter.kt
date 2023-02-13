@@ -7,7 +7,6 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.os.postDelayed
 import androidx.core.view.children
 import androidx.databinding.OnRebindCallback
 import androidx.recyclerview.widget.DiffUtil
@@ -133,6 +132,7 @@ class AppListAdapter(
             DragInfo(cell, cell.position, position, item),
             0
         )
+        viewModel.showTopFields(item)
     }
 
     override fun destroyItem(container: ViewGroup, position: Int, `object`: Any) {
@@ -448,6 +448,15 @@ class AppListAdapter(
 
     fun getAdapterIndex(targetAdapter: BaseAdapter<DesktopCell, LauncherItemApplicationBinding>): Int {
         return recyclersAdapters.indexOfFirst { it === targetAdapter }
+    }
+
+    fun removeShortcut(dragInfo: DragInfo) {
+        dragInfo.removeItem()
+        dragInfo.currentPage.takeIf { it >= 0 }?.let {
+            updateItems(recyclersAdapters[it], dragInfo.draggedItemPos)
+            saveItemPositionsOnPage(listOfNotNull(dragInfo.cell), it)
+            if (pageIsEmpty(it) && it == recyclersAdapters.lastIndex) removePage(it)
+        }
     }
 
 }

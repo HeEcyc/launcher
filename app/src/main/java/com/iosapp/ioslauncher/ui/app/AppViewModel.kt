@@ -27,7 +27,6 @@ import com.iosapp.ioslauncher.base.createAdapter
 import com.iosapp.ioslauncher.data.*
 import com.iosapp.ioslauncher.data.db.DataBase
 import com.iosapp.ioslauncher.databinding.BottomItemApplicationBinding
-import com.iosapp.ioslauncher.databinding.LauncherItemApplicationMenuBinding as LauncherItemApplicationBinding
 import com.iosapp.ioslauncher.ui.custom.NonSwipeableViewPager
 import com.iosapp.ioslauncher.utils.APP_COLUMN_COUNT
 import com.iosapp.ioslauncher.utils.PAGE_INDEX_BOTTOM
@@ -35,8 +34,11 @@ import com.iosapp.ioslauncher.utils.PAGE_INDEX_JUST_MENU
 import kotlinx.coroutines.*
 import java.text.Collator
 import kotlin.math.max
+import com.iosapp.ioslauncher.databinding.LauncherItemApplicationMenuBinding as LauncherItemApplicationBinding
 
 class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChangeListener {
+
+    val showTopFields = MutableLiveData<InstalledApp>()
 
     val onMenuItemLongClick = MutableLiveData<Unit>()
     val disableMotionLayoutLongClick = MutableLiveData<Unit>()
@@ -182,6 +184,8 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         }
     }
 
+    fun showTopFields(app: InstalledApp) = showTopFields.postValue(app)
+
     @SuppressLint("NewApi")
     private fun startDragAndDrop(
         item: InstalledApp,
@@ -198,6 +202,7 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
             DragInfo(DesktopCell(adapter.getData().indexOf(item), PAGE_INDEX_JUST_MENU, item), adapter.getData().indexOf(item), position, item, removeFromOriginalPlace),
             0
         )
+        showTopFields(item)
     }
 
     fun onEditClick() = isSelectionEnabled.set(!isSelectionEnabled.get())
@@ -222,7 +227,11 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
             ),
             0
         )
+        showTopFields(item)
     }
+
+    fun isAppSystem(packageName: String) =
+        packageManager.getApplicationInfo(packageName, 0).flags and ApplicationInfo.FLAG_SYSTEM == ApplicationInfo.FLAG_SYSTEM
 
     fun vibrate() {
         with(LauncherApplication.instance.getSystemService(Vibrator::class.java)) {

@@ -14,6 +14,7 @@ import android.view.DragEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowInsetsController
+import android.view.animation.LinearInterpolator
 import android.widget.ImageView
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -126,6 +127,10 @@ class LauncherView @JvmOverloads constructor(
         binding.motionView.addTransitionListener(this)
         binding.bottomAppsOverlay.setOnDragListener(this)
         binding.appPages.setOnDragListener(this)
+        binding.topFields.setOnDragListener(this)
+        binding.fieldDelete.setOnDragListener(this)
+        binding.fieldRemove.setOnDragListener(this)
+        binding.motionView.setOnDragListener(this)
         binding.allAps.setOnDragListener { _, _ -> true }
         binding.allAps.setOnLongClickListener(this)
         binding.motionView.setOnLongClickListener(this)
@@ -142,7 +147,7 @@ class LauncherView @JvmOverloads constructor(
         binding.srl.setOnRefreshListener(onRefreshListener)
         viewModel.viewModelScope.launch {
             while (true) {
-                delay(100)
+                delay(200)
                 val pos = binding.srl.children.first { it is ImageView }.y
                 if (pos == -200f)
                     lastTimeIdleMillis = System.currentTimeMillis()
@@ -154,6 +159,72 @@ class LauncherView @JvmOverloads constructor(
             }
         }
         binding.menuTouchInterceptor.setOnTouchListener { _, _ -> true }
+        viewModel.showTopFields.observe(lifecycleOwner) {
+            if (!viewModel.isAppSystem(it.packageName)) binding.fieldDelete.visibility = View.VISIBLE
+            showTopFields()
+        }
+    }
+
+    private var topFieldsAnimator: ValueAnimator? = null
+    private var topFieldsEndValue = 0f
+
+    private fun showTopFields() {
+        if (topFieldsEndValue == 1f) return
+        topFieldsEndValue = 1f
+        topFieldsAnimator?.cancel()
+        val currentPosition = binding.topFields.translationY / (binding.topFields.height * 0.75f)
+        val targetMenuScaleFactor = (binding.appPages.height - binding.topFields.height * 0.75f) / binding.appPages.height
+        val targetMenuScaleFactorDelta = binding.appPages.scaleX - targetMenuScaleFactor
+        val currentMenuScaleFactor = binding.appPages.scaleX
+        topFieldsAnimator = ValueAnimator.ofFloat(currentPosition, 1f).apply {
+            interpolator = LinearInterpolator()
+            duration = 100
+            addUpdateListener {
+                val newValue = it.animatedValue as Float
+                binding.topFields.translationY = (binding.topFields.height * 0.75f) * newValue
+                val newScaleFactor = currentMenuScaleFactor - targetMenuScaleFactorDelta * newValue
+                binding.appPages.scaleX = newScaleFactor
+                binding.appPages.scaleY = newScaleFactor
+                binding.appPages.translationY = (binding.topFields.height * 0.75f) / 2f * newValue
+            }
+            addListener(
+                onEnd = { topFieldsAnimator = null },
+                onCancel = { topFieldsAnimator = null }
+            )
+            start()
+        }
+    }
+
+    private fun hideTopFields() {
+        if (topFieldsEndValue == 0f) return
+        topFieldsEndValue = 0f
+        topFieldsAnimator?.cancel()
+        val currentPosition = binding.topFields.translationY / (binding.topFields.height * 0.75f)
+        val targetMenuScaleFactor = 1f
+        val targetMenuScaleFactorDelta = targetMenuScaleFactor - binding.appPages.scaleX
+        topFieldsAnimator = ValueAnimator.ofFloat(currentPosition, 0f).apply {
+            interpolator = LinearInterpolator()
+            duration = 200
+            addUpdateListener {
+                val newValue = it.animatedValue as Float
+                binding.topFields.translationY = (binding.topFields.height * 0.75f) * newValue
+                val newScaleFactor = targetMenuScaleFactor - targetMenuScaleFactorDelta * newValue
+                binding.appPages.scaleX = newScaleFactor
+                binding.appPages.scaleY = newScaleFactor
+                binding.appPages.translationY = (binding.topFields.height * 0.75f) / 2f * newValue
+            }
+            addListener(
+                onEnd = {
+                    topFieldsAnimator = null
+                    binding.fieldDelete.visibility = View.GONE
+                },
+                onCancel = {
+                    topFieldsAnimator = null
+                    binding.fieldDelete.visibility = View.GONE
+                }
+            )
+            start()
+        }
     }
 
     private fun getOnScrollListener() = object : RecyclerView.OnScrollListener() {
@@ -208,7 +279,89 @@ class LauncherView @JvmOverloads constructor(
         return when (v.id) {
             R.id.appPages -> handleEventMainAppList(event)
             R.id.bottomAppsOverlay -> handleBottomAppList(event)
+            R.id.topFields -> handleTopFields(event)
+            R.id.fieldDelete -> handleFieldDelete(event)
+            R.id.fieldRemove -> handleFieldRemove(event)
+            R.id.motionView -> true
             else -> false
+        }.also {
+            if (it && event.action == DragEvent.ACTION_DRAG_ENDED) {
+                translateViewUp { hideTopFields() }
+            }
+        }
+    }
+
+    private fun handleTopFields(event: DragEvent): Boolean {
+        when (event.action) {
+            DragEvent.ACTION_DRAG_ENTERED -> translateViewDown()
+            DragEvent.ACTION_DRAG_EXITED -> translateViewUp()
+        }
+        return true
+    }
+
+    private fun handleFieldDelete(event: DragEvent): Boolean {
+        val dragInfo = event.localState as? DragInfo ?: return false
+        when (event.action) {
+            DragEvent.ACTION_DRAG_ENTERED, DragEvent.ACTION_DRAG_EXITED -> handleTopFields(event)
+            DragEvent.ACTION_DROP -> viewModel.removeItem(dragInfo.draggedItem.packageName)
+        }
+        return true
+    }
+
+    private fun handleFieldRemove(event: DragEvent): Boolean {
+        val dragInfo = event.localState as? DragInfo ?: return false
+        when (event.action) {
+            DragEvent.ACTION_DRAG_ENTERED, DragEvent.ACTION_DRAG_EXITED -> handleTopFields(event)
+            DragEvent.ACTION_DROP -> viewPagerAdapter?.removeShortcut(dragInfo)
+        }
+        return true
+    }
+
+    private var rootTranslationAnimator: ValueAnimator? = null
+    private var rootTranslationEndValue = 0f
+
+    private fun translateViewDown() {
+        if (rootTranslationEndValue == 1f) return
+        rootTranslationEndValue = 1f
+        rootTranslationAnimator?.cancel()
+        val statusBarHeight = getStatusBarHeight()
+        val currentPosition = binding.root.translationY / statusBarHeight
+        rootTranslationAnimator = ValueAnimator.ofFloat(currentPosition, 1f).apply {
+            interpolator = LinearInterpolator()
+            duration = 100
+            addUpdateListener {
+                val newValue = it.animatedValue as Float
+                binding.root.translationY = statusBarHeight * newValue
+            }
+            addListener(
+                onEnd = { rootTranslationAnimator = null },
+                onCancel = { rootTranslationAnimator = null }
+            )
+            start()
+        }
+    }
+
+    private fun translateViewUp(onEnd: () -> Unit = {}) {
+        if (rootTranslationEndValue == 0f) {
+            onEnd()
+            return
+        }
+        rootTranslationEndValue = 0f
+        rootTranslationAnimator?.cancel()
+        val statusBarHeight = getStatusBarHeight()
+        val currentPosition = binding.root.translationY / statusBarHeight
+        rootTranslationAnimator = ValueAnimator.ofFloat(currentPosition, 0f).apply {
+            interpolator = LinearInterpolator()
+            duration = 100
+            addUpdateListener {
+                val newValue = it.animatedValue as Float
+                binding.root.translationY = statusBarHeight * newValue
+            }
+            addListener(
+                onEnd = { rootTranslationAnimator = null; onEnd() },
+                onCancel = { rootTranslationAnimator = null; onEnd() }
+            )
+            start()
         }
     }
 
@@ -235,8 +388,14 @@ class LauncherView @JvmOverloads constructor(
     private fun handleEventMainAppList(event: DragEvent): Boolean {
         val dragInfo = event.localState as? DragInfo ?: return false
         when (event.action) {
-            DragEvent.ACTION_DRAG_LOCATION -> handleItemMovement(event.x, event.y, dragInfo)
-            DragEvent.ACTION_DROP -> stopMovePagesJob()
+            DragEvent.ACTION_DRAG_LOCATION -> {
+                binding.srl.isEnabled = false
+                handleItemMovement(event.x, event.y, dragInfo)
+            }
+            DragEvent.ACTION_DROP -> {
+                binding.srl.isEnabled = true
+                stopMovePagesJob()
+            }
         }
         return true
     }
@@ -395,6 +554,7 @@ class LauncherView @JvmOverloads constructor(
         endId: Int,
         progress: Float
     ) {
+        binding.srl.isEnabled = false
 
         val roundProgress = (progress * 100).toInt() / 100f
 
@@ -443,22 +603,22 @@ class LauncherView @JvmOverloads constructor(
         }
     }
 
-    private var animator: ValueAnimator? = null
-    private var endValue: Float? = null
+    private var arrowAnimator: ValueAnimator? = null
+    private var arrowEndValue: Float? = null
     private fun animateArrow(from: Float, to: Float) {
-        if (to == endValue) return
+        if (to == arrowEndValue) return
         if (to == binding.arrow.state) {
-            animator?.cancel()
+            arrowAnimator?.cancel()
             return
         }
-        animator?.cancel()
-        animator = ValueAnimator.ofFloat(from, to).apply {
+        arrowAnimator?.cancel()
+        arrowAnimator = ValueAnimator.ofFloat(from, to).apply {
             duration = 200
             addUpdateListener { binding.arrow.state = it.animatedValue as Float }
             addListener(
-                onStart = { endValue = to },
-                onEnd = { endValue = null },
-                onCancel = { endValue = null }
+                onStart = { arrowEndValue = to },
+                onEnd = { arrowEndValue = null },
+                onCancel = { arrowEndValue = null }
             )
             start()
         }
