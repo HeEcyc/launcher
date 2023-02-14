@@ -1,6 +1,7 @@
 package com.iosapp.ioslauncher.ui.app
 
 import android.annotation.SuppressLint
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
@@ -9,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.children
 import androidx.databinding.OnRebindCallback
+import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -27,6 +29,9 @@ import com.iosapp.ioslauncher.ui.custom.NonSwipeableViewPager
 import com.iosapp.ioslauncher.utils.PAGE_INDEX_BOTTOM
 import com.iosapp.ioslauncher.utils.SwapHelper
 import com.iosapp.ioslauncher.utils.diff.utils.AppListDiffUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class AppListAdapter(
     private val listAppPages: MutableList<List<DesktopCell>>,
@@ -91,6 +96,11 @@ class AppListAdapter(
                             appBinding.root.setOnLongClickListener {
                                 if (!stateProvider.isPresentOnHomeScreen()) return@setOnLongClickListener false
                                 stateProvider.onAppSelected()
+                                viewModel.viewModelScope.launch(Dispatchers.Main) {
+                                    appBinding.appIcon.imageTintList = ColorStateList.valueOf(Color.parseColor("#40000000"))
+                                    delay(500)
+                                    appBinding.appIcon.imageTintList = null
+                                }
                                 startDragAndDrop(app, appBinding, cell, position)
                                 false
                             }

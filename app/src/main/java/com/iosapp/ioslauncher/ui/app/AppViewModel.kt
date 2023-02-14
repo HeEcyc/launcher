@@ -6,6 +6,7 @@ import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
@@ -122,6 +123,11 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
                 binding.root.setOnLongClickListener {
                     if (stateProvider?.isPresentOnHomeScreen() == true) {
                         stateProvider?.onAppSelected()
+                        viewModelScope.launch(Dispatchers.Main) {
+                            binding.appIcon.imageTintList = ColorStateList.valueOf(Color.parseColor("#40000000"))
+                            delay(500)
+                            binding.appIcon.imageTintList = null
+                        }
                         createDragAndDropView(item, binding, adapter)
                     }
                     false

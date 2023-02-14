@@ -54,7 +54,8 @@
                 android:scaleType="centerCrop"
                 app:layout_constraintDimensionRatio="1:1"
                 app:layout_constraintTop_toTopOf="parent"
-                bind:imageDrawable="@{item.icon}" />
+                bind:imageDrawable="@{item.icon}"
+                app:tintMode="src_over"/>
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/label"
