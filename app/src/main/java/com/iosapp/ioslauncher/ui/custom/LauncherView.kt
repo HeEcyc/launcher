@@ -40,6 +40,8 @@ import com.iosapp.ioslauncher.utils.APP_COLUMN_COUNT
 import com.iosapp.ioslauncher.utils.MOVING_PAGE_DELAY
 import com.iosapp.ioslauncher.utils.PAGE_INDEX_JUST_MENU
 import kotlinx.coroutines.*
+import me.everything.android.ui.overscroll.IOverScrollDecor
+import me.everything.android.ui.overscroll.OverScrollDecoratorHelper
 import java.lang.reflect.Method
 import kotlin.math.abs
 import kotlin.math.min
@@ -96,6 +98,8 @@ class LauncherView @JvmOverloads constructor(
         showsb.invoke(sbs)
         binding.srl.isRefreshing = false
     }
+
+    private var overScrollDecor: IOverScrollDecor? = null
 
     fun setViewModel(viewModel: AppViewModel) {
         binding.setVariable(BR.viewModel, viewModel)
@@ -163,6 +167,7 @@ class LauncherView @JvmOverloads constructor(
             if (!viewModel.isAppSystem(it.packageName)) binding.fieldDelete.visibility = View.VISIBLE
             showTopFields()
         }
+        overScrollDecor = OverScrollDecoratorHelper.setUpOverScroll(binding.appPages)
     }
 
     private var topFieldsAnimator: ValueAnimator? = null
