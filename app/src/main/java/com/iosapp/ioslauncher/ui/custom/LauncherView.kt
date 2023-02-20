@@ -1,5 +1,6 @@
 package com.iosapp.ioslauncher.ui.custom
 
+import android.animation.Animator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -27,6 +28,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
 import androidx.viewpager.widget.ViewPager
+import androidx.viewpager.widget.ViewPager.OnPageChangeListener
 import com.iosapp.ioslauncher.BR
 import com.iosapp.ioslauncher.R
 import com.iosapp.ioslauncher.base.BaseAdapter
@@ -168,6 +170,52 @@ class LauncherView @JvmOverloads constructor(
             showTopFields()
         }
         overScrollDecor = OverScrollDecoratorHelper.setUpOverScroll(binding.appPages)
+        overScrollDecor?.setOverScrollStateListener { _, _, _ -> hideArrowShowDots() }
+        overScrollDecor?.setOverScrollUpdateListener { _, _, _ -> hideArrowShowDots() }
+        binding.appPages.addOnPageChangeListener(object : OnPageChangeListener {
+            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
+            override fun onPageSelected(position: Int) {}
+            override fun onPageScrollStateChanged(state: Int) {
+                if (state == ViewPager.SCROLL_STATE_IDLE) {
+                    viewModel.viewModelScope.launch(Dispatchers.Main) {
+                        delay(250)
+                        showArrowHideDots()
+                    }
+                } else hideArrowShowDots()
+            }
+        })
+    }
+
+    private var arrowVisibilityAnimator: ValueAnimator? = null
+
+    private fun showArrowHideDots() {
+        if (arrowVisibilityAnimator !== null)  return
+        val onCompleteEnd = { _: Animator -> arrowVisibilityAnimator = null }
+        arrowVisibilityAnimator = ValueAnimator.ofFloat(binding.pageIndicator.alpha, 0f).apply {
+            interpolator = LinearInterpolator()
+            duration = 125
+            addUpdateListener { binding.pageIndicator.alpha = it.animatedValue as Float }
+            addListener(
+                onCancel = onCompleteEnd,
+                onEnd = {
+                    arrowVisibilityAnimator = ValueAnimator.ofFloat(binding.arrow.alpha, 1f).apply {
+                        interpolator = LinearInterpolator()
+                        duration = 125
+                        addUpdateListener { binding.arrow.alpha = it.animatedValue as Float }
+                        addListener(onCancel = onCompleteEnd, onEnd = onCompleteEnd)
+                        start()
+                    }
+                }
+            )
+            start()
+        }
+    }
+
+    private fun hideArrowShowDots() {
+        arrowVisibilityAnimator?.cancel()
+        arrowVisibilityAnimator = null
+        binding.arrow.alpha = 0f
+        binding.pageIndicator.alpha = 1f
     }
 
     private var topFieldsAnimator: ValueAnimator? = null
