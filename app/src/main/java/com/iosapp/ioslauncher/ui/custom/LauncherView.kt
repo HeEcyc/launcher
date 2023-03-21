@@ -7,6 +7,9 @@ import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
@@ -26,6 +29,7 @@ import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
 import androidx.viewpager.widget.ViewPager
 import androidx.viewpager.widget.ViewPager.OnPageChangeListener
@@ -125,6 +129,12 @@ class LauncherView @JvmOverloads constructor(
                 position >= count - countLast
             }
         ))
+        binding.allAps.addItemDecoration(object : ItemDecoration() {
+            override fun onDraw(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
+                if (parent.childCount > 0 && parent.getChildAdapterPosition(parent.children.first()) == 0)
+                c.drawLine(parent.left.toFloat(), parent.children.first().y + parent.children.first().height, parent.right.toFloat(), parent.children.first().y + parent.children.first().height + 1, Paint().apply { color = Color.parseColor("#D4D4D4") })
+            }
+        })
 
         calculateAppItemViewHeight()
         setTouchListenerOnIndicator()
@@ -184,6 +194,7 @@ class LauncherView @JvmOverloads constructor(
                 } else hideArrowShowDots()
             }
         })
+        binding.menuTabBar.post { binding.menuTabBar.bindMenuAdapter(viewModel.tabMenuAdapter) }
     }
 
     private var arrowVisibilityAnimator: ValueAnimator? = null

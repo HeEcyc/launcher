@@ -204,7 +204,7 @@
                     android:layout_height="0dp"
                     app:layout_constraintTop_toTopOf="@id/bottomMenuHitBox"
                     app:layout_constraintHeight_percent="1"
-                    android:background="@color/white">
+                    android:background="#F3F3F3">
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"/>
@@ -223,8 +223,7 @@
 
                         <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:background="#CCCCCC">
+                            android:layout_height="wrap_content">
                             <androidx.constraintlayout.widget.ConstraintLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="0dp"
@@ -253,8 +252,22 @@
                                     android:scaleX="0.75"
                                     android:onClick="@{(_) -> viewModel.onEditClick()}"/>
 
+                                <com.iosapp.ioslauncher.ui.custom.MenuTabBar
+                                    android:id="@+id/menuTabBar"
+                                    android:layout_width="0dp"
+                                    android:layout_height="match_parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintEnd_toStartOf="@id/buttonSettings"/>
+
                             </androidx.constraintlayout.widget.ConstraintLayout>
                         </androidx.constraintlayout.widget.ConstraintLayout>
+
+                        <androidx.viewpager.widget.ViewPager
+                            android:id="@+id/menuPages"
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="1"
+                            android:overScrollMode="never"/>
 
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/allAps"

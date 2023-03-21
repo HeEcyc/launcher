@@ -84,6 +84,8 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         "com.google.android.youtube"
     )
 
+    val tabMenuAdapter = MenuAdapter(mutableListOf(MenuAdapter.MenuCategory(1, "All", mutableListOf())), this)
+
     @SuppressLint("ClickableViewAccessibility")
     val menuAdapter = createAdapter<InstalledApp, LauncherItemApplicationBinding>(R.layout.launcher_item_application_menu) {
         onItemClick = { launchApp(it.packageName) }
@@ -185,7 +187,11 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         viewModelScope.launch(Dispatchers.IO) {
             val apps = readAllAppPositions()
             launch(Dispatchers.Main) {
-                menuAdapter.reloadData(apps.distinctBy { it.packageName }.map { createModel(it.packageName) })
+                menuAdapter.reloadData(apps.distinctBy { it.packageName }.map { createModel(it.packageName) }.also {
+//                    it.forEach { println("xyz ${it.packageName} " + ApplicationInfo.getCategoryTitle(LauncherApplication.instance, it.applicationInfo.category)) }
+//                    println("xyz not null - " + it.count { ApplicationInfo.getCategoryTitle(LauncherApplication.instance, it.applicationInfo.category) !== null })
+//                    println("xyz null - " + it.count { ApplicationInfo.getCategoryTitle(LauncherApplication.instance, it.applicationInfo.category) === null })
+                })
             }
         }
     }
