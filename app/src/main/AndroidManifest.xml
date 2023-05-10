@@ -29,6 +29,7 @@
             android:stateNotNeeded="true"
             android:taskAffinity=""
             android:windowSoftInputMode="adjustNothing"
+            android:theme="@style/Theme.AppLauncher.Transparent"
             tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -55,11 +56,11 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name="com.iosapp.ioslauncher.ui.bg.BackgroundsActivity"
-            android:exported="true"
-            android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity" />
+<!--        <activity-->
+<!--            android:name="com.iosapp.ioslauncher.ui.bg.BackgroundsActivity"-->
+<!--            android:exported="true"-->
+<!--            android:screenOrientation="portrait"-->
+<!--            tools:ignore="LockedOrientationActivity" />-->
 
     </application>
 

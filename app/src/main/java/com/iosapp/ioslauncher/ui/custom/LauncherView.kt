@@ -671,11 +671,8 @@ class LauncherView @JvmOverloads constructor(
     private var arrowEndValue: Float? = null
     private fun animateArrow(from: Float, to: Float) {
         if (to == arrowEndValue) return
-        if (to == binding.arrow.state) {
-            arrowAnimator?.cancel()
-            return
-        }
         arrowAnimator?.cancel()
+        if (to == binding.arrow.state) return
         arrowAnimator = ValueAnimator.ofFloat(from, to).apply {
             duration = 200
             addUpdateListener { binding.arrow.state = it.animatedValue as Float }

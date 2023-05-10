@@ -15,7 +15,6 @@ import android.os.Vibrator
 import android.view.MotionEvent
 import android.view.View
 import androidx.databinding.ObservableBoolean
-import androidx.databinding.ObservableField
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.RecyclerView
@@ -66,7 +65,7 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         addAction(Intent.ACTION_PACKAGE_ADDED)
         addDataScheme("package")
     }
-    val launcherBG = ObservableField(Prefs.bgRes)
+//    val launcherBG = ObservableField(Prefs.bgRes)
     var stateProvider: NonSwipeableViewPager.StateProvider? = null
 
     private var saveDBJob: Job? = null
@@ -573,9 +572,9 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         sharedPreferences: SharedPreferences,
         key: String
     ) {
-        when (key) {
-            Prefs.bgResKey -> launcherBG.set(sharedPreferences.getInt(key, R.mipmap.img_10))
-        }
+//        when (key) {
+//            Prefs.bgResKey -> launcherBG.set(sharedPreferences.getInt(key, R.mipmap.img_10))
+//        }
     }
 
     override fun onCleared() {

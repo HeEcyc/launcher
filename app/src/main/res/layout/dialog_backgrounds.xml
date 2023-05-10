@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <data>
+<!--    <data>-->
 
-        <variable
-            name="viewModel"
-            type="com.iosapp.ioslauncher.ui.bg.BackgroundsViewModel" />
-    </data>
+<!--        <variable-->
+<!--            name="viewModel"-->
+<!--            type="com.iosapp.ioslauncher.ui.bg.BackgroundsViewModel" />-->
+<!--    </data>-->
 
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
@@ -15,28 +15,28 @@
         android:fitsSystemWindows="true"
         android:orientation="vertical">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/backgrounds"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="40sp"
-            android:overScrollMode="never"
-            app:adapter="@{viewModel.adapter}"
-            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-            app:spanCount="2" />
+<!--        <androidx.recyclerview.widget.RecyclerView-->
+<!--            android:id="@+id/backgrounds"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:layout_marginTop="40sp"-->
+<!--            android:overScrollMode="never"-->
+<!--            app:adapter="@{viewModel.adapter}"-->
+<!--            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"-->
+<!--            app:spanCount="2" />-->
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/closeButton"
-            android:layout_width="50sp"
-            android:layout_height="50sp"
-            android:background="@drawable/close_circle"
-            android:elevation="5sp"
-            android:padding="15sp"
-            android:src="@drawable/cancel_icon"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.95" />
+<!--        <androidx.appcompat.widget.AppCompatImageView-->
+<!--            android:id="@+id/closeButton"-->
+<!--            android:layout_width="50sp"-->
+<!--            android:layout_height="50sp"-->
+<!--            android:background="@drawable/close_circle"-->
+<!--            android:elevation="5sp"-->
+<!--            android:padding="15sp"-->
+<!--            android:src="@drawable/cancel_icon"-->
+<!--            app:layout_constraintBottom_toBottomOf="parent"-->
+<!--            app:layout_constraintEnd_toEndOf="parent"-->
+<!--            app:layout_constraintStart_toStartOf="parent"-->
+<!--            app:layout_constraintTop_toTopOf="parent"-->
+<!--            app:layout_constraintVertical_bias="0.95" />-->
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
