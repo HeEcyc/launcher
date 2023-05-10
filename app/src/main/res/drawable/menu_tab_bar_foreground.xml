@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:width="360dp"
+        android:height="48dp"
+        android:drawable="@drawable/menu_tab_bar_foreground_frame"/>
+    <item
+        android:width="12dp"
+        android:height="48dp"
+        android:drawable="@drawable/menu_tab_bar_foreground_gradient_left"/>
+    <item
+        android:width="12dp"
+        android:height="48dp"
+        android:gravity="right"
+        android:drawable="@drawable/menu_tab_bar_foreground_gradient_right"/>
+</layer-list>

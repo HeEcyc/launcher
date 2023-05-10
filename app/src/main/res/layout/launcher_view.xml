@@ -229,7 +229,8 @@
                                 android:layout_height="0dp"
                                 app:layout_constraintTop_toTopOf="parent"
                                 app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintDimensionRatio="360:48">
+                                app:layout_constraintDimensionRatio="360:48"
+                                android:clipChildren="true">
 
                                 <androidx.appcompat.widget.AppCompatImageView
                                     android:id="@+id/buttonSettings"
@@ -252,12 +253,25 @@
                                     android:scaleX="0.75"
                                     android:onClick="@{(_) -> viewModel.onEditClick()}"/>
 
-                                <com.iosapp.ioslauncher.ui.custom.MenuTabBar
-                                    android:id="@+id/menuTabBar"
+                                <androidx.constraintlayout.widget.ConstraintLayout
                                     android:layout_width="0dp"
-                                    android:layout_height="match_parent"
+                                    android:layout_height="0dp"
+                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:layout_constraintBottom_toBottomOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toStartOf="@id/buttonSettings"/>
+                                    app:layout_constraintEnd_toStartOf="@id/buttonSettings"
+                                    app:layout_constraintDimensionRatio="360:48"
+                                    android:clipChildren="true">
+                                    <com.iosapp.ioslauncher.ui.custom.MenuTabBar
+                                        android:id="@+id/menuTabBar"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        tools:ignore="TooDeepLayout"/>
+                                    <androidx.appcompat.widget.AppCompatImageView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:src="@drawable/menu_tab_bar_foreground"/>
+                                </androidx.constraintlayout.widget.ConstraintLayout>
 
                             </androidx.constraintlayout.widget.ConstraintLayout>
                         </androidx.constraintlayout.widget.ConstraintLayout>

@@ -83,7 +83,23 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         "com.google.android.youtube"
     )
 
-    val tabMenuAdapter = MenuAdapter(mutableListOf(MenuAdapter.MenuCategory(1, "All", mutableListOf())), this)
+    val tabMenuAdapter = MenuAdapter(
+        mutableListOf(
+            MenuAdapter.MenuCategory(1, "All", mutableListOf()),
+            MenuAdapter.MenuCategory(2, "All2", mutableListOf()),
+            MenuAdapter.MenuCategory(3, "All3", mutableListOf()),
+            MenuAdapter.MenuCategory(4, "All4", mutableListOf()),
+            MenuAdapter.MenuCategory(4, "All4", mutableListOf()),
+            MenuAdapter.MenuCategory(4, "All4", mutableListOf()),
+            MenuAdapter.MenuCategory(4, "All4", mutableListOf()),
+            MenuAdapter.MenuCategory(4, "All4", mutableListOf()),
+            MenuAdapter.MenuCategory(4, "All4", mutableListOf()),
+            MenuAdapter.MenuCategory(4, "All4", mutableListOf()),
+            MenuAdapter.MenuCategory(4, "All4", mutableListOf()),
+            MenuAdapter.MenuCategory(4, "All4", mutableListOf()),
+        ),
+        this
+    )
 
     @SuppressLint("ClickableViewAccessibility")
     val menuAdapter = createAdapter<InstalledApp, LauncherItemApplicationBinding>(R.layout.launcher_item_application_menu) {
