@@ -281,17 +281,18 @@
                             android:layout_width="match_parent"
                             android:layout_height="0dp"
                             android:layout_weight="1"
-                            android:overScrollMode="never"/>
-
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/allAps"
-                            android:layout_width="match_parent"
-                            android:layout_height="0dp"
-                            android:layout_weight="1"
-                            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-                            app:spanCount="4"
                             android:overScrollMode="never"
                             android:adapter="@{viewModel.menuAdapter}"/>
+
+<!--                        <androidx.recyclerview.widget.RecyclerView-->
+<!--                            android:id="@+id/allAps"-->
+<!--                            android:layout_width="match_parent"-->
+<!--                            android:layout_height="0dp"-->
+<!--                            android:layout_weight="1"-->
+<!--                            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"-->
+<!--                            app:spanCount="4"-->
+<!--                            android:overScrollMode="never"-->
+<!--                            android:adapter="@{viewModel.menuAdapter}"/>-->
 
                     </androidx.appcompat.widget.LinearLayoutCompat>
                 </androidx.constraintlayout.widget.ConstraintLayout>

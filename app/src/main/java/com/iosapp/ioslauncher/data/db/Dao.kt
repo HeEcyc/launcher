@@ -3,6 +3,7 @@ package com.iosapp.ioslauncher.data.db
 import androidx.room.*
 import androidx.room.Dao
 import com.iosapp.ioslauncher.data.AppScreenLocation
+import com.iosapp.ioslauncher.data.RecentApp
 
 @Dao
 interface Dao {
@@ -27,4 +28,13 @@ interface Dao {
 
     @Update
     fun updateItem(appScreenLocation: AppScreenLocation)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertRecentApp(recentApp: RecentApp)
+
+    @Query("SELECT * FROM RecentApp")
+    fun getRecentApps(): List<RecentApp>
+
+    @Query("DELETE FROM RecentApp WHERE packageName = :packageName")
+    fun deletePackageFromRecent(packageName: String)
 }

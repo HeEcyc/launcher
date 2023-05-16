@@ -35,6 +35,12 @@ class MenuTabBar @JvmOverloads constructor(
     private val recyclerView = RecyclerView(context, attrs)
     private val underlineView = UnderlineView(context, attrs, defStyle)
 
+    var currentTab: Int
+        get() = adapter.getData().indexOfFirst { it.isSelected.get() }
+        set(value) {
+            onTabClick(adapter.getData()[value])
+        }
+
     private val tabHorizontalSpace get() = recyclerView.height / 4
 
     private val adapter = createAdapter<MenuTab, ItemMenuTabBinding>(R.layout.item_menu_tab) {
@@ -83,7 +89,7 @@ class MenuTabBar @JvmOverloads constructor(
     fun reloadItems(categories: List<MenuAdapter.MenuCategory>) {
         adapter.reloadData(categories.mapIndexed { index, menuCategory ->
             MenuTab(menuCategory.categoryTitle, index == 0)
-        })
+        }.toMutableList())
         if (categories.isNotEmpty())
             recyclerView.scrollToPosition(0)
     }
@@ -108,21 +114,21 @@ class MenuTabBar @JvmOverloads constructor(
         val selectedTabIndex = adapter.getData().indexOfFirst { it.isSelected.get() }
         val viewsWithTabIndices = recyclerView.children.map { it to recyclerView.getChildAdapterPosition(it) }
         val selectedTabView = viewsWithTabIndices.firstOrNull { it.second == selectedTabIndex }?.first
-        if (selectedTabView === null) return
-        val title = selectedTabView.findViewById<View>(R.id.title)
+        val goingToInvisible = selectedTabView === null
+        val title = selectedTabView?.findViewById<View>(R.id.title)
         val initialWidth = underlineView.width
         val initialMarginStart = underlineView.marginStart
         val newWidthStep1: Int
         val newMarginStartStep1: Int
-        val newWidthStep2 = title.width
-        val newMarginStartStep2 = selectedTabView.xDirectionIndependent.toInt() + tabHorizontalSpace
         if (movingForward) {
-            newWidthStep1 = selectedTabView.xDirectionIndependent.toInt() + tabHorizontalSpace - initialMarginStart
+            newWidthStep1 = if (goingToInvisible) width - initialMarginStart else selectedTabView!!.xDirectionIndependent.toInt() + tabHorizontalSpace - initialMarginStart
             newMarginStartStep1 = initialMarginStart
         } else {
-            newWidthStep1 = initialWidth + initialMarginStart - selectedTabView.xDirectionIndependent.toInt() - tabHorizontalSpace
-            newMarginStartStep1 = selectedTabView.xDirectionIndependent.toInt() + tabHorizontalSpace
+            newWidthStep1 = if (goingToInvisible) initialMarginStart + initialWidth else initialWidth + initialMarginStart - selectedTabView!!.xDirectionIndependent.toInt() - tabHorizontalSpace
+            newMarginStartStep1 = if (goingToInvisible) 0 else selectedTabView!!.xDirectionIndependent.toInt() + tabHorizontalSpace
         }
+        val newWidthStep2 = if (goingToInvisible) 0 else title!!.width
+        val newMarginStartStep2 = if (goingToInvisible) (if (movingForward) width else 0) else selectedTabView!!.xDirectionIndependent.toInt() + tabHorizontalSpace
         val widthStep1Delta = newWidthStep1 - initialWidth
         val marginStartStep1Delta = newMarginStartStep1 - initialMarginStart
         val widthStep2Delta = newWidthStep2 - newWidthStep1

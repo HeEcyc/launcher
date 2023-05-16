@@ -10,6 +10,7 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.view.MotionEvent
@@ -32,6 +33,7 @@ import com.iosapp.ioslauncher.utils.APP_COLUMN_COUNT
 import com.iosapp.ioslauncher.utils.PAGE_INDEX_BOTTOM
 import com.iosapp.ioslauncher.utils.PAGE_INDEX_JUST_MENU
 import kotlinx.coroutines.*
+import java.io.File
 import java.text.Collator
 import kotlin.math.max
 import com.iosapp.ioslauncher.databinding.LauncherItemApplicationMenuBinding as LauncherItemApplicationBinding
@@ -83,43 +85,30 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         "com.google.android.youtube"
     )
 
-    val tabMenuAdapter = MenuAdapter(
-        mutableListOf(
-            MenuAdapter.MenuCategory(1, "All", mutableListOf()),
-            MenuAdapter.MenuCategory(2, "All2", mutableListOf()),
-            MenuAdapter.MenuCategory(3, "All3", mutableListOf()),
-            MenuAdapter.MenuCategory(4, "All4", mutableListOf()),
-            MenuAdapter.MenuCategory(4, "All4", mutableListOf()),
-            MenuAdapter.MenuCategory(4, "All4", mutableListOf()),
-            MenuAdapter.MenuCategory(4, "All4", mutableListOf()),
-            MenuAdapter.MenuCategory(4, "All4", mutableListOf()),
-            MenuAdapter.MenuCategory(4, "All4", mutableListOf()),
-            MenuAdapter.MenuCategory(4, "All4", mutableListOf()),
-            MenuAdapter.MenuCategory(4, "All4", mutableListOf()),
-            MenuAdapter.MenuCategory(4, "All4", mutableListOf()),
-        ),
+    val menuAdapter = MenuAdapter(
+        mutableListOf(),
         this
     )
 
-    @SuppressLint("ClickableViewAccessibility")
-    val menuAdapter = createAdapter<InstalledApp, LauncherItemApplicationBinding>(R.layout.launcher_item_application_menu) {
-        onItemClick = { launchApp(it.packageName) }
-        onBind = { item, binding, adapter ->
-            binding.isShortcut = false
-            binding.root.setOnTouchListener { _, _ ->
-                disableMotionLayoutLongClick.postValue(Unit)
-                false
-            }
-            binding.setVariable(BR.viewModel, this@AppViewModel)
-            binding.label.setTextColor(Color.BLACK)
-            binding.notifyPropertyChanged(BR.viewModel)
-            binding.root.setOnLongClickListener {
-                onMenuItemLongClick.postValue(Unit)
-                startDragAndDrop(item, binding, adapter, 0, false)
-                false
-            }
-        }
-    }
+//    @SuppressLint("ClickableViewAccessibility")
+//    val menuAdapter = createAdapter<InstalledApp, LauncherItemApplicationBinding>(R.layout.launcher_item_application_menu) {
+//        onItemClick = { launchApp(it.packageName) }
+//        onBind = { item, binding, adapter ->
+//            binding.isShortcut = false
+//            binding.root.setOnTouchListener { _, _ ->
+//                disableMotionLayoutLongClick.postValue(Unit)
+//                false
+//            }
+//            binding.setVariable(BR.viewModel, this@AppViewModel)
+//            binding.label.setTextColor(Color.BLACK)
+//            binding.notifyPropertyChanged(BR.viewModel)
+//            binding.root.setOnLongClickListener {
+//                onMenuItemLongClick.postValue(Unit)
+//                startDragAndDrop(item, binding, adapter, 0, false)
+//                false
+//            }
+//        }
+//    }
 
     @SuppressLint("ClickableViewAccessibility")
     val bottomAppListAdapter =
@@ -200,15 +189,68 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
     init {
         Prefs.sharedPreference.registerOnSharedPreferenceChangeListener(this)
         viewModelScope.launch(Dispatchers.IO) {
-            val apps = readAllAppPositions()
+            val apps = readAllAppPositions().distinctBy { it.packageName }.map { createModel(it.packageName) }
+            val recentApps = getRecentApps()
+
+            val mainAppList = mutableListOf(*recentApps.toTypedArray(), *apps.toTypedArray())
+
+            val appCategories = mutableListOf(
+                MenuAdapter.MenuCategory("All", mainAppList)
+            )
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                appCategories.addAll(
+                    apps.groupBy {it.applicationInfo.category }
+                        .filterNot { it.key == ApplicationInfo.CATEGORY_UNDEFINED }
+                        .mapNotNull {
+                            val categoryTitle = ApplicationInfo.getCategoryTitle(LauncherApplication.instance, it.key)
+                            if (categoryTitle === null)
+                                null
+                            else
+                                MenuAdapter.MenuCategory(categoryTitle.toString(), it.value.toMutableList())
+                        }
+                )
+            }
+
             launch(Dispatchers.Main) {
-                menuAdapter.reloadData(apps.distinctBy { it.packageName }.map { createModel(it.packageName) }.also {
+                menuAdapter.reloadData(appCategories)
+//                menuAdapter.reloadData(apps.distinctBy { it.packageName }.map { createModel(it.packageName) }.also {
 //                    it.forEach { println("xyz ${it.packageName} " + ApplicationInfo.getCategoryTitle(LauncherApplication.instance, it.applicationInfo.category)) }
 //                    println("xyz not null - " + it.count { ApplicationInfo.getCategoryTitle(LauncherApplication.instance, it.applicationInfo.category) !== null })
 //                    println("xyz null - " + it.count { ApplicationInfo.getCategoryTitle(LauncherApplication.instance, it.applicationInfo.category) === null })
-                })
+//                })
             }
         }
+    }
+
+    private suspend fun getRecentApps(): List<InstalledApp?> {
+        val apps = readAllAppPositions().distinctBy { it.packageName }.map { createModel(it.packageName) }
+        val recentAppsFiles = apps.map { ia ->
+            val ai = ia.applicationInfo
+            val pn = ai.packageName
+            ia to (listOfNotNull(
+                File(ai.dataDir),
+                File(ai.sourceDir),
+                File(ai.publicSourceDir),
+                Environment.getDataDirectory(),
+                LauncherApplication.instance.externalCacheDir,
+                *LauncherApplication.instance.externalCacheDirs
+            ).flatMap { root -> root.walk().filterNotNull() }.filter {
+                it.absolutePath.contains(pn)
+            }.maxOfOrNull { it.lastModified() } ?: 0)
+        }.let { ps ->
+            val max = ps.maxOf { it.second }
+            ps.map { it.first to max - it.second }
+        }.sortedBy { it.second }.map { it.first }
+        val recentAppsDB = DataBase.dao.getRecentApps().sortedByDescending { it.time }.mapNotNull {
+            try { createModel(it.packageName) } catch (e: Exception) { null }
+        }
+        return recentAppsFiles
+            .plus(List(8) { null })
+            .take(8)
+            .dropLast(minOf(8, recentAppsDB.size))
+            .toMutableList()
+            .apply { addAll(recentAppsDB.take(8 - size)) }
     }
 
     fun showTopFields(app: InstalledApp) = showTopFields.postValue(app)
@@ -351,19 +393,29 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
         packageManager.getLaunchIntentForPackage(packageName)
             ?.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             ?.let(LauncherApplication.instance::startActivity)
+        if (menuAdapter.recentApps.none { it?.packageName == packageName })
+            viewModelScope.launch(Dispatchers.IO) {
+                DataBase.dao.insertRecentApp(RecentApp(packageName, System.currentTimeMillis()))
+                val newRecentApps = getRecentApps()
+                launch(Dispatchers.Main) {
+                    menuAdapter.mainCategory.apply { repeat(8) { removeFirst() } }
+                    menuAdapter.mainCategory.addAll(0, newRecentApps)
+                    menuAdapter.notifyDataSetChanged()
+                }
+            }
     }
 
-    suspend fun getFormattedAppPositions(itemsPerPage: Int): MutableList<List<DesktopCell>> {
+    suspend fun getFormattedAppPositions(itemsPerPage: Int): MutableList<MutableList<DesktopCell>> {
         val positions = readAllAppPositions().filterNot { it.page in listOf(PAGE_INDEX_JUST_MENU, PAGE_INDEX_BOTTOM) }
         val pages = positions.groupBy { it.page }
         return MutableList((pages.keys.maxOrNull() ?: 0) + 1) { page ->
-            List(itemsPerPage) { index -> DesktopCell(
+            MutableList(itemsPerPage) { index -> DesktopCell(
                 index, page, pages[page]?.find { it.position == index }?.let { createModel(it.packageName) }
             ) }
         }
     }
 
-    suspend fun readAllAppPositions(): List<AppScreenLocation> {
+    private suspend fun readAllAppPositions(): List<AppScreenLocation> {
         return if (DataBase.dao.getRowCount() == 0) {
             val apps = getInstalledApps()
             saveAppsToDB(apps)
@@ -376,6 +428,7 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
                 .filter { it.page == PAGE_INDEX_BOTTOM }
                 .sortedBy { it.position }
                 .map { createModel(it.packageName) }
+                .toMutableList()
                 .let { withContext(Dispatchers.Main) { bottomAppListAdapter.reloadData(it) } }
         }
     }
@@ -467,6 +520,7 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
 
         bottomApps.sortedBy { it.position }
             .map { createModel(it.packageName) }
+            .toMutableList()
             .let {
                 withContext(Dispatchers.Main) { bottomAppListAdapter.reloadData(it) }
             }
@@ -558,13 +612,27 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
     }
 
     fun onAppInstalled(installedApp: InstalledApp) {
-        if (menuAdapter.getData().contains(installedApp)) return
+        if (menuAdapter.mainCategory.contains(installedApp)) return
         val collator = Collator.getInstance(getCurrentLocale())
-        val newIndex = menuAdapter.getData()
+        val newIndex = 8 + menuAdapter.mainCategory
+            .drop(8)
             .toMutableList()
-            .apply { add(installedApp); sortWith(compareBy(collator) { it.name }) }
+            .apply { add(installedApp); sortWith(compareBy(collator) { it?.name }) }
             .indexOf(installedApp)
-        menuAdapter.addItem(newIndex, installedApp)
+        menuAdapter.mainCategory.add(newIndex, installedApp)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val newAppCategory = ApplicationInfo
+                .getCategoryTitle(LauncherApplication.instance, installedApp.applicationInfo.category)
+                .toString()
+            if (menuAdapter.getData().none { it.categoryTitle == newAppCategory }) {
+                menuAdapter.getData().add(MenuAdapter.MenuCategory(newAppCategory, mutableListOf(installedApp)))
+            } else {
+                menuAdapter.getData()
+                    .first { it.categoryTitle == newAppCategory }
+                    .apps
+                    .apply { add(installedApp); sortWith(compareBy(collator) { it?.name }) }
+            }
+        }
         menuAdapter.notifyDataSetChanged()
         viewModelScope.launch(Dispatchers.IO) {
             AppScreenLocation(installedApp.packageName, 0, newIndex).let(DataBase.dao::addItem)
@@ -572,16 +640,32 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
     }
 
     fun deletePackage(packageName: String) {
-        viewModelScope.launch(Dispatchers.IO) { DataBase.dao.deletePackage(packageName) }
-        val index = menuAdapter.getData().indexOfFirst { it.packageName == packageName }
-        if (index == -1) return
-        menuAdapter.removeItem(index)
-//        menuAdapter.notifyItemRemoved(index)
-        menuAdapter.notifyDataSetChanged()
-        val bottomIndex = bottomAppListAdapter.getData().indexOfFirst { it.packageName == packageName }
-        if (bottomIndex == -1) return
-        bottomAppListAdapter.removeItem(bottomIndex)
-        bottomAppListAdapter.notifyItemRemoved(bottomIndex)
+        viewModelScope.launch(Dispatchers.IO) {
+            val isInRecent = menuAdapter.recentApps.any { it?.packageName == packageName }
+            val newRecentApps = mutableListOf<InstalledApp?>()
+            if (isInRecent) {
+                newRecentApps.addAll(getRecentApps())
+            }
+            launch(Dispatchers.Main) {
+                if (isInRecent) {
+                    menuAdapter.mainCategory.apply { repeat(8) { removeFirst() } }
+                    menuAdapter.mainCategory.addAll(0, newRecentApps)
+                }
+                menuAdapter.getData().forEach { category ->
+                    category.apps.removeAll { it?.packageName == packageName }
+                }
+                menuAdapter.getData().removeAll { it.apps.isEmpty() }
+                menuAdapter.notifyDataSetChanged()
+                val bottomIndex = bottomAppListAdapter.getData()
+                    .indexOfFirst { it.packageName == packageName }
+                if (bottomIndex != -1) {
+                    bottomAppListAdapter.removeItem(bottomIndex)
+                    bottomAppListAdapter.notifyItemRemoved(bottomIndex)
+                }
+            }
+            DataBase.dao.deletePackage(packageName)
+            DataBase.dao.deletePackageFromRecent(packageName)
+        }
     }
 
     override fun onSharedPreferenceChanged(

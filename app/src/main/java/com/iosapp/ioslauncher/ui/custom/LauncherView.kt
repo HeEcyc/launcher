@@ -7,9 +7,6 @@ import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
@@ -27,9 +24,6 @@ import androidx.core.view.children
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.viewModelScope
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
 import androidx.viewpager.widget.ViewPager
 import androidx.viewpager.widget.ViewPager.OnPageChangeListener
@@ -97,6 +91,7 @@ class LauncherView @JvmOverloads constructor(
     }
 
     private var lastTimeIdleMillis = System.currentTimeMillis()
+    @SuppressLint("WrongConstant")
     private val onRefreshListener = OnRefreshListener {
         val sbs = context.getSystemService("statusbar")
         val statusbarManager = Class.forName("android.app.StatusBarManager")
@@ -115,26 +110,13 @@ class LauncherView @JvmOverloads constructor(
 
     @SuppressLint("ClickableViewAccessibility")
     private fun initView() {
+        binding.menuPages.offscreenPageLimit = 9
         binding.arrow.state = -1f
         binding.menu.post { binding.menu.alpha = 0f }
-        binding.allAps.addOnScrollListener(getOnScrollListener())
         binding.appsContainer.layoutParams.let { it as LayoutParams }.setMargins(0, getStatusBarHeight(), 0, 0)
 
         val navBarHeight = if (hasNavigationBar()) getNavBarSize() * 2 else binding.fakeNavBar.layoutParams.height
         binding.fakeNavBar.layoutParams.height = navBarHeight
-        binding.allAps.addItemDecoration(ItemDecorationWithEnds(
-            bottomLast = navBarHeight,
-            lastPredicate = { position, count ->
-                val countLast = count.rem(4).takeIf { it > 0 } ?: 4
-                position >= count - countLast
-            }
-        ))
-        binding.allAps.addItemDecoration(object : ItemDecoration() {
-            override fun onDraw(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
-                if (parent.childCount > 0 && parent.getChildAdapterPosition(parent.children.first()) == 0)
-                c.drawLine(parent.left.toFloat(), parent.children.first().y + parent.children.first().height, parent.right.toFloat(), parent.children.first().y + parent.children.first().height + 1, Paint().apply { color = Color.parseColor("#D4D4D4") })
-            }
-        })
 
         calculateAppItemViewHeight()
         setTouchListenerOnIndicator()
@@ -147,8 +129,6 @@ class LauncherView @JvmOverloads constructor(
         binding.fieldDelete.setOnDragListener(this)
         binding.fieldRemove.setOnDragListener(this)
         binding.motionView.setOnDragListener(this)
-        binding.allAps.setOnDragListener { _, _ -> true }
-        binding.allAps.setOnLongClickListener(this)
         binding.motionView.setOnLongClickListener(this)
         context.registerReceiver(broadcastReceiver, viewModel.intentFilter)
         val lifecycleOwner = findViewTreeLifecycleOwner()!!
@@ -194,7 +174,17 @@ class LauncherView @JvmOverloads constructor(
                 } else hideArrowShowDots()
             }
         })
-        binding.menuTabBar.post { binding.menuTabBar.bindMenuAdapter(viewModel.tabMenuAdapter) }
+        binding.menuTabBar.post { binding.menuTabBar.bindMenuAdapter(viewModel.menuAdapter) }
+        binding.menuTabBar.onItemClick.observe(lifecycleOwner) {
+            binding.menuPages.currentItem = binding.menuTabBar.currentTab
+        }
+        binding.menuPages.addOnPageChangeListener(object : OnPageChangeListener {
+            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
+            override fun onPageSelected(position: Int) {
+                binding.menuTabBar.currentTab = position
+            }
+            override fun onPageScrollStateChanged(state: Int) {}
+        })
     }
 
     private var arrowVisibilityAnimator: ValueAnimator? = null
@@ -288,18 +278,6 @@ class LauncherView @JvmOverloads constructor(
                 }
             )
             start()
-        }
-    }
-
-    private fun getOnScrollListener() = object : RecyclerView.OnScrollListener() {
-        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-            if (binding.allAps.scrollState == RecyclerView.SCROLL_STATE_IDLE)
-                binding.allAps.isNestedScrollingEnabled =
-                    (binding.allAps.layoutManager?.let { it as GridLayoutManager }
-                        ?.findFirstVisibleItemPosition() ?: 0) == 0
-        }
-        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-            binding.allAps.isNestedScrollingEnabled = false
         }
     }
 
@@ -506,7 +484,7 @@ class LauncherView @JvmOverloads constructor(
 //        if (dragInfo.currentPage == -1)
 //            viewPagerAdapter?.insertItemToPosition(currentPage, holder.layoutPosition, dragInfo)
 //        else
-            viewPagerAdapter?.swapItem(dragInfo, holder.layoutPosition, currentPage)
+        viewPagerAdapter?.swapItem(dragInfo, holder.layoutPosition, currentPage)
     }
 
     private fun stopMovePagesJob() {

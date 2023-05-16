@@ -34,7 +34,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class AppListAdapter(
-    private val listAppPages: MutableList<List<DesktopCell>>,
+    private val listAppPages: MutableList<MutableList<DesktopCell>>,
     private val visibleApplicationsOnScreen: Int,
     private val viewModel: AppViewModel,
     private val stateProvider: NonSwipeableViewPager.StateProvider,
@@ -289,7 +289,7 @@ class AppListAdapter(
         if (!canCreatePage) return false
 
 //        listAppPages.add(listOf())
-        List(visibleApplicationsOnScreen) {
+        MutableList(visibleApplicationsOnScreen) {
             DesktopCell(it, listAppPages.size)
         }.let(listAppPages::add)
 //        recyclersAdapters.add(createAdapter(listAppPages.size - 1))
@@ -306,11 +306,11 @@ class AppListAdapter(
 //            onNewApp(installedApp)
 //        } else {
 //            lastAdapter.addItem(installedApp)
-            viewModel.addItem(
-                installedApp,
-                lastAdapter.itemCount - 1,
-                recyclersAdapters.size - 1
-            )
+        viewModel.addItem(
+            installedApp,
+            lastAdapter.itemCount - 1,
+            recyclersAdapters.size - 1
+        )
 //        }
     }
 
@@ -431,8 +431,8 @@ class AppListAdapter(
         val newCell = recyclersAdapters[newPage].getData()[newPosition]
         val app = currentCell.app.get()
 //        swapHelper.requestInsertToPosition(newPage, newPosition) {
-            currentCell.app.set(null)
-            newCell.app.set(app)
+        currentCell.app.set(null)
+        newCell.app.set(app)
             moveBy1(items.dropLast(1))
 //        }
     }

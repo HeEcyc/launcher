@@ -9,12 +9,12 @@ import androidx.databinding.ViewDataBinding
 import androidx.recyclerview.widget.RecyclerView
 import com.iosapp.ioslauncher.BR
 
-abstract class BaseAdapter<T, V : ViewDataBinding> private constructor(initItems: List<T>? = null) :
+abstract class BaseAdapter<T, V : ViewDataBinding> private constructor(initItems: MutableList<T>? = null) :
     RecyclerView.Adapter<BaseAdapter.BaseItem<T, out ViewDataBinding>>() {
     protected var items: MutableList<T> = mutableListOf()
 
     init {
-        initItems?.let { items.addAll(it) }
+        initItems?.let { items = it }
     }
 
     override fun onCreateViewHolder(@NonNull viewGroup: ViewGroup, i: Int): BaseItem<T, V> =
@@ -29,14 +29,14 @@ abstract class BaseAdapter<T, V : ViewDataBinding> private constructor(initItems
         notifyItemRangeRemoved(0, size)
     }
 
-    open fun reloadData(items: List<T>) {
+    open fun reloadData(items: MutableList<T>) {
         onNewItems(items)
         notifyDataSetChanged()
     }
 
-    fun onNewItems(items: List<T>) {
+    fun onNewItems(items: MutableList<T>) {
         this.items.clear()
-        this.items.addAll(items)
+        this.items = items
     }
 
     fun getData() = items
@@ -110,7 +110,7 @@ abstract class BaseAdapter<T, V : ViewDataBinding> private constructor(initItems
         var onItemClick: ((item: T) -> Unit)? = null
         var onIndexedItemClick: ((item: T, postition: Int) -> Unit)? = null
         var onIndexedViewItemClick: ((view: V, item: T, postition: Int) -> Unit)? = null
-        var initItems: List<T>? = null
+        var initItems: MutableList<T>? = null
         var itemViewTypeProvider: ((T) -> Int)? = null
         var viewBinding: ((inflater: LayoutInflater, viewGroup: ViewGroup, viewType: Int) -> V)? =
             null
