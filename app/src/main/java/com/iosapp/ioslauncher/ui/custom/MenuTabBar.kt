@@ -7,7 +7,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
-import android.view.animation.LinearInterpolator
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.view.children
@@ -104,11 +103,15 @@ class MenuTabBar @JvmOverloads constructor(
     private fun onTabClick(tab: MenuTab) {
         val movingForward = adapter.getData().indexOfFirst { it.isSelected.get() } < adapter.getData().indexOf(tab)
         adapter.getData().forEach { it.isSelected.set(it === tab) }
-        animateUnderlineClick(movingForward)
+        if (targetTab !== tab) {
+            targetTab = tab
+            animateUnderlineClick(movingForward)
+        }
         onItemClick.postValue(tab)
     }
 
     private var underlineAnimator: ValueAnimator? = null
+    private var targetTab: MenuTab? = null
     private fun animateUnderlineClick(movingForward: Boolean) {
         underlineAnimator?.cancel()
         val selectedTabIndex = adapter.getData().indexOfFirst { it.isSelected.get() }
@@ -134,8 +137,7 @@ class MenuTabBar @JvmOverloads constructor(
         val widthStep2Delta = newWidthStep2 - newWidthStep1
         val marginStartStep2Delta = newMarginStartStep2 - newMarginStartStep1
         underlineAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
-            interpolator = LinearInterpolator()
-            duration = 25
+            duration = 100
             addUpdateListener {
                 val progressStep1 = it.animatedValue as Float
                 underlineView.layoutParams = provideUnderlineLayoutParams(
@@ -145,8 +147,7 @@ class MenuTabBar @JvmOverloads constructor(
             }
             doOnEnd {
                 underlineAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
-                    interpolator = LinearInterpolator()
-                    duration = 25
+                    duration = 100
                     addUpdateListener {
                         val progressStep2 = it.animatedValue as Float
                         underlineView.layoutParams = provideUnderlineLayoutParams(
