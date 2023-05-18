@@ -27,6 +27,7 @@ import com.iosapp.ioslauncher.databinding.LauncherItemApplicationMenuBinding
 import com.iosapp.ioslauncher.ui.custom.ClickableMotionLayout
 import com.iosapp.ioslauncher.ui.custom.NonSwipeableViewPager
 import com.iosapp.ioslauncher.utils.PAGE_INDEX_BOTTOM
+import com.iosapp.ioslauncher.utils.PAGE_INDEX_JUST_MENU
 import com.iosapp.ioslauncher.utils.SwapHelper
 import com.iosapp.ioslauncher.utils.diff.utils.AppListDiffUtils
 import kotlinx.coroutines.Dispatchers
@@ -179,8 +180,11 @@ class AppListAdapter(
                 if (hasSwappedItem) {
                     if (dragInfo.currentPage != PAGE_INDEX_BOTTOM)
                         dragInfo.cell?.app?.set(swappedItem)
-                    else {
-                        viewModel.bottomAppListAdapter.getData()[dragInfo.draggedItemPos] = swappedItem!!
+                    else if (dragInfo.currentPage != PAGE_INDEX_JUST_MENU) {
+                        if (dragInfo.draggedItemPos >= viewModel.bottomAppListAdapter.getData().size)
+                            viewModel.bottomAppListAdapter.getData().add(swappedItem!!)
+                        else
+                            viewModel.bottomAppListAdapter.getData()[dragInfo.draggedItemPos] = swappedItem!!
                         viewModel.bottomAppListAdapter.notifyItemChanged(dragInfo.draggedItemPos)
                     }
                 }

@@ -12,14 +12,13 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.PagerAdapter
 import com.iosapp.ioslauncher.BR
-import com.iosapp.ioslauncher.LauncherApplication
 import com.iosapp.ioslauncher.R
 import com.iosapp.ioslauncher.base.*
 import com.iosapp.ioslauncher.data.DesktopCell
 import com.iosapp.ioslauncher.data.DragInfo
 import com.iosapp.ioslauncher.data.InstalledApp
 import com.iosapp.ioslauncher.databinding.LauncherItemApplicationMenuBinding
-import com.iosapp.ioslauncher.ui.custom.ItemDecorationWithEnds
+import com.iosapp.ioslauncher.ui.custom.LauncherView
 import com.iosapp.ioslauncher.utils.PAGE_INDEX_JUST_MENU
 
 class MenuAdapter(
@@ -40,9 +39,10 @@ class MenuAdapter(
     override fun getCount(): Int = categories.size
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
+        val launcherView = getParentLauncherView(container)
         return RecyclerView(container.context).apply {
             overScrollMode = View.OVER_SCROLL_NEVER
-            adapter = recyclersAdapters.getOrElse(position) { createAdapter(position) }
+            adapter = recyclersAdapters.getOrElse(position) { createAdapter(position, launcherView) }
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
@@ -50,14 +50,6 @@ class MenuAdapter(
             layoutManager = GridLayoutManager(context, 4)
             recyclers.getOrNull(position)?.let { recyclers.set(position, this) } ?: recyclers.add(position, this)
             addOnScrollListener(getOnScrollListener(this))
-            val navBarHeight = if (hasNavigationBar()) getNavBarSize() * 2 else findParentWithId(R.id.motionView, container)?.findViewById<View>(R.id.fakeNavBar)?.height ?: 0
-            addItemDecoration(ItemDecorationWithEnds(
-                bottomLast = navBarHeight,
-                lastPredicate = { position, count ->
-                    val countLast = count.rem(4).takeIf { it > 0 } ?: 4
-                    position >= count - countLast
-                }
-            ))
             if (position == 0) {
                 addItemDecoration(object : RecyclerView.ItemDecoration() {
                     override fun onDraw(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
@@ -78,25 +70,6 @@ class MenuAdapter(
         }
     }
 
-    private fun hasNavigationBar(): Boolean {
-        val id: Int = LauncherApplication.instance.resources.getIdentifier("config_showNavigationBar", "bool", "android")
-        return id > 0 && LauncherApplication.instance.resources.getBoolean(id)
-    }
-
-    private fun getNavBarSize() =
-        with(LauncherApplication.instance.resources.getIdentifier("navigation_bar_height", "dimen", "android")) {
-            if (this != 0) LauncherApplication.instance.resources.getDimensionPixelSize(this)
-            else 0
-        }
-
-    private fun findParentWithId(id: Int, view: View?): View? {
-        if (view === null) return null
-        return if (view.id == id)
-            view
-        else
-            findParentWithId(id, view.parent as? View)
-    }
-
     private fun getOnScrollListener(targetRV: RecyclerView) = object : RecyclerView.OnScrollListener() {
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
             if (targetRV.scrollState == RecyclerView.SCROLL_STATE_IDLE)
@@ -110,10 +83,12 @@ class MenuAdapter(
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    private fun createAdapter(position: Int) = createAdapter<InstalledApp?, LauncherItemApplicationMenuBinding>(R.layout.launcher_item_application_menu) {
+    private fun createAdapter(position: Int, launcherView: LauncherView?) = createAdapter<InstalledApp?, LauncherItemApplicationMenuBinding>(R.layout.launcher_item_application_menu) {
         initItems = categories[position].apps
         onItemClick = { if (it !== null) viewModel.launchApp(it.packageName) }
         onBind = { item, binding, adapter ->
+            if (launcherView !== null)
+                binding.root.setOnDragListener(launcherView)
             binding.isShortcut = false
             binding.root.setOnTouchListener { _, _ ->
                 viewModel.disableMotionLayoutLongClick.postValue(Unit)
@@ -124,13 +99,22 @@ class MenuAdapter(
             binding.notifyPropertyChanged(BR.viewModel)
             binding.root.setOnLongClickListener {
                 if (item !== null) {
-                    viewModel.onMenuItemLongClick.postValue(Unit)
-                    startDragAndDrop(item, binding, adapter, 0, false)
+//                    viewModel.onMenuItemLongClick.postValue(Unit)
+                    startDragAndDrop(item, binding, adapter, 0, false, binding.root)
                 }
                 false
             }
         }
     }.apply { recyclersAdapters.add(position, this) }
+
+    private fun getParentLauncherView(view: View?): LauncherView? {
+        return if (view === null)
+            null
+        else if (view.parent is LauncherView)
+            view.parent as LauncherView
+        else
+            getParentLauncherView(view.parent as? View)
+    }
 
     @SuppressLint("NewApi")
     private fun startDragAndDrop(
@@ -139,13 +123,14 @@ class MenuAdapter(
         adapter: BaseAdapter<InstalledApp?, *>,
         position: Int,
         removeFromOriginalPlace: Boolean = true,
+        originView: View
     ) {
 //        viewModel.isSelectionEnabled.set(true)
 //        canCreatePage = adapter.getData().size > 1
         binding.appIcon.startDragAndDrop(
             null,
             View.DragShadowBuilder(binding.appIcon),
-            DragInfo(DesktopCell(adapter.getData().indexOf(item), PAGE_INDEX_JUST_MENU, item), adapter.getData().indexOf(item), position, item, removeFromOriginalPlace),
+            DragInfo(DesktopCell(adapter.getData().indexOf(item), PAGE_INDEX_JUST_MENU, item), adapter.getData().indexOf(item), position, item, removeFromOriginalPlace, originView = originView),
             0
         )
         viewModel.showTopFields(item)

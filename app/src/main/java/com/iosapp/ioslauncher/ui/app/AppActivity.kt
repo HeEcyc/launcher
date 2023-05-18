@@ -4,9 +4,14 @@ import android.app.role.RoleManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.constraintlayout.motion.widget.MotionLayout
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.iosapp.ioslauncher.R
@@ -16,6 +21,9 @@ import com.iosapp.ioslauncher.databinding.AppActivityBinding
 import com.iosapp.ioslauncher.ui.dialogs.DialogTutorial
 import com.iosapp.ioslauncher.utils.IRON_SOURCE_APP_KEY
 import com.ironsource.mediationsdk.IronSource
+import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent.setEventListener
+import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEventListener
+
 
 class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_activity) {
 
@@ -43,8 +51,15 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
 
     override fun setupUI() {
+        setEventListener(this,
+            KeyboardVisibilityEventListener { isOpen ->
+                viewModel.isKeyboardOpen.set(isOpen)
+            }
+        )
         IronSource.setMetaData("is_child_directed","false")
         IronSource.init(this, IRON_SOURCE_APP_KEY)
+
+        binding.root.fitSystemWindowsAndAdjustResize()
 
         if (!Prefs.isShowingTutorial) {
             DialogTutorial().show(supportFragmentManager, "tag")
@@ -61,6 +76,7 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
                 supportFragmentManager.unregisterFragmentLifecycleCallbacks(this)
             }
         }, true)
+        viewModel.onBackPressed.observe(this) { onBackPressed() }
     }
 
     private fun askRole() {
@@ -81,6 +97,13 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
 
     override fun onBackPressed() {
         when {
+            viewModel.hasAppInfoBubble.get() ->
+                viewModel.hasAppInfoBubble.set(false)
+            (viewModel.searchQuery.get()?.length ?: 0) > 0 ->
+                viewModel.searchQuery.set("")
+            viewModel.isKeyboardOpen.get() ->
+                getSystemService(InputMethodManager::class.java)
+                    .hideSoftInputFromWindow(binding.root.windowToken, 0)
             findViewById<MotionLayout>(R.id.motionView).progress > 0.2f ->
                 findViewById<MotionLayout>(R.id.motionView).transitionToStart()
             else -> {
@@ -94,4 +117,23 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
         super.onStop()
         viewModel.isSelectionEnabled.set(false)
     }
+
+    private fun View?.fitSystemWindowsAndAdjustResize() = this?.let { view ->
+        ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
+            view.fitsSystemWindows = true
+            val bottom = insets.getInsets(WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.statusBars()).bottom
+
+            WindowInsetsCompat
+                .Builder()
+                .setInsets(
+                    WindowInsetsCompat.Type.systemBars(),
+                    Insets.of(0, 0, 0, bottom)
+                )
+                .build()
+                .apply {
+                    ViewCompat.onApplyWindowInsets(v, this)
+                }
+        }
+    }
+
 }

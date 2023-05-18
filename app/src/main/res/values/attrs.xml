@@ -5,4 +5,12 @@
         <attr name="font_to_height_ratio" format="float"/>
     </declare-styleable>
 
+    <declare-styleable name="ScalableCardView">
+        <attr name="scale_by" format="enum">
+            <enum name="byWidth" value="0"/>
+            <enum name="byHeight" value="1"/>
+        </attr>
+        <attr name="scalable_corner_radius" format="float"/>
+    </declare-styleable>
+
 </resources>

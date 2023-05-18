@@ -16,6 +16,7 @@ import android.os.Vibrator
 import android.view.MotionEvent
 import android.view.View
 import androidx.databinding.ObservableBoolean
+import androidx.databinding.ObservableField
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.RecyclerView
@@ -28,6 +29,7 @@ import com.iosapp.ioslauncher.base.createAdapter
 import com.iosapp.ioslauncher.data.*
 import com.iosapp.ioslauncher.data.db.DataBase
 import com.iosapp.ioslauncher.databinding.BottomItemApplicationBinding
+import com.iosapp.ioslauncher.databinding.LauncherItemApplicationMenuBinding
 import com.iosapp.ioslauncher.ui.custom.NonSwipeableViewPager
 import com.iosapp.ioslauncher.utils.APP_COLUMN_COUNT
 import com.iosapp.ioslauncher.utils.PAGE_INDEX_BOTTOM
@@ -40,6 +42,8 @@ import com.iosapp.ioslauncher.databinding.LauncherItemApplicationMenuBinding as 
 
 class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChangeListener {
 
+    val scrollResultsToStart = MutableLiveData<Unit>()
+    val onBackPressed = MutableLiveData<Unit>()
     val showTopFields = MutableLiveData<InstalledApp>()
 
     val onMenuItemLongClick = MutableLiveData<Unit>()
@@ -186,7 +190,34 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
             })
         }
 
+    val searchQuery = ObservableField("")
+    val isKeyboardOpen = ObservableBoolean(false)
+
+    val recentAdapter = createAdapter<InstalledApp?, LauncherItemApplicationMenuBinding>(R.layout.launcher_item_application_menu) {
+        onItemClick = { it?.packageName?.let(this@AppViewModel::launchApp) }
+        onBind = { _, binding, _ ->
+            binding.setVariable(BR.viewModel, this@AppViewModel)
+            binding.notifyPropertyChanged(BR.viewModel)
+        }
+    }
+
+    val searchResultAdapter = createAdapter<InstalledApp?, LauncherItemApplicationMenuBinding>(R.layout.launcher_item_application_menu) {
+        onItemClick = { it?.packageName?.let(this@AppViewModel::launchApp) }
+        onBind = { _, binding, _ ->
+            binding.setVariable(BR.viewModel, this@AppViewModel)
+            binding.notifyPropertyChanged(BR.viewModel)
+        }
+    }
+
+    val hasAppInfoBubble = ObservableBoolean(false)
+
     init {
+        observe(isKeyboardOpen) { _, _ ->
+            if (isKeyboardOpen.get())
+                try {
+                    recentAdapter.reloadData(menuAdapter.recentApps.toMutableList())
+                } catch (e: Exception) {}
+        }
         Prefs.sharedPreference.registerOnSharedPreferenceChangeListener(this)
         viewModelScope.launch(Dispatchers.IO) {
             val apps = readAllAppPositions().distinctBy { it.packageName }.map { createModel(it.packageName) }
@@ -220,6 +251,19 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
 //                    println("xyz null - " + it.count { ApplicationInfo.getCategoryTitle(LauncherApplication.instance, it.applicationInfo.category) === null })
 //                })
             }
+        }
+        observe(searchQuery) { _, _ ->
+            val query = searchQuery.get()?.trim()
+            val res = if (query.isNullOrEmpty())
+                mutableListOf()
+            else
+                menuAdapter
+                    .mainCategory
+                    .drop(8)
+                    .filter { it?.name?.contains(query, true) ?: false }
+                    .toMutableList()
+            searchResultAdapter.reloadData(res)
+            if (res.isNotEmpty()) scrollResultsToStart.postValue(Unit)
         }
     }
 
@@ -677,10 +721,13 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
 //        }
     }
 
+    fun clearSearchQuery() = searchQuery.set("")
+
     override fun onCleared() {
         super.onCleared()
         Prefs.sharedPreference.unregisterOnSharedPreferenceChangeListener(this)
     }
 
+    fun onBackPressed() = onBackPressed.postValue(Unit)
 
 }

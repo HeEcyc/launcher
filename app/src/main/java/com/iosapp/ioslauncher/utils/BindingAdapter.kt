@@ -7,7 +7,9 @@ import android.view.View
 import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.databinding.BindingAdapter
+import com.iosapp.ioslauncher.R
 import com.iosapp.ioslauncher.data.InstalledApp
 
 @BindingAdapter("onEnableSelected")
@@ -48,3 +50,8 @@ fun AppCompatImageView.setDrawable(isSelected: Boolean) {
 
 @BindingAdapter("app")
 fun FrameLayout.setApp(app: InstalledApp?) {}
+
+@BindingAdapter("isEnabled")
+fun MotionLayout.setSwipeEnabled(b: Boolean) {
+    enableTransition(R.id.mainTransition, b)
+}

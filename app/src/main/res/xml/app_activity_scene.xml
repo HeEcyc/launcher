@@ -29,6 +29,27 @@
             app:layout_constraintWidth_percent="0.5"
             app:visibilityMode="ignore"/>
 
+        <Constraint
+            android:id="@+id/searchBarBottomContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@id/searchBarAnchor"
+            app:visibilityMode="ignore"/>
+
+        <Constraint
+            android:id="@+id/searchBarAnchor"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            app:layout_constraintTop_toBottomOf="@id/menu"/>
+
+        <Constraint
+            android:id="@+id/bubbleLayout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toTopOf="@id/menu"
+            app:layout_constraintBottom_toBottomOf="@id/searchContainer"
+            app:visibilityMode="ignore"/>
+
     </ConstraintSet>
 
     <ConstraintSet android:id="@+id/end">
@@ -58,9 +79,31 @@
             app:layout_constraintWidth_percent="0.5"
             app:visibilityMode="ignore"/>
 
+        <Constraint
+            android:id="@+id/searchBarBottomContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@id/searchBarAnchor"
+            app:visibilityMode="ignore"/>
+
+        <Constraint
+            android:id="@+id/searchBarAnchor"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            app:layout_constraintTop_toBottomOf="parent"/>
+
+        <Constraint
+            android:id="@+id/bubbleLayout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toTopOf="@id/menu"
+            app:layout_constraintBottom_toBottomOf="@id/searchContainer"
+            app:visibilityMode="ignore"/>
+
     </ConstraintSet>
 
     <Transition
+        android:id="@+id/mainTransition"
         app:constraintSetEnd="@id/end"
         app:constraintSetStart="@+id/start"
         app:duration="100">

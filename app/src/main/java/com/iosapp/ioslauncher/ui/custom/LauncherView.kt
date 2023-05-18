@@ -7,19 +7,24 @@ import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.graphics.Point
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import android.util.AttributeSet
 import android.view.DragEvent
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowInsetsController
 import android.view.animation.LinearInterpolator
 import android.widget.ImageView
+import android.widget.LinearLayout
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.addListener
+import androidx.core.content.ContextCompat.startActivity
 import androidx.core.view.children
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.findViewTreeLifecycleOwner
@@ -32,6 +37,8 @@ import com.iosapp.ioslauncher.R
 import com.iosapp.ioslauncher.base.BaseAdapter
 import com.iosapp.ioslauncher.data.DesktopCell
 import com.iosapp.ioslauncher.data.DragInfo
+import com.iosapp.ioslauncher.data.InstalledApp
+import com.iosapp.ioslauncher.databinding.BubbleBinding
 import com.iosapp.ioslauncher.databinding.LauncherItemApplicationBinding
 import com.iosapp.ioslauncher.databinding.LauncherViewBinding
 import com.iosapp.ioslauncher.ui.app.AppListAdapter
@@ -46,6 +53,7 @@ import java.lang.reflect.Method
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.roundToInt
+
 
 class LauncherView @JvmOverloads constructor(
     context: Context,
@@ -114,9 +122,11 @@ class LauncherView @JvmOverloads constructor(
         binding.arrow.state = -1f
         binding.menu.post { binding.menu.alpha = 0f }
         binding.appsContainer.layoutParams.let { it as LayoutParams }.setMargins(0, getStatusBarHeight(), 0, 0)
+        binding.bubbleContainer.layoutParams.let { it as LinearLayout.LayoutParams }.setMargins(0, getStatusBarHeight(), 0, 0)
 
-        val navBarHeight = if (hasNavigationBar()) getNavBarSize() * 2 else binding.fakeNavBar.layoutParams.height
-        binding.fakeNavBar.layoutParams.height = navBarHeight
+        binding.fakeNavBar.layoutParams.height = if (hasNavigationBar()) getNavBarSize() * 2 else binding.fakeNavBar.layoutParams.height
+        binding.fakeSearchBarBottom.layoutParams.height = if (hasNavigationBar()) getNavBarSize() else 1
+        binding.searchBarBottom.layoutParams.height = binding.fakeSearchBarBottom.layoutParams.height
 
         calculateAppItemViewHeight()
         setTouchListenerOnIndicator()
@@ -133,7 +143,7 @@ class LauncherView @JvmOverloads constructor(
         context.registerReceiver(broadcastReceiver, viewModel.intentFilter)
         val lifecycleOwner = findViewTreeLifecycleOwner()!!
         viewModel.onMenuItemLongClick.observe(lifecycleOwner) {
-            binding.motionView.progress = 0f
+//            binding.motionView.progress = 0f
             onAppSelected()
         }
         viewModel.disableMotionLayoutLongClick.observe(lifecycleOwner) {
@@ -185,6 +195,9 @@ class LauncherView @JvmOverloads constructor(
             }
             override fun onPageScrollStateChanged(state: Int) {}
         })
+        viewModel.scrollResultsToStart.observe(lifecycleOwner) {
+            binding.searchResults.smoothScrollToPosition(0)
+        }
     }
 
     private var arrowVisibilityAnimator: ValueAnimator? = null
@@ -282,7 +295,7 @@ class LauncherView @JvmOverloads constructor(
     }
 
     private fun getStatusBarHeight() =
-        resources.getDimensionPixelSize(resources.getIdentifier("status_bar_height", "dimen", "android"))
+        resources.getDimensionPixelSize(resources.getIdentifier("status_bar_height", "dimen", "android")).takeIf { it > 0 } ?: resources.getDimensionPixelSize(R.dimen.statusBarHeight)
 
     private fun getRectWidth() = (binding.appPages.width * 0.08).toInt()
 
@@ -318,7 +331,7 @@ class LauncherView @JvmOverloads constructor(
     }
 
     override fun onDrag(v: View, event: DragEvent): Boolean {
-        return when (v.id) {
+        return handleEventOriginPlace(v, event) || when (v.id) {
             R.id.appPages -> handleEventMainAppList(event)
             R.id.bottomAppsOverlay -> handleBottomAppList(event)
             R.id.topFields -> handleTopFields(event)
@@ -329,6 +342,84 @@ class LauncherView @JvmOverloads constructor(
         }.also {
             if (it && event.action == DragEvent.ACTION_DRAG_ENDED) {
                 translateViewUp { hideTopFields() }
+            }
+        }
+    }
+
+    private fun handleEventOriginPlace(v: View, event: DragEvent): Boolean {
+        val dragInfo = event.localState as? DragInfo
+        val originView = dragInfo?.originView
+        if (originView !== null) {
+            if (v === dragInfo.originView) {
+                dragInfo.hasCheckedIfOverOriginal = true
+                if (dragInfo.timeMillisSinceDragBegin >= 200) {
+                    if (!viewModel.hasAppInfoBubble.get())
+                        showBubble(dragInfo.draggedItem, originView)
+                }
+                return true
+            } else {
+                if (dragInfo.hasCheckedIfOverOriginal) {
+                    if (event.action !in listOf(DragEvent.ACTION_DRAG_ENTERED, DragEvent.ACTION_DRAG_LOCATION, DragEvent.ACTION_DROP))
+                        return true
+                    val left = 0
+                    val top = 0
+                    val right = originView.width.times(0.5).toInt()
+                    val bottom = originView.height.times(0.5).toInt()
+                    val originViewRect = Rect(left, top, right, bottom)
+                    val originViewPoint = Point(originView.width.times(0.25).toInt(),originView.height.times(0.25).toInt())
+                    binding.root.let { it as ViewGroup }.getChildVisibleRect(dragInfo.originView, originViewRect, originViewPoint)
+                    if (originViewRect.contains(event.x.toInt(), event.y.toInt()))
+                        return true
+                    else
+                        if (binding.motionView.progress > 0f) {
+                            binding.motionView.progress = 0f
+                            viewModel.hasAppInfoBubble.set(false)
+                        }
+                } else
+                    return true
+            }
+        }
+        return false
+    }
+
+    private fun showBubble(app: InstalledApp, originView: View) {
+        binding.bubbleContainer.removeAllViews()
+        viewModel.hasAppInfoBubble.set(true)
+        binding.bubbleContainer.post {
+            val upperSpace = originView.y
+            val lowerSpace = binding.bubbleContainer.height - originView.y - originView.height
+            val aboveOriginal = upperSpace >= lowerSpace
+            val bubble = BubbleBinding.inflate(LayoutInflater.from(context))
+            bubble.root.layoutParams =
+                LayoutParams(originView.width * 2, originView.height.times(0.7).toInt()).let { bodyParams ->
+                    bodyParams.topToTop = LayoutParams.PARENT_ID
+                    bodyParams.bottomToBottom = LayoutParams.PARENT_ID
+                    bodyParams.startToStart = LayoutParams.PARENT_ID
+                    bodyParams.endToEnd = LayoutParams.PARENT_ID
+                    bodyParams.verticalBias = if (aboveOriginal)
+                        (originView.y - bodyParams.height) / (binding.bubbleContainer.height - bodyParams.height)
+                    else
+                        (originView.y + originView.height) / (binding.bubbleContainer.height - bodyParams.height)
+                    bodyParams.horizontalBias =
+                        (originView.x + originView.width / 2) / (binding.bubbleContainer.measuredWidth)
+                    bubble.tail.layoutParams.let { it as LayoutParams }.let { tailParams ->
+                        if (!aboveOriginal) {
+                            tailParams.topToBottom = LayoutParams.UNSET
+                            tailParams.bottomToBottom = LayoutParams.UNSET
+                            tailParams.topToTop = R.id.body
+                            tailParams.bottomToTop = R.id.body
+                        }
+                        tailParams.horizontalBias = bodyParams.horizontalBias
+                    }
+                    bodyParams
+                }
+            binding.bubbleContainer.addView(bubble.root, bubble.root.layoutParams)
+            bubble.body.setOnClickListener {
+                val i = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                i.addCategory(Intent.CATEGORY_DEFAULT)
+                i.data = Uri.parse("package:" + app.packageName)
+                context.startActivity(i)
+                viewModel.hasAppInfoBubble.set(false)
             }
         }
     }

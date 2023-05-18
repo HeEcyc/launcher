@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
+        <import type="android.view.View"/>
         <variable
             name="viewModel"
             type="com.iosapp.ioslauncher.ui.app.AppViewModel" />
@@ -26,7 +26,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 app:layoutDescription="@xml/app_activity_scene"
-                android:clipChildren="false">
+                android:clipChildren="false"
+                isEnabled="@{!(viewModel.isKeyboardOpen || viewModel.searchQuery.length() > 0)}">
 
                 <View
                     android:id="@+id/overlay"
@@ -130,7 +131,7 @@
                     android:layout_height="0sp"
                     android:fitsSystemWindows="true"
                     android:overScrollMode="always"
-                    android:paddingTop="24dp"
+                    android:layout_marginTop="24dp"
                     app:layout_constraintBottom_toTopOf="@id/indicatorOverlay"
                     app:layout_constraintTop_toTopOf="parent"
                     tools:ignore="SpeakableTextPresentCheck" />
@@ -223,99 +224,365 @@
 
                         <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
+                            android:layout_height="0dp"
+                            android:layout_weight="1">
+
+                            <androidx.appcompat.widget.LinearLayoutCompat
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:orientation="vertical">
+
+                                <androidx.constraintlayout.widget.ConstraintLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content">
+                                    <androidx.constraintlayout.widget.ConstraintLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="0dp"
+                                        app:layout_constraintTop_toTopOf="parent"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintDimensionRatio="360:48"
+                                        android:clipChildren="true"
+                                        tools:ignore="TooDeepLayout">
+
+                                        <androidx.appcompat.widget.AppCompatImageView
+                                            android:id="@+id/buttonSettings"
+                                            android:layout_width="0dp"
+                                            android:layout_height="match_parent"
+                                            app:layout_constraintEnd_toEndOf="parent"
+                                            app:layout_constraintDimensionRatio="1:1"
+                                            android:src="@drawable/ic_settings"
+                                            android:scaleY="0.5"
+                                            android:scaleX="0.5" />
+
+        <!--                                <androidx.appcompat.widget.AppCompatImageView-->
+        <!--                                    android:id="@+id/buttonEdit"-->
+        <!--                                    android:layout_width="0dp"-->
+        <!--                                    android:layout_height="match_parent"-->
+        <!--                                    app:layout_constraintEnd_toStartOf="@id/buttonSettings"-->
+        <!--                                    app:layout_constraintDimensionRatio="1:1"-->
+        <!--                                    android:src="@drawable/ic_edit"-->
+        <!--                                    android:scaleY="0.75"-->
+        <!--                                    android:scaleX="0.75"-->
+        <!--                                    android:onClick="@{(_) -> viewModel.onEditClick()}"/>-->
+
+                                        <androidx.constraintlayout.widget.ConstraintLayout
+                                            android:layout_width="0dp"
+                                            android:layout_height="0dp"
+                                            app:layout_constraintTop_toTopOf="parent"
+                                            app:layout_constraintBottom_toBottomOf="parent"
+                                            app:layout_constraintStart_toStartOf="parent"
+                                            app:layout_constraintEnd_toStartOf="@id/buttonSettings"
+                                            app:layout_constraintDimensionRatio="360:48"
+                                            android:clipChildren="true">
+                                            <com.iosapp.ioslauncher.ui.custom.MenuTabBar
+                                                android:id="@+id/menuTabBar"
+                                                android:layout_width="match_parent"
+                                                android:layout_height="match_parent"
+                                                android:clipChildren="true"
+                                                tools:ignore="TooDeepLayout"/>
+                                            <View
+                                                android:layout_width="match_parent"
+                                                android:layout_height="match_parent"
+                                                android:foreground="@drawable/menu_tab_bar_foreground"/>
+                                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+                                    </androidx.constraintlayout.widget.ConstraintLayout>
+                                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                                <androidx.viewpager.widget.ViewPager
+                                    android:id="@+id/menuPages"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="0dp"
+                                    android:layout_weight="1"
+                                    android:adapter="@{viewModel.menuAdapter}"
+                                    android:overScrollMode="never"
+                                    tools:ignore="SpeakableTextPresentCheck" />
+
+        <!--                        <androidx.recyclerview.widget.RecyclerView-->
+        <!--                            android:id="@+id/allAps"-->
+        <!--                            android:layout_width="match_parent"-->
+        <!--                            android:layout_height="0dp"-->
+        <!--                            android:layout_weight="1"-->
+        <!--                            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"-->
+        <!--                            app:spanCount="4"-->
+        <!--                            android:overScrollMode="never"-->
+        <!--                            android:adapter="@{viewModel.menuAdapter}"/>-->
+
+                            </androidx.appcompat.widget.LinearLayoutCompat>
+
                             <androidx.constraintlayout.widget.ConstraintLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:visibility="@{viewModel.isKeyboardOpen ? View.VISIBLE : View.GONE}"
+                                android:onClick="@{(_) -> viewModel.onBackPressed()}"
+                                android:background="#C0F3F3F3">
+                                <androidx.appcompat.widget.LinearLayoutCompat
+                                    android:layout_width="0dp"
+                                    android:layout_height="match_parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintWidth_percent="0.93"
+                                    android:orientation="vertical">
+
+                                    <androidx.constraintlayout.widget.ConstraintLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content">
+                                        <androidx.constraintlayout.widget.ConstraintLayout
+                                            android:layout_width="match_parent"
+                                            android:layout_height="0dp"
+                                            app:layout_constraintTop_toTopOf="parent"
+                                            app:layout_constraintBottom_toBottomOf="parent"
+                                            app:layout_constraintDimensionRatio="360:48">
+                                            <androidx.appcompat.widget.AppCompatImageView
+                                                android:layout_width="0dp"
+                                                android:layout_height="match_parent"
+                                                app:layout_constraintEnd_toEndOf="parent"
+                                                app:layout_constraintDimensionRatio="1:1"
+                                                android:src="@drawable/ic_clear"
+                                                android:alpha="0.75"
+                                                android:scaleY="0.8"
+                                                android:scaleX="0.8"/>
+                                        </androidx.constraintlayout.widget.ConstraintLayout>
+                                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                                    <Space
+                                        android:layout_width="match_parent"
+                                        android:layout_height="0dp"
+                                        android:layout_weight="1"/>
+
+                                    <com.iosapp.ioslauncher.ui.custom.ScalableCardView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        app:cardElevation="0dp"
+                                        app:cardBackgroundColor="@android:color/white"
+                                        app:scale_by="byHeight"
+                                        app:scalable_corner_radius="0.05">
+                                        <androidx.recyclerview.widget.RecyclerView
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:layout_margin="10dp"
+                                            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                                            app:spanCount="4"
+                                            android:orientation="vertical"
+                                            android:adapter="@{viewModel.recentAdapter}"
+                                            android:overScrollMode="never"
+                                            android:scrollbars="none"/>
+                                    </com.iosapp.ioslauncher.ui.custom.ScalableCardView>
+
+                                    <Space
+                                        android:layout_width="match_parent"
+                                        android:layout_height="5dp"/>
+
+                                </androidx.appcompat.widget.LinearLayoutCompat>
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:visibility="@{viewModel.searchQuery.length() > 0 ? View.VISIBLE : View.GONE}"
+                                android:onClick="@{(_) -> Object}"
+                                android:background="#F6F6F6">
+                                <androidx.recyclerview.widget.RecyclerView
+                                    android:id="@+id/searchResults"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                                    app:spanCount="4"
+                                    android:orientation="vertical"
+                                    android:adapter="@{viewModel.searchResultAdapter}"
+                                    android:overScrollMode="never"
+                                    android:scrollbars="none"/>
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+                            <View
                                 android:layout_width="match_parent"
                                 android:layout_height="0dp"
                                 app:layout_constraintTop_toTopOf="parent"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintDimensionRatio="360:48"
-                                android:clipChildren="true">
+                                app:layout_constraintBaseline_toTopOf="parent"
+                                app:layout_constraintDimensionRatio="360:64"
+                                app:cardCornerRadius="0dp"
+                                app:cardBackgroundColor="#F6F6F6"/>
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+                        <View
+                            android:id="@+id/fakeSearchBarBottom"
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:visibility="@{viewModel.isKeyboardOpen ? View.GONE : View.VISIBLE}"/>
+
+                    </androidx.appcompat.widget.LinearLayoutCompat>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/searchContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    app:layout_constraintBottom_toTopOf="@id/searchBarBarrier"
+                    app:layout_constraintDimensionRatio="360:64"
+                    app:cardCornerRadius="0dp"
+                    app:cardBackgroundColor="#F6F6F6">
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <com.iosapp.ioslauncher.ui.custom.ScalableCardView
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintHeight_percent="0.75"
+                            app:layout_constraintDimensionRatio="330:48"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#FFFFFF"
+                            app:scale_by="byHeight"
+                            app:scalable_corner_radius="0.5">
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
 
                                 <androidx.appcompat.widget.AppCompatImageView
-                                    android:id="@+id/buttonSettings"
-                                    android:layout_width="0dp"
-                                    android:layout_height="match_parent"
-                                    app:layout_constraintEnd_toEndOf="parent"
-                                    app:layout_constraintDimensionRatio="1:1"
-                                    android:src="@drawable/ic_settings"
-                                    android:scaleY="0.75"
-                                    android:scaleX="0.75" />
-
-                                <androidx.appcompat.widget.AppCompatImageView
-                                    android:id="@+id/buttonEdit"
-                                    android:layout_width="0dp"
-                                    android:layout_height="match_parent"
-                                    app:layout_constraintEnd_toStartOf="@id/buttonSettings"
-                                    app:layout_constraintDimensionRatio="1:1"
-                                    android:src="@drawable/ic_edit"
-                                    android:scaleY="0.75"
-                                    android:scaleX="0.75"
-                                    android:onClick="@{(_) -> viewModel.onEditClick()}"/>
-
-                                <androidx.constraintlayout.widget.ConstraintLayout
                                     android:layout_width="0dp"
                                     android:layout_height="0dp"
                                     app:layout_constraintTop_toTopOf="parent"
                                     app:layout_constraintBottom_toBottomOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toStartOf="@id/buttonSettings"
-                                    app:layout_constraintDimensionRatio="360:48"
-                                    android:clipChildren="true">
-                                    <com.iosapp.ioslauncher.ui.custom.MenuTabBar
-                                        android:id="@+id/menuTabBar"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="match_parent"
-                                        tools:ignore="TooDeepLayout"/>
-                                    <androidx.appcompat.widget.AppCompatImageView
-                                        android:layout_width="match_parent"
-                                        android:layout_height="match_parent"
-                                        android:src="@drawable/menu_tab_bar_foreground"/>
-                                </androidx.constraintlayout.widget.ConstraintLayout>
+                                    app:layout_constraintDimensionRatio="1:1"
+                                    android:scaleX="0.5"
+                                    android:scaleY="0.5"
+                                    android:src="@drawable/ic_search"
+                                    />
+
+                                <androidx.appcompat.widget.AppCompatEditText
+                                    android:id="@+id/searchField"
+                                    android:layout_width="0dp"
+                                    android:layout_height="0dp"
+                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:layout_constraintBottom_toBottomOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintDimensionRatio="234:24"
+                                    app:layout_constraintHeight_percent="0.5"
+                                    android:gravity="center_vertical"
+                                    android:background="@null"
+                                    android:textCursorDrawable="@drawable/cursor"
+                                    android:textSize="18sp"
+                                    android:textColor="#474747"
+                                    android:textColorHint="#80474747"
+                                    android:singleLine="true"
+                                    android:inputType="text"
+                                    android:text="@={viewModel.searchQuery}"
+                                    android:hint="@string/search"
+                                    tools:ignore="Autofill,LabelFor,TooDeepLayout,VisualLintTextFieldSize" />
+
+                                <androidx.appcompat.widget.AppCompatImageView
+                                    android:layout_width="0dp"
+                                    android:layout_height="0dp"
+                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:layout_constraintBottom_toBottomOf="parent"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintDimensionRatio="1:1"
+                                    android:scaleX="0.5"
+                                    android:scaleY="0.5"
+                                    android:alpha="@{viewModel.searchQuery.length() == 0 ? 0f : 1f}"
+                                    android:src="@drawable/ic_clear"
+                                    android:onClick="@{(_) -> viewModel.clearSearchQuery()}"/>
 
                             </androidx.constraintlayout.widget.ConstraintLayout>
-                        </androidx.constraintlayout.widget.ConstraintLayout>
+                        </com.iosapp.ioslauncher.ui.custom.ScalableCardView>
 
-                        <androidx.viewpager.widget.ViewPager
-                            android:id="@+id/menuPages"
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </androidx.cardview.widget.CardView>
+
+                <androidx.constraintlayout.widget.Barrier
+                    android:id="@+id/searchBarBarrier"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:barrierDirection="top"
+                    app:constraint_referenced_ids="searchBarBottomContainer, searchBarAnchor"/>
+
+                <FrameLayout
+                    android:id="@+id/searchBarBottomContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintBottom_toTopOf="@id/searchBarAnchor"
+                    android:visibility="@{viewModel.isKeyboardOpen ? View.GONE : View.VISIBLE}">
+                    <View
+                        android:id="@+id/searchBarBottom"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#F6F6F6" />
+                </FrameLayout>
+
+                <View
+                    android:id="@+id/searchBarAnchor"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    app:layout_constraintTop_toBottomOf="@id/menu" />
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:id="@+id/bubbleLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    app:layout_constraintTop_toTopOf="@id/menu"
+                    app:layout_constraintBottom_toBottomOf="@id/searchContainer"
+                    android:orientation="vertical"
+                    android:visibility="@{viewModel.hasAppInfoBubble ? View.VISIBLE : View.GONE}"
+                    android:onClick="@{(_) -> viewModel.onBackPressed()}">
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <View
                             android:layout_width="match_parent"
                             android:layout_height="0dp"
-                            android:layout_weight="1"
-                            android:overScrollMode="never"
-                            android:adapter="@{viewModel.menuAdapter}"/>
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintDimensionRatio="360:48"/>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/bubbleContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1">
 
-<!--                        <androidx.recyclerview.widget.RecyclerView-->
-<!--                            android:id="@+id/allAps"-->
-<!--                            android:layout_width="match_parent"-->
-<!--                            android:layout_height="0dp"-->
-<!--                            android:layout_weight="1"-->
-<!--                            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"-->
-<!--                            app:spanCount="4"-->
-<!--                            android:overScrollMode="never"-->
-<!--                            android:adapter="@{viewModel.menuAdapter}"/>-->
-
-                    </androidx.appcompat.widget.LinearLayoutCompat>
-                </androidx.constraintlayout.widget.ConstraintLayout>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintDimensionRatio="360:64"/>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </androidx.appcompat.widget.LinearLayoutCompat>
 
                 <com.iosapp.ioslauncher.ui.custom.ArrowView
                     android:id="@+id/arrow"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
+                    android:layout_marginBottom="10dp"
                     app:layout_constraintBottom_toTopOf="@id/menu"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintDimensionRatio="1:1"
-                    app:layout_constraintWidth_percent="0.05"
-                    android:layout_marginBottom="10dp"/>
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintWidth_percent="0.05" />
 
                 <View
                     android:id="@+id/menuTouchInterceptor"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    app:layout_constraintTop_toTopOf="@id/menu"
                     app:layout_constraintBottom_toBottomOf="@id/menu"
+                    app:layout_constraintEnd_toEndOf="@id/menu"
                     app:layout_constraintStart_toStartOf="@id/menu"
-                    app:layout_constraintEnd_toEndOf="@id/menu"/>
+                    app:layout_constraintTop_toTopOf="@id/menu" />
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/bottomRoot"
