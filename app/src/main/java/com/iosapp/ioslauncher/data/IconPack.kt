@@ -67,7 +67,7 @@ sealed interface IconPack : Serializable {
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
                 }
             } else {
-                bitmap = BitmapFactory.decodeFile(file.path)
+                bitmap = BitmapFactory.decodeFile(file.path)// ?: ai.loadIcon(pm).toBitmap()
             }
             return bitmap.toDrawable(resources)
         }

@@ -44,6 +44,7 @@ import com.iosapp.ioslauncher.databinding.LauncherItemApplicationBinding
 import com.iosapp.ioslauncher.databinding.LauncherViewBinding
 import com.iosapp.ioslauncher.ui.app.AppListAdapter
 import com.iosapp.ioslauncher.ui.app.AppViewModel
+import com.iosapp.ioslauncher.ui.pack.PackActivity
 import com.iosapp.ioslauncher.utils.APP_COLUMN_COUNT
 import com.iosapp.ioslauncher.utils.MOVING_PAGE_DELAY
 import com.iosapp.ioslauncher.utils.PAGE_INDEX_JUST_MENU
@@ -212,6 +213,9 @@ class LauncherView @JvmOverloads constructor(
             viewModel.recentAdapter.getData().forEach {
                 it?.icon?.set(Prefs.iconPack.getAppIcon(it.applicationInfo, pm))
             }
+        }
+        binding.buttonSettings.setOnClickListener {
+            context.startActivity(Intent(context, PackActivity::class.java))
         }
     }
 
