@@ -35,7 +35,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class AppListAdapter(
-    private val listAppPages: MutableList<MutableList<DesktopCell>>,
+    val listAppPages: MutableList<MutableList<DesktopCell>>,
     private val visibleApplicationsOnScreen: Int,
     private val viewModel: AppViewModel,
     private val stateProvider: NonSwipeableViewPager.StateProvider,

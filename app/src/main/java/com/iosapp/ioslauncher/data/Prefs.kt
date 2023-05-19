@@ -2,6 +2,7 @@ package com.iosapp.ioslauncher.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.lifecycle.MutableLiveData
 import com.iosapp.ioslauncher.LauncherApplication
 
 object Prefs {
@@ -12,6 +13,7 @@ object Prefs {
 
 //    const val bgResKey = "bg_res_key"
     const val isShowingTutorialKey = "isShowingTutorial"
+    const val iconPackKey = "iconPack"
 
 //    var bgRes: Int = R.mipmap.img_10
 //        get() = sharedPreference.getInt(bgResKey, R.mipmap.img_10)
@@ -31,4 +33,13 @@ object Prefs {
 //    private fun saveBG(value: Int) {
 //        sharedPreference.edit().putInt(bgResKey, value).apply()
 //    }
+
+    val onIconPackChanged = MutableLiveData<Unit>()
+    var iconPack: IconPack
+        get() = IconPack.values()[sharedPreference.getInt(iconPackKey, IconPack.Default.packId())]
+        set(value) {
+            sharedPreference.edit().putInt(iconPackKey, value.packId()).apply()
+            onIconPackChanged.postValue(Unit)
+        }
+
 }

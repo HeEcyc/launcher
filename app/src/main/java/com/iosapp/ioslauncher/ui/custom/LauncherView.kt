@@ -24,7 +24,6 @@ import android.widget.LinearLayout
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.addListener
-import androidx.core.content.ContextCompat.startActivity
 import androidx.core.view.children
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.findViewTreeLifecycleOwner
@@ -33,11 +32,13 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
 import androidx.viewpager.widget.ViewPager
 import androidx.viewpager.widget.ViewPager.OnPageChangeListener
 import com.iosapp.ioslauncher.BR
+import com.iosapp.ioslauncher.LauncherApplication
 import com.iosapp.ioslauncher.R
 import com.iosapp.ioslauncher.base.BaseAdapter
 import com.iosapp.ioslauncher.data.DesktopCell
 import com.iosapp.ioslauncher.data.DragInfo
 import com.iosapp.ioslauncher.data.InstalledApp
+import com.iosapp.ioslauncher.data.Prefs
 import com.iosapp.ioslauncher.databinding.BubbleBinding
 import com.iosapp.ioslauncher.databinding.LauncherItemApplicationBinding
 import com.iosapp.ioslauncher.databinding.LauncherViewBinding
@@ -53,7 +54,6 @@ import java.lang.reflect.Method
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.roundToInt
-
 
 class LauncherView @JvmOverloads constructor(
     context: Context,
@@ -198,12 +198,27 @@ class LauncherView @JvmOverloads constructor(
         viewModel.scrollResultsToStart.observe(lifecycleOwner) {
             binding.searchResults.smoothScrollToPosition(0)
         }
+        Prefs.onIconPackChanged.observe(lifecycleOwner) {
+            val pm = LauncherApplication.instance.packageManager
+            viewPagerAdapter?.listAppPages?.flatten()?.forEach {
+                it.app.get()?.let { app -> app.icon.set(Prefs.iconPack.getAppIcon(app.applicationInfo, pm)) }
+            }
+            viewModel.menuAdapter.getData().flatMap { it.apps }.forEach {
+                it?.icon?.set(Prefs.iconPack.getAppIcon(it.applicationInfo, pm))
+            }
+            viewModel.bottomAppListAdapter.getData().forEach {
+                it.icon.set(Prefs.iconPack.getAppIcon(it.applicationInfo, pm))
+            }
+            viewModel.recentAdapter.getData().forEach {
+                it?.icon?.set(Prefs.iconPack.getAppIcon(it.applicationInfo, pm))
+            }
+        }
     }
 
     private var arrowVisibilityAnimator: ValueAnimator? = null
 
     private fun showArrowHideDots() {
-        if (arrowVisibilityAnimator !== null)  return
+        arrowVisibilityAnimator?.cancel()
         val onCompleteEnd = { _: Animator -> arrowVisibilityAnimator = null }
         arrowVisibilityAnimator = ValueAnimator.ofFloat(binding.pageIndicator.alpha, 0f).apply {
             interpolator = LinearInterpolator()
@@ -331,7 +346,7 @@ class LauncherView @JvmOverloads constructor(
     }
 
     override fun onDrag(v: View, event: DragEvent): Boolean {
-        return handleEventOriginPlace(v, event) || when (v.id) {
+        return (handleEventOriginPlace(v, event) || when (v.id) {
             R.id.appPages -> handleEventMainAppList(event)
             R.id.bottomAppsOverlay -> handleBottomAppList(event)
             R.id.topFields -> handleTopFields(event)
@@ -339,7 +354,7 @@ class LauncherView @JvmOverloads constructor(
             R.id.fieldRemove -> handleFieldRemove(event)
             R.id.motionView -> true
             else -> false
-        }.also {
+        }).also {
             if (it && event.action == DragEvent.ACTION_DRAG_ENDED) {
                 translateViewUp { hideTopFields() }
             }
@@ -368,17 +383,14 @@ class LauncherView @JvmOverloads constructor(
                     val originViewRect = Rect(left, top, right, bottom)
                     val originViewPoint = Point(originView.width.times(0.25).toInt(),originView.height.times(0.25).toInt())
                     binding.root.let { it as ViewGroup }.getChildVisibleRect(dragInfo.originView, originViewRect, originViewPoint)
-                    if (originViewRect.contains(event.x.toInt(), event.y.toInt()))
-                        return true
-                    else
-                        if (binding.motionView.progress > 0f) {
-                            binding.motionView.progress = 0f
-                            viewModel.hasAppInfoBubble.set(false)
-                        }
+                    if (originViewRect.contains(event.x.toInt(), event.y.toInt())) return true
                 } else
                     return true
             }
         }
+        if (binding.motionView.progress > 0f)
+            binding.motionView.progress = 0f
+        viewModel.hasAppInfoBubble.set(false)
         return false
     }
 
@@ -687,6 +699,7 @@ class LauncherView @JvmOverloads constructor(
         endId: Int,
         progress: Float
     ) {
+        viewModel.hasAppInfoBubble.set(false)
         binding.srl.isEnabled = false
 
         val roundProgress = (progress * 100).toInt() / 100f

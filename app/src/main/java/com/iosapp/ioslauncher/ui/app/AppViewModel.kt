@@ -631,7 +631,7 @@ class AppViewModel : BaseViewModel(), SharedPreferences.OnSharedPreferenceChange
             rf.flags and (ApplicationInfo.FLAG_SYSTEM or ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) == 0
         return InstalledApp(
             rf.loadLabel(packageManager).toString(),
-            runBlocking(Dispatchers.IO) { rf.loadIcon(packageManager) },
+            runBlocking(Dispatchers.IO) { Prefs.iconPack.getAppIcon(rf, packageManager) },
             rf.packageName,
             isNotSystemApp,
             this

@@ -45,7 +45,8 @@
                 app:layout_constraintEnd_toEndOf="@id/appIcon"
                 android:scaleX="1.2"
                 android:scaleY="1.2"
-                android:src="@drawable/app_item_shadow_gradient"/>
+                android:src="@drawable/app_item_shadow_gradient"
+                android:alpha="0.05"/>
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/appIcon"
