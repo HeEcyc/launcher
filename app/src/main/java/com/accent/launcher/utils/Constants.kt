@@ -8,8 +8,6 @@ const val REQUEST_DELAY = 1000L
 const val PAGE_INDEX_BOTTOM = -1
 const val PAGE_INDEX_JUST_MENU = -2
 
-const val IRON_SOURCE_APP_KEY = ""
-
 val presetIconApps = listOf(
     "com.android.chrome",
     "com.google.android.apps.maps",

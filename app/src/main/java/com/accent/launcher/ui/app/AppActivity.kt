@@ -19,11 +19,9 @@ import com.accent.launcher.base.BaseActivity
 import com.accent.launcher.data.Prefs
 import com.accent.launcher.databinding.AppActivityBinding
 import com.accent.launcher.ui.dialogs.DialogTutorial
-import com.accent.launcher.utils.IRON_SOURCE_APP_KEY
-import com.ironsource.mediationsdk.IronSource
+import com.accent.launcher.ui.pack.PackActivity
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent.setEventListener
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEventListener
-
 
 class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_activity) {
 
@@ -40,29 +38,18 @@ class AppActivity : BaseActivity<AppViewModel, AppActivityBinding>(R.layout.app_
     }
     override val viewModel: AppViewModel by viewModels()
 
-    override fun onResume() {
-        super.onResume()
-        IronSource.onResume(this)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        IronSource.onPause(this)
-    }
-
     override fun setupUI() {
         setEventListener(this,
             KeyboardVisibilityEventListener { isOpen ->
                 viewModel.isKeyboardOpen.set(isOpen)
             }
         )
-        IronSource.setMetaData("is_child_directed","false")
-        IronSource.init(this, IRON_SOURCE_APP_KEY)
 
         binding.root.fitSystemWindowsAndAdjustResize()
 
         if (!Prefs.isShowingTutorial) {
             DialogTutorial().show(supportFragmentManager, "tag")
+            startActivity(Intent(this, PackActivity::class.java))
         } else {
             askRole()
             supportFragmentManager.unregisterFragmentLifecycleCallbacks(fragmentLifecycleCallback)
