@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.iosapp.ioslauncher">
+    package="com.accent.launcher">
 
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
@@ -12,7 +12,7 @@
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
 
     <application
-        android:name="com.iosapp.ioslauncher.LauncherApplication"
+        android:name="com.accent.launcher.LauncherApplication"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -20,7 +20,7 @@
         android:theme="@style/Theme.AppLauncher">
 
         <activity
-            android:name="com.iosapp.ioslauncher.ui.app.AppActivity"
+            android:name="com.accent.launcher.ui.app.AppActivity"
             android:clearTaskOnLaunch="true"
             android:configChanges="uiMode"
             android:exported="true"
@@ -40,7 +40,7 @@
         </activity>
 
         <activity
-            android:name="com.iosapp.ioslauncher.ui.EmptyLaunchActivity"
+            android:name="com.accent.launcher.ui.EmptyLaunchActivity"
             android:clearTaskOnLaunch="true"
             android:configChanges="uiMode"
             android:exported="true"
@@ -57,7 +57,7 @@
         </activity>
 
         <activity
-            android:name=".ui.pack.PackActivity"
+            android:name="com.accent.launcher.ui.pack.PackActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity" />

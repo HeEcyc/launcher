@@ -5,7 +5,7 @@
     <data>
         <variable
             name="item"
-            type="com.iosapp.ioslauncher.ui.custom.MenuTabBar.MenuTab" />
+            type="com.accent.launcher.ui.custom.MenuTabBar.MenuTab" />
     </data>
 
     <androidx.appcompat.widget.LinearLayoutCompat
@@ -22,7 +22,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintDimensionRatio="1:4"/>
         </androidx.constraintlayout.widget.ConstraintLayout>
-        <com.iosapp.ioslauncher.ui.custom.TrueAutoSizeTextView
+        <com.accent.launcher.ui.custom.TrueAutoSizeTextView
             android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"

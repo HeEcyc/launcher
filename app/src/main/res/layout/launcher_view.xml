@@ -7,7 +7,7 @@
         <import type="android.view.View"/>
         <variable
             name="viewModel"
-            type="com.iosapp.ioslauncher.ui.app.AppViewModel" />
+            type="com.accent.launcher.ui.app.AppViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -21,7 +21,7 @@
             app:swipeRefreshLayoutProgressSpinnerBackgroundColor="@android:color/transparent"
             android:alpha="1"
             android:clipChildren="false">
-            <com.iosapp.ioslauncher.ui.custom.ClickableMotionLayout
+            <com.accent.launcher.ui.custom.ClickableMotionLayout
                 android:id="@+id/motionView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -125,7 +125,7 @@
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <com.iosapp.ioslauncher.ui.custom.NonSwipeableViewPager
+                <com.accent.launcher.ui.custom.NonSwipeableViewPager
                     android:id="@+id/appPages"
                     android:layout_width="match_parent"
                     android:layout_height="0sp"
@@ -274,7 +274,7 @@
                                             app:layout_constraintEnd_toStartOf="@id/buttonSettings"
                                             app:layout_constraintDimensionRatio="360:48"
                                             android:clipChildren="true">
-                                            <com.iosapp.ioslauncher.ui.custom.MenuTabBar
+                                            <com.accent.launcher.ui.custom.MenuTabBar
                                                 android:id="@+id/menuTabBar"
                                                 android:layout_width="match_parent"
                                                 android:layout_height="match_parent"
@@ -350,7 +350,7 @@
                                         android:layout_height="0dp"
                                         android:layout_weight="1"/>
 
-                                    <com.iosapp.ioslauncher.ui.custom.ScalableCardView
+                                    <com.accent.launcher.ui.custom.ScalableCardView
                                         android:layout_width="match_parent"
                                         android:layout_height="wrap_content"
                                         app:cardElevation="0dp"
@@ -367,7 +367,7 @@
                                             android:adapter="@{viewModel.recentAdapter}"
                                             android:overScrollMode="never"
                                             android:scrollbars="none"/>
-                                    </com.iosapp.ioslauncher.ui.custom.ScalableCardView>
+                                    </com.accent.launcher.ui.custom.ScalableCardView>
 
                                     <Space
                                         android:layout_width="match_parent"
@@ -430,7 +430,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent">
 
-                        <com.iosapp.ioslauncher.ui.custom.ScalableCardView
+                        <com.accent.launcher.ui.custom.ScalableCardView
                             android:layout_width="0dp"
                             android:layout_height="0dp"
                             app:layout_constraintTop_toTopOf="parent"
@@ -495,7 +495,7 @@
                                     android:onClick="@{(_) -> viewModel.clearSearchQuery()}"/>
 
                             </androidx.constraintlayout.widget.ConstraintLayout>
-                        </com.iosapp.ioslauncher.ui.custom.ScalableCardView>
+                        </com.accent.launcher.ui.custom.ScalableCardView>
 
                     </androidx.constraintlayout.widget.ConstraintLayout>
                 </androidx.cardview.widget.CardView>
@@ -564,7 +564,7 @@
                     </androidx.constraintlayout.widget.ConstraintLayout>
                 </androidx.appcompat.widget.LinearLayoutCompat>
 
-                <com.iosapp.ioslauncher.ui.custom.ArrowView
+                <com.accent.launcher.ui.custom.ArrowView
                     android:id="@+id/arrow"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
@@ -613,7 +613,7 @@
                     </RelativeLayout>
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-            </com.iosapp.ioslauncher.ui.custom.ClickableMotionLayout>
+            </com.accent.launcher.ui.custom.ClickableMotionLayout>
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

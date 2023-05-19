@@ -4,7 +4,7 @@
     <data>
         <variable
             name="viewModel"
-            type="com.iosapp.ioslauncher.ui.pack.PackViewModel" />
+            type="com.accent.launcher.ui.pack.PackViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -35,7 +35,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="360:86">
 
-            <com.iosapp.ioslauncher.ui.custom.ScalableCardView
+            <com.accent.launcher.ui.custom.ScalableCardView
                 android:id="@+id/buttonOk"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
@@ -67,9 +67,9 @@
                         android:textAllCaps="true"
                         android:text="@string/ok"/>
                 </androidx.constraintlayout.widget.ConstraintLayout>
-            </com.iosapp.ioslauncher.ui.custom.ScalableCardView>
+            </com.accent.launcher.ui.custom.ScalableCardView>
 
-            <com.iosapp.ioslauncher.ui.custom.ScalableCardView
+            <com.accent.launcher.ui.custom.ScalableCardView
                 android:id="@+id/buttonCancel"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
@@ -101,7 +101,7 @@
                         android:textAllCaps="true"
                         android:text="@string/cancel"/>
                 </androidx.constraintlayout.widget.ConstraintLayout>
-            </com.iosapp.ioslauncher.ui.custom.ScalableCardView>
+            </com.accent.launcher.ui.custom.ScalableCardView>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -5,7 +5,7 @@
     <data>
         <variable
             name="item"
-            type="com.iosapp.ioslauncher.data.DesktopCell" />
+            type="com.accent.launcher.data.DesktopCell" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

@@ -5,11 +5,11 @@
 
         <variable
             name="viewModel"
-            type="com.iosapp.ioslauncher.ui.app.AppViewModel" />
+            type="com.accent.launcher.ui.app.AppViewModel" />
 
         <variable
             name="item"
-            type="com.iosapp.ioslauncher.data.InstalledApp" />
+            type="com.accent.launcher.data.InstalledApp" />
 
         <import type="android.view.View" />
 

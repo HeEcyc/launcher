@@ -6,7 +6,7 @@
 
         <variable
             name="viewModel"
-            type="com.iosapp.ioslauncher.ui.app.AppViewModel" />
+            type="com.accent.launcher.ui.app.AppViewModel" />
     </data>
 
 
@@ -21,7 +21,7 @@
 <!--            android:scaleType="centerCrop"-->
 <!--            app:imageResource="@{viewModel.launcherBG}" />-->
 
-        <com.iosapp.ioslauncher.ui.custom.LauncherView
+        <com.accent.launcher.ui.custom.LauncherView
             android:id="@+id/launcherView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

@@ -3,11 +3,11 @@
 
     <data>
 
-        <import type="com.iosapp.ioslauncher.data.InstalledApp"/>
+        <import type="com.accent.launcher.data.InstalledApp"/>
 
         <variable
             name="viewModel"
-            type="com.iosapp.ioslauncher.ui.app.AppViewModel" />
+            type="com.accent.launcher.ui.app.AppViewModel" />
 
         <variable
             name="item"
@@ -19,7 +19,7 @@
 
         <variable
             name="cell"
-            type="com.iosapp.ioslauncher.data.DesktopCell" />
+            type="com.accent.launcher.data.DesktopCell" />
 
         <import type="android.view.View" />
     </data>
