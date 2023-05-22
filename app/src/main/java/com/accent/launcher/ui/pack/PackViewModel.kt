@@ -1,5 +1,6 @@
 package com.accent.launcher.ui.pack
 
+import androidx.core.content.res.ResourcesCompat
 import androidx.databinding.ObservableField
 import com.accent.launcher.LauncherApplication
 import com.accent.launcher.R
@@ -21,17 +22,26 @@ class PackViewModel : BaseViewModel() {
         initItems = IconPack.values().toMutableList()
         onBind = { item, binding, adapter ->
             val pm = LauncherApplication.instance.packageManager
+            val resources = LauncherApplication.instance.resources
             binding.selected = ObservableWrapper(selected)
             binding.recycler.adapter = createAdapter<InstalledApp, LauncherItemApplicationMenuBinding>(R.layout.launcher_item_application_menu) {
-                initItems = presetIconApps.take(12).map {
+                initItems = MutableList(presetIconApps.take(12).size) { index ->
                     InstalledApp(
                         "",
-                        item.getAppIcon(pm.getApplicationInfo(it, 0), pm),
-                        it,
+                        ResourcesCompat.getDrawable(
+                            resources,
+                            resources.getIdentifier(
+                                "ic_${item.packId()}_${index.toString().padStart(2, '0')}",
+                                "mipmap",
+                                LauncherApplication.instance.packageName
+                            ),
+                            null
+                        ),
+                        "",
                         true,
                         AppViewModel()
                     )
-                }.toMutableList()
+                }
             }
             binding.imgSelected.alpha = if (selected == item) 1f else 0f
             binding.button.setOnClickListener { selected.set(item) }
